@@ -6,7 +6,7 @@ export const loginstyle = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#f6f6f6", // Light background color
+    backgroundColor: "#f6f6f6",
   },
   innerContainer: {
     width: "90%",
@@ -14,7 +14,7 @@ export const loginstyle = StyleSheet.create({
     padding: 20,
     backgroundColor: "#fff",
     borderRadius: 15,
-    elevation: 5, // Adds shadow for Android
+    elevation: 5, 
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
@@ -50,24 +50,24 @@ export const loginstyle = StyleSheet.create({
 
   container2: {
     flex: 1,
-    justifyContent: 'space-between', // Distributes space between children
+    justifyContent: 'space-between', 
     alignItems: 'center',
     padding: 16,
   },
   text2: {
     fontSize: 24,
-    marginVertical: 20, // Adds vertical margin
+    marginVertical: 20, 
   },
   buttonContainer: {
-    flexDirection: 'row', // Aligns buttons side by side
-    justifyContent: 'space-around', // Distributes buttons evenly
+    flexDirection: 'row', 
+    justifyContent: 'space-around',
     width: '100%',
-    marginBottom: 20, // Adds margin at the bottom
+    marginBottom: 20, 
     color: 205781,
   },
   buttonD: {
-    flex: 1, // Allows buttons to take equal space
-    marginHorizontal: 5, // Adds horizontal margin between buttons
+    flex: 1, 
+    marginHorizontal: 5, 
   },
 
   customButton: {
@@ -81,8 +81,98 @@ export const loginstyle = StyleSheet.create({
 
   buttonText: {
     color: '#fff',
-    marginLeft: 5, // Space between icon and text
+    marginLeft: 5, 
   },
 
-  
+  greetingContainer: {
+    position: "absolute",
+    top: 20,
+    left: 20,
+  },
+  greetingText: {
+    fontSize: 40,
+    fontWeight: "bold",
+    color: "#000",
+  },
+  bottomNav: {
+    position: "absolute",
+    bottom: 0,
+    width: "110%",
+    backgroundColor: "#fff",
+    paddingVertical: 20,
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
+    elevation: 5,
+    flexDirection: "row",
+    justifyContent: "space-around",
+    alignItems: "center",
+  },
+  navIcon: {
+    width: 30,
+    height: 30,
+  },
+
+  itemContainer: {
+    position: "absolute",
+    top: 180, 
+    left: "5%", 
+    right: "5%",
+    backgroundColor: "#fff",
+    flexDirection: "row",
+    justifyContent: "space-around",
+    paddingVertical: 50,
+    borderRadius: 15,
+    elevation: 5, 
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    zIndex: 10,
+  },
+  ContainerItem: {
+    alignItems: "center",
+  },
+  itemLabel: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "#555",
+  },
+  itemValue: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#000",
+  },
+
+  locationCard: {
+    backgroundColor: "#fff",
+    borderRadius: 20,
+    padding: 15,
+    marginTop: 250,
+    marginHorizontal: 20,
+    elevation: 5,
+    width: "110%",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+  },
+  locationTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 12,
+    textAlign: "center",
+  },
+  locationText: {
+    fontSize: 16,
+    fontWeight: "500",
+    marginBottom: 8,
+  },
+  toggleRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: "#ddd",
+  },
 });

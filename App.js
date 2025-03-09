@@ -10,6 +10,7 @@ import Dashboard from "./src/screens/Dashboard";
 import Register from "./src/screens/Register";
 import LandingPage from "./src/screens/LandingPage"
 import Trips from "./src/screens/Trips"
+import Expenses from "./src/screens/Expenses";
 
 const Stack = createStackNavigator();
 
@@ -19,7 +20,7 @@ const App = () => {
       <GestureHandlerRootView style={{ flex: 1 }}>
         <NavigationContainer>
           <Stack.Navigator
-            initialRouteName="LandingPage"
+            initialRouteName="Dashboard"
             screenOptions={{ headerShown: false }}
           >
             <Stack.Screen name="Register" component={Register} />
@@ -27,6 +28,8 @@ const App = () => {
             <Stack.Screen name="Login" component={Login} />
             <Stack.Screen name="LandingPage" component={LandingPage} />
             <Stack.Screen name="Trips" component={Trips} />
+            <Stack.Screen name="Expenses" component={Expenses} />
+          
           
           </Stack.Navigator>
         </NavigationContainer>
