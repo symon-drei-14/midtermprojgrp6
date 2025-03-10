@@ -3,8 +3,10 @@ import { Text, View, ImageBackground, StyleSheet, TouchableOpacity } from "react
 
 function LandingPage({ navigation }) {
   return (
+    // yung background bakit naman may proceed to view your status ? confusing
     <ImageBackground source={require("../assets/background.png")} style={styles.background}>
       <View style={styles.container}>
+        {/* bakit nakalagay sign in tapos register ang navigation ? again confusing much better if dalawang button nalang one for register one for login */}
         <TouchableOpacity style={styles.button} onPress={() => navigation.navigate("Register")}>
           <Text style={styles.buttonText}>Sign In</Text>
         </TouchableOpacity>
@@ -12,6 +14,8 @@ function LandingPage({ navigation }) {
     </ImageBackground>
   );
 }
+
+// may styles kayo dito at the same time gumagamit kayo ng global styles pagisahin niyo nalang
 
 const styles = StyleSheet.create({
   background: {

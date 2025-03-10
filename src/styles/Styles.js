@@ -1,6 +1,9 @@
 import { StyleSheet } from "react-native";
 import { red100 } from "../../node_modules/react-native-paper/lib/typescript/styles/themes/v2/colors";
 
+
+//comments ng chatgpt ah linisin niyo nlng 
+
 export const loginstyle = StyleSheet.create({
   container: {
     flex: 1,

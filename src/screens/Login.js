@@ -4,6 +4,7 @@ import { loginstyle } from "../styles/Styles";
 import api from "../api";
 
 const Login = ({ navigation }) => {
+    //inconsistency sa styles purple white yung login niyo yung landing page blue and black
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [isPressed, setIsPressed] = useState(false);
@@ -17,6 +18,8 @@ const Login = ({ navigation }) => {
     }
 
     try {
+
+      //bat ginagamit niyo ang fakestore api natin kasama ba to sa capstone niyo ? 
       const response = await api.post("/auth/login", { username, password });
 
       console.log("Request Body:", JSON.stringify({ username, password }, null, 2));
@@ -29,6 +32,10 @@ const Login = ({ navigation }) => {
       Alert.alert("Error", "Invalid username or password!", [{ text: "OK" }]);
     }
   };
+
+  // const handleInputChange = () => { 
+  //   //much better sa onchangetext ganto gamitin para naman macheck if kumpleto na yung minimum requirements for login
+  // }
 
   return (
     <View style={[loginstyle.container, { backgroundColor: "#FFFAF3" }]}>
