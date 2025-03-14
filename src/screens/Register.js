@@ -1,22 +1,45 @@
 import React, { useState } from "react";
-import { Text, View, TextInput, Button, Alert, TouchableOpacity } from "react-native";
-import { loginstyle } from "../styles/Styles"; // Adjusted path assuming it's inside 'screens' directory
+import { Text, View, TextInput, Alert, TouchableOpacity } from "react-native";
+import { loginstyle } from "../styles/Styles";
 
-const Register = ({navigation}) => {
-  //inconsistency sa styles purple white yung registration niyo yung landing page blue and black
-  const [username, setUsername] = useState("");
+const Register = ({ navigation }) => {
+  const [surname, setLastname] = useState("");
   const [firstname, setFirstname] = useState("");
   const [password, setPass] = useState("");
   const [conpass, setConPass] = useState("");
   const [email, setEmail] = useState("");
 
-  const handlePress = () => {
-    //nice ! dagdagan lang for minimum requirements ng register like 8 characters for password kayo bahala
-    // mas maganda if gumamit ng handleInputChange na function para habang nag ttype chinecheck na rin hindi yung sa pag pindot ng button
-    // bat di naman nag nnavigate sa login or landingpage upon successful registration
 
-    if (!username || !firstname || !email || !password || !conpass) {
+  const handleInputChange = (field, value) => {
+    switch (field) {
+      case "firstname":
+        setFirstname(value);
+        break;
+      case "surname":
+        setLastname(value);
+        break;
+      case "email":
+        setEmail(value);
+        break;
+      case "password":
+        setPass(value);
+        break;
+      case "conpass":
+        setConPass(value);
+        break;
+      default:
+        break;
+    }
+  };
+
+  const handlePress = () => {
+    if (!firstname || !surname || !email || !password || !conpass) {
       Alert.alert("Error", "All fields are required!", [{ text: "OK" }]);
+      return;
+    }
+
+    if (password.length < 8) {
+      Alert.alert("Error", "Password must be at least 8 characters long!", [{ text: "OK" }]);
       return;
     }
 
@@ -27,6 +50,9 @@ const Register = ({navigation}) => {
 
     Alert.alert("Success", "Registration Successful!", [{ text: "OK" }]);
     console.log("Registration successful");
+
+   
+    navigation.navigate("Dashboard", { firstname });
   };
 
   return (
@@ -34,24 +60,20 @@ const Register = ({navigation}) => {
       <View style={loginstyle.innerContainer}>
         <Text style={loginstyle.title}>Create your own account</Text>
 
-        <Text>First name</Text>
+        <Text>First Name</Text>
         <TextInput
-          value={username}
+          value={firstname}
           style={loginstyle.textinput}
-          onChangeText={setUsername}
-          //bakit username ang first name ? bad practice sa data to mas maganda may sariling field for username only
-
-          //bakit mas maganda if may username ? for example inenter ko ay Sean Kyle. may space mahihirapan kayo harangin ang spacing sa username which again bad practice pag may spaces ang username
+          onChangeText={(value) => handleInputChange("firstname", value)}
           placeholder="Enter your first name"
           placeholderTextColor="#999"
         />
 
         <Text>Surname</Text>
         <TextInput
-          value={firstname}
+          value={surname}
           style={loginstyle.textinput}
-          onChangeText={setFirstname}
-          //placeholder mali or yung value naka set sa firstname pero placeholder surname
+          onChangeText={(value) => handleInputChange("surname", value)}
           placeholder="Enter your surname"
           placeholderTextColor="#999"
         />
@@ -60,9 +82,8 @@ const Register = ({navigation}) => {
         <TextInput
           value={email}
           style={loginstyle.textinput}
-          onChangeText={setEmail}
-          // placeholder siguro mas maganda if example@example.com
-          placeholder="Enter your email"
+          onChangeText={(value) => handleInputChange("email", value)}
+          placeholder="example@example.com"
           placeholderTextColor="#999"
           keyboardType="email-address"
         />
@@ -71,7 +92,7 @@ const Register = ({navigation}) => {
         <TextInput
           value={password}
           style={loginstyle.textinput}
-          onChangeText={setPass}
+          onChangeText={(value) => handleInputChange("password", value)}
           secureTextEntry={true}
           placeholder="Enter your password"
           placeholderTextColor="#999"
@@ -81,18 +102,23 @@ const Register = ({navigation}) => {
         <TextInput
           value={conpass}
           style={[loginstyle.textinput, { marginBottom: 35 }]}
-          onChangeText={setConPass}
+          onChangeText={(value) => handleInputChange("conpass", value)}
           secureTextEntry={true}
           placeholder="Confirm your password"
           placeholderTextColor="#999"
         />
 
-        <Button onPress={handlePress} title="Sign in" color="#841584" />
-            <View style={{ marginTop: 20, alignItems: "center" }}>
-            <TouchableOpacity onPress={() => navigation.navigate("Login")} style={{ marginTop: 10 }}> 
+        <TouchableOpacity
+          style={loginstyle.button}
+          onPress={handlePress}
+        >
+          <Text style={loginstyle.buttonText}>Sign Up</Text>
+        </TouchableOpacity>
+
+        <View style={{ marginTop: 20, alignItems: "center" }}>
+          <TouchableOpacity onPress={() => navigation.navigate("Login")} style={{ marginTop: 10 }}>
             <Text style={{ color: "#841584", fontWeight: "bold" }}>Already registered? Sign in</Text>
           </TouchableOpacity>
-        
         </View>
       </View>
     </View>
