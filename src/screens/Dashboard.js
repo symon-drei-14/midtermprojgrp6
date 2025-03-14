@@ -13,7 +13,7 @@ function Dashboard({ navigation }) {
   const [sensorEnabled, setSensorEnabled] = useState(false);
 
   const handleLogout = () => {
-    nav.navigate("LandingPage"); // Redirect to Landing page
+    nav.navigate("LandingPage"); 
   };
 
   return (

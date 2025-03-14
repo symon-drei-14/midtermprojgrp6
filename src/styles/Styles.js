@@ -195,7 +195,7 @@ export const loginstyle = StyleSheet.create({
   expense: StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: "#F5F5F5", // Light gray background
+      backgroundColor: "#F5F5F5", 
       padding: 20,
     },
     header: {
@@ -209,12 +209,12 @@ export const loginstyle = StyleSheet.create({
       width: 50,
       height: 50,
       borderRadius: 25,
-      backgroundColor: "#007AFF", // Blue
+      backgroundColor: "#007AFF", 
     },
     placeholderSquare: {
       width: 24,
       height: 24,
-      backgroundColor: "#007AFF", // Blue
+      backgroundColor: "#007AFF", 
     },
     greeting: {
       color: "#333",
@@ -225,8 +225,8 @@ export const loginstyle = StyleSheet.create({
       padding: 20,
       borderRadius: 15,
       marginBottom: 20,
-      backgroundColor: "#4CAF50", // Green background
-      elevation: 5, // Shadow effect
+      backgroundColor: "#4CAF50", 
+      elevation: 5,
     },
     balanceTitle: {
       color: "#FFF",
@@ -253,7 +253,7 @@ export const loginstyle = StyleSheet.create({
       alignItems: "center",
       justifyContent: "space-between",
       padding: 15,
-      backgroundColor: "#FFF", // White cards
+      backgroundColor: "#FFF", 
       borderRadius: 10,
       marginBottom: 10,
       shadowColor: "#000",
@@ -267,12 +267,12 @@ export const loginstyle = StyleSheet.create({
       fontSize: 16,
     },
     expenseAmount: {
-      color: "#E53935", // Red for emphasis
+      color: "#E53935", 
       fontSize: 16,
       fontWeight: "bold",
     },
     expensebutton: {
-      backgroundColor: "#007AFF", // Blue button
+      backgroundColor: "#007AFF", 
       padding: 15,
       borderRadius: 10,
       alignItems: "center",
@@ -282,7 +282,7 @@ export const loginstyle = StyleSheet.create({
       flex: 1,
       justifyContent: "center",
       alignItems: "center",
-      backgroundColor: "rgba(0, 0, 0, 0.5)", // Dark overlay
+      backgroundColor: "rgba(0, 0, 0, 0.5)", 
     },
     modalContent: {
       width: "80%",
@@ -317,8 +317,8 @@ export const loginstyle = StyleSheet.create({
     categoryContainer: {
       flexDirection: "row",
       // justifyContent: "space-around",
-      flexWrap: "wrap", // Allow wrapping
-  gap: 8, // Add spacing between categories
+      flexWrap: "wrap", 
+  gap: 8, 
       marginBottom: 10,
     },
     categoryButton: {
@@ -437,6 +437,6 @@ buttonText3: {
 
 
 
-  
+
 });
 
