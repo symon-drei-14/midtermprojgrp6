@@ -7,7 +7,7 @@ function LandingPage({ navigation }) {
     <ImageBackground source={require("../assets/background.png")} style={styles.background}>
       <View style={styles.container}>
         {/* bakit nakalagay sign in tapos register ang navigation ? again confusing much better if dalawang button nalang one for register one for login */}
-        <TouchableOpacity style={styles.button} onPress={() => navigation.navigate("Register")}>
+        <TouchableOpacity style={styles.button} onPress={() => navigation.navigate("Login")}>
           <Text style={styles.buttonText}>Sign In</Text>
         </TouchableOpacity>
       </View>

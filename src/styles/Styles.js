@@ -4,6 +4,21 @@ import { red100 } from "../../node_modules/react-native-paper/lib/typescript/sty
 
 
 export const loginstyle = StyleSheet.create({
+  usernameError:{
+
+
+  },
+
+
+  inputError: {
+    borderColor: "red",
+    borderWidth: 1,
+  },
+  errorText: {
+    color: "red",
+    marginBottom: 8,
+  },
+
   container: {
     flex: 1,
     justifyContent: "center",

@@ -1,24 +1,59 @@
 import React, { useState } from "react";
-import { Text, View, TextInput, TouchableOpacity, Alert } from "react-native";
+import { Text, View, TextInput, TouchableOpacity } from "react-native";
 import { loginstyle } from "../styles/Styles";
 
 const Login = ({ navigation }) => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [usernameError, setUsernameError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
   const [isPressed, setIsPressed] = useState(false);
 
+  const validateUsername = (text) => {
+    setUsername(text);
+    if (text.length < 5) {
+    
+      setUsernameError("Username must be atleast 4 characters");
+    }
+      else if (text.length < 1) {
+        setUsernameError("Username is required.");
+    } else {
+      setUsernameError("");
+    }
+  };
+
+  const validatePassword = (text) => {
+    setPassword(text);
+    if (text.length < 8) {
+      setPasswordError("Password must be atleast 8 characters");
+}
+else if (text.length < 1) {
+  setPasswordError("Password is required.");
+}
+
+else {
+      setPasswordError("");
+    }
+  };
+
   const handleLogin = () => {
-    if (!username || !password) {
-      Alert.alert("Error", "All fields are required!", [{ text: "OK" }]);
-      return;
+    let valid = true;
+
+    if (username.length < 4) {
+      setUsernameError("Username is required.");
+      valid = false;
     }
 
-    if (username === "driver1" && password === "mansar") {
-      Alert.alert("Success", "Login Successful!", [{ text: "OK" }]);
-      navigation.navigate("Dashboard", { username });
-    } else {
-      Alert.alert("Error", "Invalid username or password!", [{ text: "OK" }]);
+    if (password.length < 4) {
+      setPasswordError("Password is required.");
+      valid = false;
     }
+
+    if (!valid) return;
+
+    
+    alert("Login Successful!");
+    navigation.navigate("Dashboard", { username });
   };
 
   return (
@@ -29,19 +64,27 @@ const Login = ({ navigation }) => {
         <Text>Username</Text>
         <TextInput
           value={username}
-          style={loginstyle.textinput}
-          onChangeText={setUsername}
+          style={[
+            loginstyle.textinput,
+            usernameError ? loginstyle.inputError :null
+          ]}
+          onChangeText={validateUsername}
           placeholder="Enter your username"
         />
+        {usernameError ? <Text style={{ color: "red" }}>{usernameError}</Text> : null}
 
         <Text>Password</Text>
         <TextInput
           value={password}
-          style={loginstyle.textinput}
-          onChangeText={setPassword}
+          style={[
+            loginstyle.textinput,
+            passwordError ? { borderColor: "red", borderWidth: 1 } : {},
+          ]}
+          onChangeText={validatePassword}
           secureTextEntry={true}
           placeholder="Enter your password"
         />
+        {passwordError ? <Text style={{ color: "red" }}>{passwordError}</Text> : null}
 
         <TouchableOpacity
           style={[
@@ -54,14 +97,6 @@ const Login = ({ navigation }) => {
         >
           <Text style={loginstyle.buttonText}>Login</Text>
         </TouchableOpacity>
-
-        <View style={{ marginTop: 20, alignItems: "center" }}>
-          <TouchableOpacity onPress={() => navigation.navigate("Register")}>
-            <Text style={{ color: "#841584", fontWeight: "bold" }}>
-              Register as User
-            </Text>
-          </TouchableOpacity>
-        </View>
       </View>
     </View>
   );

@@ -59,11 +59,15 @@ function Dashboard({ navigation }) {
         
         <View style={{ marginVertical: 20 }} />
         <TouchableOpacity onPress={handleLogout} style={loginstyle.logoutButton}>
+          <Text style={loginstyle.logoutText}>Profile</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={handleLogout} style={loginstyle.logoutButton}>
           <Text style={loginstyle.logoutText}>Logout</Text>
         </TouchableOpacity>
 
         <View style={{ marginVertical: 80 }} />
       </View>
+      
 
       <View style={loginstyle.bottomNav}>
         <TouchableOpacity onPress={() => nav.navigate("Dashboard")}>
