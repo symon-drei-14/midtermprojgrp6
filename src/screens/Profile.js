@@ -12,7 +12,7 @@ import profileicon from "../assets/profile.png";
 const Profile = () => {
     const nav = useNavigation();
     const [password, setPassword] = useState(""); 
-    const [savedPassword, setSavedPassword] = useState("********"); // Default hidden password
+    const [savedPassword, setSavedPassword] = useState("********"); 
     const [isPasswordVisible, setIsPasswordVisible] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [passwordError, setPasswordError] = useState("");
@@ -31,7 +31,7 @@ const Profile = () => {
             setPasswordError("Password must be at least 8 characters.");
             return;
         }
-        setSavedPassword(password); // Save the new password
+        setSavedPassword(password); 
         setIsEditing(false);
         alert("Password updated successfully!");
     };
@@ -47,7 +47,7 @@ const Profile = () => {
                 <View style={profilestyle.detailsContainer}>
                     <Text style={profilestyle.detailTitle}>Driver Information</Text>
 
-                    {/* Password Input Field */}
+         
                     <View style={profilestyle.inputContainer}>
                         <Text>🔒 Password:</Text>
 
@@ -74,7 +74,7 @@ const Profile = () => {
                             ) : null}
                         </View>
 
-                        {/* Toggle Visibility Button */}
+                      
                         <TouchableOpacity onPress={() => setIsPasswordVisible(!isPasswordVisible)}>
                             <Text style={profilestyle.toggleText}>
                                 {isPasswordVisible ? "Hide" : "Show"}
@@ -82,7 +82,7 @@ const Profile = () => {
                         </TouchableOpacity>
                     </View>
 
-                    {/* Edit/Save Button */}
+                 
                     <TouchableOpacity
                         style={profilestyle.editButton}
                         onPress={isEditing ? handleSave : () => setIsEditing(true)}
@@ -99,7 +99,6 @@ const Profile = () => {
                 </View>
             </View>
 
-            {/* Bottom Navigation */}
             <View style={navbar.bottomNav}>
                 <TouchableOpacity onPress={() => nav.navigate("Dashboard")}>
                     <Image source={homeIcon} style={navbar.navIcon} />
