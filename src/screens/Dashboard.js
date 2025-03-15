@@ -2,10 +2,12 @@ import { View, Image, TouchableOpacity, Text, Switch, Button } from "react-nativ
 import { useNavigation } from "@react-navigation/native";
 import { loginstyle } from "../styles/Styles";
 import React, { useState } from "react";
+import { navbar } from "../styles/Navbar";
 
-import homeIcon from "../assets/home.jpg";
-import userIcon from "../assets/exp.jpg";
-import locationIcon from "../assets/trip.jpg";
+import homeIcon from "../assets/Home2.png";
+import userIcon from "../assets/trip2.png";
+import locationIcon from "../assets/exp2.png";
+import profileicon from "../assets/profile.png"
 
 function Dashboard({ navigation }) {
   const nav = useNavigation();
@@ -61,9 +63,7 @@ function Dashboard({ navigation }) {
 
         
         <View style={{ marginVertical: 20 }} />
-        <TouchableOpacity onPress={handleprofile} style={loginstyle.logoutButton}>
-          <Text style={loginstyle.logoutText}>Profile</Text>
-        </TouchableOpacity>
+      
         <TouchableOpacity onPress={handleLogout} style={loginstyle.logoutButton}>
           <Text style={loginstyle.logoutText}>Logout</Text>
         </TouchableOpacity>
@@ -72,15 +72,18 @@ function Dashboard({ navigation }) {
       </View>
       
 
-      <View style={loginstyle.bottomNav}>
+      <View style={navbar.bottomNav}>
         <TouchableOpacity onPress={() => nav.navigate("Dashboard")}>
-          <Image source={homeIcon} style={loginstyle.navIcon} />
+          <Image source={homeIcon} style={navbar.navIcon} />
         </TouchableOpacity>
         <TouchableOpacity onPress={() => nav.navigate("Trips")}>
-          <Image source={userIcon} style={loginstyle.navIcon} />
+          <Image source={userIcon} style={navbar.navIcon} />
         </TouchableOpacity>
         <TouchableOpacity onPress={() => nav.navigate("Expenses")}>
-          <Image source={locationIcon} style={loginstyle.navIcon} />
+          <Image source={locationIcon} style={navbar.navIcon} />
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => nav.navigate("Profile")}>
+          <Image source={profileicon} style={navbar.navIcon} />
         </TouchableOpacity>
       </View>
     </View>

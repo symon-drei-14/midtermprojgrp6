@@ -2,10 +2,12 @@ import React, { useState, useCallback, } from 'react';
 import { View, Text, TouchableOpacity, Modal,Image } from 'react-native';
 import { useFocusEffect,useNavigation } from "@react-navigation/native";
 import { loginstyle } from "../styles/Styles";
+import { navbar } from "../styles/Navbar";
 
-import homeIcon from "../assets/home.jpg";
-import userIcon from "../assets/exp.jpg";
-import locationIcon from "../assets/trip.jpg";
+import homeIcon from "../assets/Home2.png";
+import userIcon from "../assets/trip2.png";
+import locationIcon from "../assets/exp2.png";
+import profileicon from "../assets/profile.png"
 
 const Trips = ({ navigation }) => {
    const nav = useNavigation();
@@ -72,17 +74,20 @@ const Trips = ({ navigation }) => {
         </View>
       </Modal>
 
-      <View style={loginstyle.bottomNav}>
-                <TouchableOpacity onPress={() => nav.navigate("Dashboard")}>
-                  <Image source={homeIcon} style={loginstyle.navIcon} />
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => nav.navigate("Trips")}>
-                  <Image source={userIcon} style={loginstyle.navIcon} />
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => nav.navigate("Expenses")}>
-                  <Image source={locationIcon} style={loginstyle.navIcon} />
-                </TouchableOpacity>
-              </View>
+      <View style={navbar.bottomNav}>
+        <TouchableOpacity onPress={() => nav.navigate("Dashboard")}>
+          <Image source={homeIcon} style={navbar.navIcon} />
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => nav.navigate("Trips")}>
+          <Image source={userIcon} style={navbar.navIcon} />
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => nav.navigate("Expenses")}>
+          <Image source={locationIcon} style={navbar.navIcon} />
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => nav.navigate("Profile")}>
+          <Image source={profileicon} style={navbar.navIcon} />
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };

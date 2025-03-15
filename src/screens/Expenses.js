@@ -2,10 +2,12 @@ import React, { useState, useCallback } from "react";
 import { View, Text, FlatList, Modal, TextInput, Button, TouchableOpacity, Image } from "react-native";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { loginstyle } from "../styles/Styles";
+import { navbar } from "../styles/Navbar";
 
-import homeIcon from "../assets/home.jpg";
-import userIcon from "../assets/exp.jpg";
-import locationIcon from "../assets/trip.jpg";
+import homeIcon from "../assets/Home2.png";
+import userIcon from "../assets/trip2.png";
+import locationIcon from "../assets/exp2.png";
+import profileicon from "../assets/profile.png"
 
 export default function Expenses({ navigation }) {
   const [expenses, setExpenses] = useState([
@@ -137,6 +139,8 @@ export default function Expenses({ navigation }) {
         <View style={loginstyle.expense.placeholderCircle} />
         <Text style={loginstyle.expense.greeting}>Hello Driver</Text>
         <View style={loginstyle.expense.placeholderSquare} />
+
+        
       </View>
 
       <View style={loginstyle.expense.balanceCard}>
@@ -155,12 +159,15 @@ export default function Expenses({ navigation }) {
             <Text style={loginstyle.expense.expenseText}>{item.date}</Text>
             <Text style={loginstyle.expense.expenseAmount}>₱ {item.amount}</Text>
           </View>
+          
         )}
       />
 
-      <TouchableOpacity style={[loginstyle.expense.expensebutton, { marginBottom: 60 }]} onPress={() => setModalVisible(true)}>
+      <TouchableOpacity style={[loginstyle.expense.expensebutton, { marginBottom: 100 }]} onPress={() => setModalVisible(true)}>
         <Text style={loginstyle.expense.buttonText3}>Report Expense</Text>
       </TouchableOpacity>
+
+     
 
       <Modal visible={modalVisible} animationType="slide" transparent={true}>
         <View style={loginstyle.expense.modalContainer}>
@@ -222,17 +229,28 @@ export default function Expenses({ navigation }) {
         </View>
       </Modal>
 
-      <View style={loginstyle.bottomNav}>
+      <View style={navbar.bottomNav}>
         <TouchableOpacity onPress={() => nav.navigate("Dashboard")}>
-          <Image source={homeIcon} style={loginstyle.navIcon} />
+          <Image source={homeIcon} style={navbar.navIcon} />
         </TouchableOpacity>
         <TouchableOpacity onPress={() => nav.navigate("Trips")}>
-          <Image source={userIcon} style={loginstyle.navIcon} />
+          <Image source={userIcon} style={navbar.navIcon} />
         </TouchableOpacity>
         <TouchableOpacity onPress={() => nav.navigate("Expenses")}>
-          <Image source={locationIcon} style={loginstyle.navIcon} />
+          <Image source={locationIcon} style={navbar.navIcon} />
         </TouchableOpacity>
-      </View>
+        <TouchableOpacity onPress={() => nav.navigate("Profile")}>
+          <Image source={profileicon} style={navbar.navIcon} />
+        </TouchableOpacity>
+        </View>
+     
     </View>
+
+   
+
+    
+
+    
   );
+  
 }

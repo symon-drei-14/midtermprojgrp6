@@ -17,35 +17,6 @@ function LandingPage({ navigation }) {
 
 
 
-const styles = StyleSheet.create({
-  background: {
-    flex: 1,
-    resizeMode: "cover",
-    justifyContent: "center",
-  },
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  text: {
-    fontSize: 20,
-    color: "#fff",
-    marginBottom: 20,
-  },
-  button: {
-    backgroundColor: "#007BFF",
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 5,
-      marginTop: 700,
-      Horizontal: 100,
-  },
-  buttonText: {
-    color: "#fff",
-    fontSize: 16,
-  },
-});
 
 export default LandingPage;
 

@@ -1,5 +1,4 @@
 import { StyleSheet } from "react-native";
-import { red100 } from "../../node_modules/react-native-paper/lib/typescript/styles/themes/v2/colors";
 
 
 
@@ -117,23 +116,8 @@ export const loginstyle = StyleSheet.create({
     fontWeight: "bold",
     color: "#000",
   },
-  bottomNav: {
-    position: "absolute",
-    bottom: 0,
-    width: "110%",
-    backgroundColor: "#fff",
-    paddingVertical: 20,
-    borderTopLeftRadius: 30,
-    borderTopRightRadius: 30,
-    elevation: 5,
-    flexDirection: "row",
-    justifyContent: "space-around",
-    alignItems: "center",
-  },
-  navIcon: {
-    width: 30,
-    height: 30,
-  },
+
+
 
   itemContainer: {
     position: "absolute",
@@ -218,6 +202,8 @@ export const loginstyle = StyleSheet.create({
       flex: 1,
       backgroundColor: "#F5F5F5", 
       padding: 20,
+      justifyContent:"center",
+      textAlign:"center",
     },
     header: {
       flexDirection: "row",
@@ -450,79 +436,7 @@ buttonText3: {
     },
   }),
 
-  profilestyle: StyleSheet.create({
 
-    container: {
-      flex: 1,
-      alignItems: "center",
-      justifyContent: "center",
-      padding: 20,
-      backgroundColor: "#f5f5f5", 
-      bottom:50,
-    },
-    profileCard: {
-      backgroundColor: "#fff",
-      padding: 20,
-      borderRadius: 15,
-      shadowColor: "#000",
-      shadowOpacity: 0.1,
-      shadowOffset: { width: 0, height: 3 },
-      elevation: 5,
-      width: "100%",
-      maxWidth: 400,
-      alignItems: "center",
-      bottom:40,
-    },
-    avatarContainer: {
-      alignItems: "center",
-      marginBottom: 20,
-    },
-    avatar: {
-      width: 100,
-      height: 100,
-    },
-    name: {
-      fontSize: 22,
-      fontWeight: "bold",
-      color: "#333",
-      marginTop: 20,
-    },
-    role: {
-      fontSize: 16,
-      color: "#666",
-        marginTop: 10,
-    },
-    detailsContainer: {
-      width: "100%",
-      marginTop: 10,
-    },
-    detailTitle: {
-      fontSize: 18,
-      fontWeight: "bold",
-      color: "#444",
-      marginBottom: 8,
-      textAlign: "center",
-    },
-    driverInfo: {
-      fontSize: 14,
-      color: "#555",
-      marginTop: 20,
-    },
-    editButton: {
-      marginTop: 20,
-      backgroundColor: "#007bff",
-      paddingVertical: 12,
-      paddingHorizontal: 30,
-      borderRadius: 8,
-    },
-    buttonText: {
-      color: "#fff",
-      fontSize: 16,
-      fontWeight: "bold",
-    },
-
-
-  }),
 
 
 
