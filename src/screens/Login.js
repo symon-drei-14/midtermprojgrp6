@@ -71,20 +71,20 @@ else {
           onChangeText={validateUsername}
           placeholder="Enter your username"
         />
-        {usernameError ? <Text style={{ color: "red" }}>{usernameError}</Text> : null}
+        {usernameError ? <Text style={ loginstyle.errorText}>{usernameError}</Text> : null}
 
         <Text>Password</Text>
         <TextInput
           value={password}
           style={[
             loginstyle.textinput,
-            passwordError ? { borderColor: "red", borderWidth: 1 } : {},
+            passwordError ? loginstyle.inputError :null
           ]}
           onChangeText={validatePassword}
           secureTextEntry={true}
           placeholder="Enter your password"
         />
-        {passwordError ? <Text style={{ color: "red" }}>{passwordError}</Text> : null}
+        {passwordError ? <Text style={ loginstyle.errorText}>{passwordError}</Text> : null}
 
         <TouchableOpacity
           style={[

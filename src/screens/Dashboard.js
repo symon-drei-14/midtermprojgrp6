@@ -16,6 +16,9 @@ function Dashboard({ navigation }) {
     nav.navigate("LandingPage"); 
   };
 
+  const handleprofile = () => {
+    nav.navigate("Profile"); 
+  };
   return (
     <View style={loginstyle.container2}>
       <View style={loginstyle.greetingContainer}>
@@ -58,7 +61,7 @@ function Dashboard({ navigation }) {
 
         
         <View style={{ marginVertical: 20 }} />
-        <TouchableOpacity onPress={handleLogout} style={loginstyle.logoutButton}>
+        <TouchableOpacity onPress={handleprofile} style={loginstyle.logoutButton}>
           <Text style={loginstyle.logoutText}>Profile</Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={handleLogout} style={loginstyle.logoutButton}>

@@ -20,6 +20,8 @@ export default function Expenses({ navigation }) {
   const [customCategory, setCustomCategory] = useState("");
   const [showCustomInput, setShowCustomInput] = useState(false);
   const [expenseAmount, setExpenseAmount] = useState("");
+  const [expenseAmountError, setExpenseAmountError] = useState("");
+  const [customCategoryError, setCustomCategoryError] = useState("");
   const budget = 87430.12;
 
   useFocusEffect(
@@ -31,31 +33,102 @@ export default function Expenses({ navigation }) {
   const quickAmounts = [100, 500, 1000, 5000];
   const expenseCategories = ["Gas", "Food", "Toll Gate", "Maintenance"];
 
+  // const handleCategorySelect = (category) => {
+  //   if (category === "Other") {
+  //     setShowCustomInput(true);
+  //     setExpenseName(""); 
+  //   } else {
+  //     setShowCustomInput(false);
+  //     setExpenseName(category);
+  //   }
+  // };
+
   const handleCategorySelect = (category) => {
     if (category === "Other") {
       setShowCustomInput(true);
-      setExpenseName(""); // Reset category
+      setExpenseName("");
+      setCustomCategory("");
+      setCustomCategoryError(""); 
     } else {
       setShowCustomInput(false);
       setExpenseName(category);
+      setCustomCategoryError(""); 
     }
   };
 
-  const addExpense = () => {
-    if (expenseAmount) {
-      const newExpense = {
-        id: Math.random().toString(),
-        name: showCustomInput ? customCategory : expenseName,
-        amount: parseFloat(expenseAmount),
-        date: new Date().toLocaleDateString("en-US"),
-      };
-
-      setExpenses([...expenses, newExpense]);
-      setExpenseAmount("");
-      setCustomCategory("");
-      setShowCustomInput(false);
-      setModalVisible(false);
+  const validateCustomCategory = (text) => {
+    setCustomCategory(text);
+    if (text.length === 0) {
+      setCustomCategoryError("Category is required.");
+    } else {
+      setCustomCategoryError("");
     }
+  };
+
+  // if (showCustomInput && customCategory.length === 0) {
+  //   setCustomCategoryError("Category is required.");
+  //   return;
+  // }
+
+  const handleBlurCustomCategory = () => {
+    if (customCategory.length === 0) {
+      setCustomCategoryError("Category is required.");
+    }
+  };
+  
+
+
+  const validateExpenseAmount = (text) => {
+    setExpenseAmount(text);
+    if (text.length === 0) {
+      setExpenseAmountError("Amount is required.");
+    } else {
+      setExpenseAmountError("");
+    }
+  };
+  
+  const handleBlurExpenseAmount = () => {
+    if (expenseAmount.length === 0) {
+      setExpenseAmountError("Amount is required.");
+    }
+  };
+  
+  const addExpense = () => {
+    let hasError = false; 
+  
+
+    if (expenseAmount.trim().length === 0) {
+      setExpenseAmountError("Amount is required.");
+      hasError = true; 
+    } else {
+      setExpenseAmountError(""); 
+    }
+  
+ 
+    if (showCustomInput && customCategory.trim().length === 0) {
+      setCustomCategoryError("Category is required.");
+      hasError = true; 
+    } else {
+      setCustomCategoryError(""); 
+    }
+ 
+    if (hasError) {
+      return;
+    }
+  
+    const newExpense = {
+      id: Math.random().toString(),
+      name: showCustomInput ? customCategory : expenseName,
+      amount: parseFloat(expenseAmount),
+      date: new Date().toLocaleDateString("en-US"),
+    };
+  
+    setExpenses([...expenses, newExpense]);
+    setExpenseAmount("");
+    setCustomCategory("");
+    setShowCustomInput(false);
+    setModalVisible(false);
+  
   };
 
   return (
@@ -94,12 +167,17 @@ export default function Expenses({ navigation }) {
           <View style={loginstyle.expense.modalContent}>
             <Text style={loginstyle.expense.sectionTitle}>Report Expense</Text>
             <TextInput
-              style={loginstyle.expense.input}
-              placeholder="Enter Amount"
-              keyboardType="numeric"
-              value={expenseAmount}
-              onChangeText={setExpenseAmount}
-            />
+  style={[
+    loginstyle.expense.input,
+    expenseAmountError ? loginstyle.expenseError :null
+  ]}
+  placeholder="Enter Amount"
+  keyboardType="numeric"
+  value={expenseAmount}
+  onChangeText={validateExpenseAmount}
+  onBlur={handleBlurExpenseAmount}
+/>
+{expenseAmountError ? <Text style={ loginstyle.errorText}>{expenseAmountError}</Text> : null}
 
             <View style={loginstyle.expense.quickAmountContainer}>
               {quickAmounts.map((amount) => (
@@ -122,13 +200,20 @@ export default function Expenses({ navigation }) {
             </View>
 
             {showCustomInput && (
-              <TextInput
-                style={loginstyle.expense.input}
-                placeholder="Enter Custom Category"
-                value={customCategory}
-                onChangeText={setCustomCategory}
-              />
-            )}
+  <>
+    <TextInput
+      style={[
+        loginstyle.expense.input,
+        customCategoryError ? loginstyle.categoryError :null
+      ]}
+      placeholder="Enter Custom Category"
+      value={customCategory}
+      onChangeText={validateCustomCategory}
+      onBlur={handleBlurCustomCategory}
+    />
+    {customCategoryError ? <Text style={ loginstyle.errorText}>{customCategoryError}</Text> : null}
+  </>
+)}
 
             <Button title="Submit" onPress={addExpense} />
             <View style={{ height: 10 }} />
