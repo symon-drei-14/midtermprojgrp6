@@ -3,6 +3,7 @@ import { View, Text, FlatList, Modal, TextInput, Button, TouchableOpacity, Image
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { loginstyle } from "../styles/Styles";
 import { navbar } from "../styles/Navbar";
+import { expensestyle } from "../styles/Expensescss";
 
 import homeIcon from "../assets/Home2.png";
 import userIcon from "../assets/trip2.png";
@@ -134,49 +135,49 @@ export default function Expenses({ navigation }) {
   };
 
   return (
-    <View style={loginstyle.expense.container}>
-      <View style={loginstyle.expense.header}>
-        <View style={loginstyle.expense.placeholderCircle} />
-        <Text style={loginstyle.expense.greeting}>Hello Driver</Text>
-        <View style={loginstyle.expense.placeholderSquare} />
+    <View style={expensestyle.container}>
+      <View style={expensestyle.header}>
+        <View style={expensestyle.placeholderCircle} />
+        <Text style={expensestyle.greeting}>Hello Driver</Text>
+        <View style={expensestyle.placeholderSquare} />
 
         
       </View>
 
-      <View style={loginstyle.expense.balanceCard}>
-        <Text style={loginstyle.expense.balanceTitle}>Current Balance</Text>
-        <Text style={loginstyle.expense.balanceAmount}>₱ {budget}</Text>
+      <View style={expensestyle.balanceCard}>
+        <Text style={expensestyle.balanceTitle}>Current Balance</Text>
+        <Text style={expensestyle.balanceAmount}>₱ {budget}</Text>
       </View>
 
-      <Text style={loginstyle.expense.sectionTitle}>Expense History</Text>
+      <Text style={expensestyle.sectionTitle}>Expense History</Text>
       <FlatList
         data={expenses}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <View style={loginstyle.expense.expenseItem}>
-            <View style={loginstyle.expense.placeholderSquare} />
-            <Text style={loginstyle.expense.expenseText}>{item.name}</Text>
-            <Text style={loginstyle.expense.expenseText}>{item.date}</Text>
-            <Text style={loginstyle.expense.expenseAmount}>₱ {item.amount}</Text>
+          <View style={expensestyle.expenseItem}>
+            <View style={expensestyle.placeholderSquare} />
+            <Text style={expensestyle.expenseText}>{item.name}</Text>
+            <Text style={expensestyle.expenseText}>{item.date}</Text>
+            <Text style={expensestyle.expenseAmount}>₱ {item.amount}</Text>
           </View>
           
         )}
       />
 
-      <TouchableOpacity style={[loginstyle.expense.expensebutton, { marginBottom: 100 }]} onPress={() => setModalVisible(true)}>
-        <Text style={loginstyle.expense.buttonText3}>Report Expense</Text>
+      <TouchableOpacity style={[expensestyle.expensebutton, { marginBottom: 100 }]} onPress={() => setModalVisible(true)}>
+        <Text style={expensestyle.buttonText3}>Report Expense</Text>
       </TouchableOpacity>
 
      
 
       <Modal visible={modalVisible} animationType="slide" transparent={true}>
-        <View style={loginstyle.expense.modalContainer}>
-          <View style={loginstyle.expense.modalContent}>
-            <Text style={loginstyle.expense.sectionTitle}>Report Expense</Text>
+        <View style={expensestyle.modalContainer}>
+          <View style={expensestyle.modalContent}>
+            <Text style={expensestyle.sectionTitle}>Report Expense</Text>
             <TextInput
   style={[
-    loginstyle.expense.input,
-    expenseAmountError ? loginstyle.expenseError :null
+    expensestyle.input,
+    expenseAmountError ? expensestyleError :null
   ]}
   placeholder="Enter Amount"
   keyboardType="numeric"
@@ -184,25 +185,25 @@ export default function Expenses({ navigation }) {
   onChangeText={validateExpenseAmount}
   onBlur={handleBlurExpenseAmount}
 />
-{expenseAmountError ? <Text style={ loginstyle.errorText}>{expenseAmountError}</Text> : null}
+{expenseAmountError ? <Text style={ errorTestylexpensestylext}>{expenseAmountError}</Text> : null}
 
-            <View style={loginstyle.expense.quickAmountContainer}>
+            <View style={expensestyle.quickAmountContainer}>
               {quickAmounts.map((amount) => (
-                <TouchableOpacity key={amount} style={loginstyle.expense.quickAmountButton} onPress={() => setExpenseAmount(amount.toString())}>
-                  <Text style={loginstyle.expense.buttonText3}>₱{amount}</Text>
+                <TouchableOpacity key={amount} style={expensestyle.quickAmountButton} onPress={() => setExpenseAmount(amount.toString())}>
+                  <Text style={expensestyle.buttonText3}>₱{amount}</Text>
                 </TouchableOpacity>
               ))}
             </View>
 
             <View style={{ height: 20 }} />
-            <View style={loginstyle.expense.categoryContainer}>
+            <View style={expensestyle.categoryContainer}>
               {expenseCategories.map((category) => (
-                <TouchableOpacity key={category} style={loginstyle.expense.categoryButton} onPress={() => handleCategorySelect(category)}>
-                  <Text style={loginstyle.expense.buttonText2}>{category}</Text>
+                <TouchableOpacity key={category} style={expensestyle.categoryButton} onPress={() => handleCategorySelect(category)}>
+                  <Text style={expensestyle.buttonText2}>{category}</Text>
                 </TouchableOpacity>
               ))}
-              <TouchableOpacity style={loginstyle.expense.categoryButton} onPress={() => handleCategorySelect("Other")}>
-                <Text style={loginstyle.expense.buttonText2}>Other</Text>
+              <TouchableOpacity style={expensestyle.categoryButton} onPress={() => handleCategorySelect("Other")}>
+                <Text style={expensestyle.buttonText2}>Other</Text>
               </TouchableOpacity>
             </View>
 
@@ -210,15 +211,15 @@ export default function Expenses({ navigation }) {
   <>
     <TextInput
       style={[
-        loginstyle.expense.input,
-        customCategoryError ? loginstyle.categoryError :null
+        expensestyle.input,
+        customCategoryError ? categorstylexpensestyleyError :null
       ]}
       placeholder="Enter Custom Category"
       value={customCategory}
       onChangeText={validateCustomCategory}
       onBlur={handleBlurCustomCategory}
     />
-    {customCategoryError ? <Text style={ loginstyle.errorText}>{customCategoryError}</Text> : null}
+    {customCategoryError ? <Text style={ errorTestylexpensestylext}>{customCategoryError}</Text> : null}
   </>
 )}
 

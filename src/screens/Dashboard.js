@@ -1,5 +1,5 @@
 import { View, Image, TouchableOpacity, Text, Switch, Button } from "react-native";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation,useRoute } from "@react-navigation/native";
 import { loginstyle } from "../styles/Styles";
 import React, { useState } from "react";
 import { navbar } from "../styles/Navbar";
@@ -11,11 +11,13 @@ import profileicon from "../assets/profile.png"
 
 function Dashboard({ navigation }) {
   const nav = useNavigation();
+  // const route = useRoute();
+  // const { username } = route.params; 
   const [locationEnabled, setLocationEnabled] = useState(false);
   const [sensorEnabled, setSensorEnabled] = useState(false);
 
   const handleLogout = () => {
-    nav.navigate("LandingPage"); 
+    nav.navigate("Login"); 
   };
 
   const handleprofile = () => {
@@ -25,7 +27,7 @@ function Dashboard({ navigation }) {
     <View style={loginstyle.container2}>
       <View style={loginstyle.greetingContainer}>
         <Text style={loginstyle.greetingText}>Hello,</Text>
-        <Text style={loginstyle.greetingText}>User</Text>
+        <Text style={loginstyle.greetingText}>Driver</Text> 
       </View>
 
       <View style={loginstyle.itemContainer}>

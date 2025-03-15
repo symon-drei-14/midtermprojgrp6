@@ -9,6 +9,8 @@ export const profilestyle = StyleSheet.create({
         backgroundColor: "#f5f5f5", 
   
       },
+
+      
       profileCard: {
         backgroundColor: "#fff",
         padding: 20,
@@ -69,6 +71,45 @@ export const profilestyle = StyleSheet.create({
         fontSize: 16,
         fontWeight: "bold",
       },
+      inputContainer: {
+        flexDirection: "row",
+        alignItems: "center",  
+        justifyContent: "space-between", 
+        // backgroundColor: "#f5f5f5", 
+        padding: 10,
+        borderRadius: 8,
+        marginBottom: 10,
+    },
+    
+
+    
+    input: {
+        flex: 1,
+        fontSize: 16,
+        color: "#333",
+        backgroundColor: "transparent", 
+        padding: 0, 
+    },
+    
+    toggleText: {
+        color: "blue",
+        fontSize: 14,
+        marginLeft: 10,
+    },
+    
+    editButton: {
+        backgroundColor: "blue",
+        paddingVertical: 5,
+        paddingHorizontal: 10,
+        borderRadius: 5,
+        marginLeft: 10,
+    },
+    
+    editButtonText: {
+        color: "white",
+        fontWeight: "bold",
+    },
+    
   
   
     });

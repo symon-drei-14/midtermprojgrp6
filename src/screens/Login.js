@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Text, View, TextInput, TouchableOpacity } from "react-native";
+import React, { useState,useEffect } from "react";
+import { Text, View, TextInput, TouchableOpacity,Image } from "react-native";
 import { loginstyle } from "../styles/Styles";
 
 const Login = ({ navigation }) => {
@@ -8,6 +8,24 @@ const Login = ({ navigation }) => {
   const [usernameError, setUsernameError] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [isPressed, setIsPressed] = useState(false);
+  const [showSplash, setShowSplash] = useState(true); 
+
+  useEffect(() => {
+    setTimeout(() => {
+      setShowSplash(false); 
+    }, 3000);
+  }, []);
+
+  if (showSplash) {
+    return (
+      <View style={[loginstyle.container, { backgroundColor: "#FFFAF3" }]}>
+        <Image
+          source={require("../assets/bgpic.png")}
+          style={{ width: "100%", height: "100%", resizeMode: "cover" }}
+        />
+      </View>
+    );
+  }
 
   const validateUsername = (text) => {
     setUsername(text);
