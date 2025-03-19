@@ -29,47 +29,51 @@ const Login = ({ navigation }) => {
 
   const validateUsername = (text) => {
     setUsername(text);
-    if (text.length < 5) {
-    
-      setUsernameError("Username must be atleast 4 characters");
-    }
-      else if (text.length < 1) {
-        setUsernameError("Username is required.");
+    if (text.length === 0) {
+      setUsernameError("Username is required.");
+    } else if (text.length < 4) {
+      setUsernameError("Username must be at least 4 characters");
     } else {
       setUsernameError("");
     }
   };
-
+  
   const validatePassword = (text) => {
     setPassword(text);
-    if (text.length < 8) {
-      setPasswordError("Password must be atleast 8 characters");
-}
-else if (text.length < 1) {
-  setPasswordError("Password is required.");
-}
-
-else {
+    if (text.length === 0) {
+      setPasswordError("Password is required.");
+    } else if (text.length < 8) {
+      setPasswordError("Password must be at least 8 characters");
+    } else {
       setPasswordError("");
     }
   };
 
   const handleLogin = () => {
     let valid = true;
-
-    if (username.length < 4) {
+  
+    if (username.length === 0) {
       setUsernameError("Username is required.");
       valid = false;
+    } else if (username.length < 4) {
+      setUsernameError("Username must be at least 4 characters.");
+      valid = false;
+    } else {
+      setUsernameError("");
     }
-
-    if (password.length < 4) {
+  
+    if (password.length === 0) {
       setPasswordError("Password is required.");
       valid = false;
+    } else if (password.length < 8) {
+      setPasswordError("Password must be at least 8 characters.");
+      valid = false;
+    } else {
+      setPasswordError("");
     }
-
+  
     if (!valid) return;
-
-    
+  
     alert("Login Successful!");
     navigation.navigate("Dashboard", { username });
   };

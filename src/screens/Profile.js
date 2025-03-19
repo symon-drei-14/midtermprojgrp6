@@ -12,7 +12,7 @@ import profileicon from "../assets/profile.png";
 const Profile = () => {
     const nav = useNavigation();
     const [password, setPassword] = useState(""); 
-    const [savedPassword, setSavedPassword] = useState("********"); 
+    const [savedPassword, setSavedPassword] = useState("password123"); // Store real password
     const [isPasswordVisible, setIsPasswordVisible] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [passwordError, setPasswordError] = useState("");
@@ -31,7 +31,7 @@ const Profile = () => {
             setPasswordError("Password must be at least 8 characters.");
             return;
         }
-        setSavedPassword(password); 
+        setSavedPassword(password); // Save actual password
         setIsEditing(false);
         alert("Password updated successfully!");
     };
@@ -46,43 +46,39 @@ const Profile = () => {
 
                 <View style={profilestyle.detailsContainer}>
                     <Text style={profilestyle.detailTitle}>Driver Information</Text>
+                    <View style={[profilestyle.inputContainer, { flexDirection: "row", alignItems: "center" }]}>
+    <Text style={{ width: 100 }}>🔒 Password:</Text> 
 
-         
-                    <View style={profilestyle.inputContainer}>
-                        <Text>🔒 Password:</Text>
+    <View style={{ flex: 1 }}>
+        {isEditing ? (
+            <TextInput
+                value={password}
+                style={[
+                    loginstyle.textinput,
+                    passwordError ? loginstyle.inputError : null,
+                ]}
+                onChangeText={validatePassword}
+                secureTextEntry={!isPasswordVisible}
+                placeholder="Enter new password"
+            />
+        ) : (
+            <Text style={profilestyle.driverInfo}>
+                {isPasswordVisible ? savedPassword : "********"}
+            </Text>
+        )}
 
-                        <View style={{ flex: 1 }}>
-                            {isEditing ? (
-                                <TextInput
-                                    value={password}
-                                    style={[
-                                        loginstyle.textinput,
-                                        passwordError ? loginstyle.inputError : null,
-                                    ]}
-                                    onChangeText={validatePassword}
-                                    secureTextEntry={!isPasswordVisible}
-                                    placeholder="Enter new password"
-                                />
-                            ) : (
-                                <Text style={profilestyle.driverInfo}>
-                                    {isPasswordVisible ? savedPassword : "********"}
-                                </Text>
-                            )}
+        {passwordError ? (
+            <Text style={loginstyle.errorText}>{passwordError}</Text>
+        ) : null}
+    </View>
 
-                            {passwordError ? (
-                                <Text style={loginstyle.errorText}>{passwordError}</Text>
-                            ) : null}
-                        </View>
+    <TouchableOpacity onPress={() => setIsPasswordVisible(!isPasswordVisible)}>
+        <Text style={profilestyle.toggleText}>
+            {isPasswordVisible ? "Hide" : "Show"}
+        </Text>
+    </TouchableOpacity>
+</View>
 
-                      
-                        <TouchableOpacity onPress={() => setIsPasswordVisible(!isPasswordVisible)}>
-                            <Text style={profilestyle.toggleText}>
-                                {isPasswordVisible ? "Hide" : "Show"}
-                            </Text>
-                        </TouchableOpacity>
-                    </View>
-
-                 
                     <TouchableOpacity
                         style={profilestyle.editButton}
                         onPress={isEditing ? handleSave : () => setIsEditing(true)}
