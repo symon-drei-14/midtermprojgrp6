@@ -137,9 +137,7 @@ export default function Expenses({ navigation }) {
   return (
     <View style={expensestyle.container}>
       <View style={expensestyle.header}>
-        <View style={expensestyle.placeholderCircle} />
-        <Text style={expensestyle.greeting}>Hello Driver</Text>
-        <View style={expensestyle.placeholderSquare} />
+   
 
         
       </View>
@@ -151,21 +149,22 @@ export default function Expenses({ navigation }) {
 
       <Text style={expensestyle.sectionTitle}>Expense History</Text>
       <FlatList
-        data={expenses}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <View style={expensestyle.expenseItem}>
-            <View style={expensestyle.placeholderSquare} />
-            <Text style={expensestyle.expenseText}>{item.name}</Text>
-            <Text style={expensestyle.expenseText}>{item.date}</Text>
-            <Text style={expensestyle.expenseAmount}>₱ {item.amount}</Text>
-          </View>
-          
-        )}
-      />
+  data={expenses}
+  keyExtractor={(item) => item.id}
+  renderItem={({ item }) => (
+    <View style={expensestyle.expenseItem}>
+  
+      <View style={expensestyle.expenseDetails}>
+        <Text style={expensestyle.expenseText}>{item.name}</Text>
+        <Text style={expensestyle.expenseDate}>{item.date}</Text>
+      </View>
+      <Text style={expensestyle.expenseAmount}>₱ {item.amount.toLocaleString()}</Text>
+    </View>
+  )}
+/>
 
       <TouchableOpacity style={[expensestyle.expensebutton, { marginBottom: 100 }]} onPress={() => setModalVisible(true)}>
-        <Text style={expensestyle.buttonText3}>Report Expense</Text>
+        <Text style={expensestyle.buttonText3}>+</Text>
       </TouchableOpacity>
 
      
@@ -190,7 +189,7 @@ export default function Expenses({ navigation }) {
             <View style={expensestyle.quickAmountContainer}>
               {quickAmounts.map((amount) => (
                 <TouchableOpacity key={amount} style={expensestyle.quickAmountButton} onPress={() => setExpenseAmount(amount.toString())}>
-                  <Text style={expensestyle.buttonText3}>₱{amount}</Text>
+                  <Text style={expensestyle.buttonText4}>₱{amount}</Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -230,16 +229,16 @@ export default function Expenses({ navigation }) {
         </View>
       </Modal>
 
-      <View style={navbar.bottomNav}>
+      <View style={navbar.bottomNav2}>
         <TouchableOpacity onPress={() => nav.navigate("Dashboard")}>
           <Image source={homeIcon} style={navbar.navIcon} />
         </TouchableOpacity>
         <TouchableOpacity onPress={() => nav.navigate("Trips")}>
           <Image source={userIcon} style={navbar.navIcon} />
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => nav.navigate("Expenses")}>
+        {/* <TouchableOpacity onPress={() => nav.navigate("Expenses")}>
           <Image source={locationIcon} style={navbar.navIcon} />
-        </TouchableOpacity>
+        </TouchableOpacity> */}
         <TouchableOpacity onPress={() => nav.navigate("Profile")}>
           <Image source={profileicon} style={navbar.navIcon} />
         </TouchableOpacity>

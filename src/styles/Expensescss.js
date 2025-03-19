@@ -37,6 +37,7 @@ container: {
     marginBottom: 20,
     backgroundColor: "#4CAF50", 
     elevation: 5,
+    marginTop:-50,
   },
   balanceTitle: {
     color: "#FFF",
@@ -82,12 +83,18 @@ container: {
     fontWeight: "bold",
   },
   expensebutton: {
-    backgroundColor: "#007AFF", 
-    padding: 15,
-    borderRadius: 10,
+    width: 60, 
+    height: 60, 
+    borderRadius: 30, 
+    backgroundColor: "#ffff",
+    justifyContent: "center",
     alignItems: "center",
-    marginTop: 20,
+    position: "absolute",
+    bottom: 30, 
+    right: 20, 
+    elevation: 5, 
   },
+  
   modalContainer: {
     flex: 1,
     justifyContent: "center",
@@ -142,7 +149,13 @@ gap: 8,
   sectionTitle: { color: "#000", fontSize: 18, fontWeight: "bold", marginBottom: 10 },
 buttonText2: { color: "#000" }, 
 buttonText3: {
-color: "#FFF",
-fontWeight: "bold",
+color: "#000000",
+// fontWeight: "bold",
+fontSize: 26,
 },
+buttonText4: {
+  color: "#000000",
+   fontWeight: "bold",
+
+  },
 });

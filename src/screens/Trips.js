@@ -1,17 +1,46 @@
-import React, { useState, useCallback, } from 'react';
-import { View, Text, TouchableOpacity, Modal,Image } from 'react-native';
+import React, { useState, useCallback, } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  FlatList,
+  ScrollView,
+  Modal,
+  Image
+} from "react-native";
+
 import { useFocusEffect,useNavigation } from "@react-navigation/native";
 import { loginstyle } from "../styles/Styles";
 import { navbar } from "../styles/Navbar";
 import { tripstyle } from "../styles/Tripcss";
+import { tripstyle2 } from "../styles/Tripcss2";
 
 import homeIcon from "../assets/Home2.png";
 import userIcon from "../assets/trip2.png";
 import locationIcon from "../assets/exp2.png";
 import profileicon from "../assets/profile.png"
+const trips = [
+  {
+    id: "1",
+    destination: "Trip to Jerusalem",
+    date: "March 20, 2025",
+    time: "11:00 PM",
+    expectedArrival: "5:00 AM",
+  },
+  {
+    id: "2",
+    destination: "Trip to Jerusalem",
+    date: "March 20, 2025",
+    time: "11:00 PM",
+    expectedArrival: "5:00 AM",
+  },
+];
 
-const Trips = ({ navigation }) => {
-   const nav = useNavigation();
+ 
+
+const TripScreen = () => {
+     const nav = useNavigation();
   const [status, setStatus] = useState('On-Going');
   const [modalVisible, setModalVisible] = useState(false);
 
@@ -25,37 +54,43 @@ const Trips = ({ navigation }) => {
     setStatus(newStatus);
     setModalVisible(false);
   };
-
   return (
-    <View style={tripstyle.container}>
-      <Text style={tripstyle.title}>Assigned Trip Details</Text>
-      <View style={tripstyle.tripContainer}>
-        <View style={tripstyle.tripDetails}>
-          <Text style={tripstyle.label}>Destination:</Text>
-          <Text style={tripstyle.value}>New York City</Text>
-        </View>
-        <View style={tripstyle.tripDetails}>
-          <Text style={tripstyle.label}>Scheduled Departure:</Text>
-          <Text style={tripstyle.value}>March 10, 2025 - 08:00 AM</Text>
-        </View>
-        <View style={tripstyle.tripDetails}>
-          <Text style={tripstyle.label}>Estimated Time of Arrival:</Text>
-          <Text style={tripstyle.value}>March 10, 2025 - 06:00 PM</Text>
-        </View>
-        <View style={tripstyle.tripDetails}>
-          <Text style={tripstyle.label}>Status:</Text>
-          <Text style={[tripstyle.value, { color: status === 'On-Going' ? 'blue' : status === 'Completed' ? 'green' : 'red' }]}>
-            {status}
-          </Text>
-        </View>
-        <TouchableOpacity style={tripstyle.button} onPress={() => setModalVisible(true)}>
-          <Text style={tripstyle.buttonText}>Change Status</Text>
-        </TouchableOpacity>
+    <View style={tripstyle2.container}>
+      <ScrollView contentContainerStyle={tripstyle2.scrollContainer}>
+   
+        <View style={tripstyle2.tripCard}>
+          <Text style={tripstyle2.tripTitle}>Trip to Jerusalem</Text>
+          <Text style={tripstyle2.detailText}>Date : March 20, 2025</Text>
+          <Text style={tripstyle2.detailText}>Time : 11:00 PM</Text>
+          <Text style={tripstyle2.detailText}>Expected Arrival : 5:00 AM</Text>
 
-          
-      </View>
-      
-      <Modal visible={modalVisible} transparent animationType="slide">
+          <Text style={tripstyle2.infoText}>Alloted budget : 232909402942</Text>
+          <Text style={tripstyle2.infoText}>Alloted Fuel budget : 2309329042</Text>
+          <Text style={tripstyle2.infoText}>Dispatcher : Jesus</Text>
+          <View style={tripstyle.tripDetails}>
+                    {/* <Text  style={tripstyle2.infoText}>Status:
+                    style={[tripstyle.value, { color: status === 'On-Going' ? 'blue' : status === 'Completed' ? 'green' : 'red' }]}
+                      {status}
+                    </Text> */}
+                    <Text
+  style={[ tripstyle2.infoText,  { color: status === 'On-Going' ? 'blue' : status === 'Completed' ? 'green' : 'red' }]}
+>Status: {status} </Text>
+                  </View>
+
+        
+          <View style={tripstyle2.buttonContainer}>
+          <TouchableOpacity style={tripstyle2.updateButton} onPress={() => setModalVisible(true)}>
+  <Text style={tripstyle2.buttonText}>Update Status</Text>
+</TouchableOpacity>
+<TouchableOpacity
+      style={tripstyle2.expenseButton}
+      onPress={() => nav.navigate('Expenses')}
+    >
+      <Text style={tripstyle2.buttonText}>Report Expense</Text>
+    </TouchableOpacity>
+          </View>
+        </View>
+     <Modal visible={modalVisible} transparent animationType="slide">
         <View style={tripstyle.modalContainer}>
           <View style={tripstyle.modalContent}>
             <Text style={tripstyle.modalTitle}>Select Status</Text>
@@ -75,22 +110,48 @@ const Trips = ({ navigation }) => {
         </View>
       </Modal>
 
-      <View style={navbar.bottomNav}>
+
+ 
+        <Text style={tripstyle2.futureTripsTitle}>Future Trips</Text>
+        <FlatList
+          data={trips}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
+            <View style={tripstyle2.futureTripCard}>
+              <Text style={tripstyle2.tripTitle}>{item.destination}</Text>
+              <Text style={tripstyle2.detailText}>Date : {item.date}</Text>
+              <Text style={tripstyle2.detailText}>Time : {item.time}</Text>
+              <Text style={tripstyle2.detailText}>
+                🚗 Expected Arrival : {item.expectedArrival}
+              </Text>
+            </View>
+          )}
+          keyboardShouldPersistTaps="handled"
+          scrollEnabled={false} 
+        />
+      </ScrollView>
+
+      
+      
+
+   <View style={navbar.bottomNav2}>
         <TouchableOpacity onPress={() => nav.navigate("Dashboard")}>
           <Image source={homeIcon} style={navbar.navIcon} />
         </TouchableOpacity>
         <TouchableOpacity onPress={() => nav.navigate("Trips")}>
           <Image source={userIcon} style={navbar.navIcon} />
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => nav.navigate("Expenses")}>
+        {/* <TouchableOpacity onPress={() => nav.navigate("Expenses")}>
           <Image source={locationIcon} style={navbar.navIcon} />
-        </TouchableOpacity>
+        </TouchableOpacity> */}
         <TouchableOpacity onPress={() => nav.navigate("Profile")}>
           <Image source={profileicon} style={navbar.navIcon} />
         </TouchableOpacity>
-      </View>
+        </View>
     </View>
   );
 };
 
-export default Trips;
+
+
+export default TripScreen;

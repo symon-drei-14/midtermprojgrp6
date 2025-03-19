@@ -1,128 +1,154 @@
-import React, { useState } from "react";
-import { Text, View, TextInput, Alert, TouchableOpacity } from "react-native";
+import React, { useState, useCallback, } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  FlatList,
+  ScrollView,
+  Modal,
+  Image
+} from "react-native";
+
+import { useFocusEffect,useNavigation } from "@react-navigation/native";
 import { loginstyle } from "../styles/Styles";
+import { navbar } from "../styles/Navbar";
+import { tripstyle } from "../styles/Tripcss";
+import { tripstyle2 } from "../styles/Tripcss2";
 
-const Register = ({ navigation }) => {
-  const [surname, setLastname] = useState("");
-  const [firstname, setFirstname] = useState("");
-  const [password, setPass] = useState("");
-  const [conpass, setConPass] = useState("");
-  const [email, setEmail] = useState("");
+import homeIcon from "../assets/Home2.png";
+import userIcon from "../assets/trip2.png";
+import locationIcon from "../assets/exp2.png";
+import profileicon from "../assets/profile.png"
+const trips = [
+  {
+    id: "1",
+    destination: "Trip to Jerusalem",
+    date: "March 20, 2025",
+    time: "11:00 PM",
+    expectedArrival: "5:00 AM",
+  },
+  {
+    id: "2",
+    destination: "Trip to Jerusalem",
+    date: "March 20, 2025",
+    time: "11:00 PM",
+    expectedArrival: "5:00 AM",
+  },
+];
 
+ 
 
-  const handleInputChange = (field, value) => {
-    switch (field) {
-      case "firstname":
-        setFirstname(value);
-        break;
-      case "surname":
-        setLastname(value);
-        break;
-      case "email":
-        setEmail(value);
-        break;
-      case "password":
-        setPass(value);
-        break;
-      case "conpass":
-        setConPass(value);
-        break;
-      default:
-        break;
-    }
+const TripScreen = () => {
+     const nav = useNavigation();
+  const [status, setStatus] = useState('On-Going');
+  const [modalVisible, setModalVisible] = useState(false);
+
+  useFocusEffect(
+    useCallback(() => {
+      setModalVisible(false);
+    }, [])
+  );
+
+  const handleStatusChange = (newStatus) => {
+    setStatus(newStatus);
+    setModalVisible(false);
   };
-
-  const handlePress = () => {
-    if (!firstname || !surname || !email || !password || !conpass) {
-      Alert.alert("Error", "All fields are required!", [{ text: "OK" }]);
-      return;
-    }
-
-    if (password.length < 8) {
-      Alert.alert("Error", "Password must be at least 8 characters long!", [{ text: "OK" }]);
-      return;
-    }
-
-    if (password !== conpass) {
-      Alert.alert("Error", "Passwords do not match!", [{ text: "OK" }]);
-      return;
-    }
-
-    Alert.alert("Success", "Registration Successful!", [{ text: "OK" }]);
-    console.log("Registration successful");
-
-   
-    navigation.navigate("Dashboard", { firstname });
-  };
-
   return (
-    <View style={loginstyle.container}>
-      <View style={loginstyle.innerContainer}>
-        <Text style={loginstyle.title}>Create your own account</Text>
+    <View style={tripstyle2.container}>
+      <ScrollView contentContainerStyle={tripstyle2.scrollContainer}>
+        {/* Trip Details */}
+        <View style={tripstyle2.tripCard}>
+          <Text style={tripstyle2.tripTitle}>Trip to Jerusalem</Text>
+          <Text style={tripstyle2.detailText}>Date : March 20, 2025</Text>
+          <Text style={tripstyle2.detailText}>Time : 11:00 PM</Text>
+          <Text style={tripstyle2.detailText}>Expected Arrival : 5:00 AM</Text>
 
-        <Text>First Name</Text>
-        <TextInput
-          value={firstname}
-          style={loginstyle.textinput}
-          onChangeText={(value) => handleInputChange("firstname", value)}
-          placeholder="Enter your first name"
-          placeholderTextColor="#999"
-        />
+          <Text style={tripstyle2.infoText}>Alloted budget : 232909402942</Text>
+          <Text style={tripstyle2.infoText}>Alloted Fuel budget : 2309329042</Text>
+          <Text style={tripstyle2.infoText}>Dispatcher : Jesus</Text>
+          <View style={tripstyle.tripDetails}>
+                    {/* <Text  style={tripstyle2.infoText}>Status:
+                    style={[tripstyle.value, { color: status === 'On-Going' ? 'blue' : status === 'Completed' ? 'green' : 'red' }]}
+                      {status}
+                    </Text> */}
+                    <Text
+  style={[ tripstyle2.infoText,  { color: status === 'On-Going' ? 'blue' : status === 'Completed' ? 'green' : 'red' }]}
+>Status: {status} </Text>
+                  </View>
 
-        <Text>Surname</Text>
-        <TextInput
-          value={surname}
-          style={loginstyle.textinput}
-          onChangeText={(value) => handleInputChange("surname", value)}
-          placeholder="Enter your surname"
-          placeholderTextColor="#999"
-        />
-
-        <Text>Email</Text>
-        <TextInput
-          value={email}
-          style={loginstyle.textinput}
-          onChangeText={(value) => handleInputChange("email", value)}
-          placeholder="example@example.com"
-          placeholderTextColor="#999"
-          keyboardType="email-address"
-        />
-
-        <Text>Password</Text>
-        <TextInput
-          value={password}
-          style={loginstyle.textinput}
-          onChangeText={(value) => handleInputChange("password", value)}
-          secureTextEntry={true}
-          placeholder="Enter your password"
-          placeholderTextColor="#999"
-        />
-
-        <Text>Confirm Password</Text>
-        <TextInput
-          value={conpass}
-          style={[loginstyle.textinput, { marginBottom: 35 }]}
-          onChangeText={(value) => handleInputChange("conpass", value)}
-          secureTextEntry={true}
-          placeholder="Confirm your password"
-          placeholderTextColor="#999"
-        />
-
-        <TouchableOpacity
-          style={loginstyle.button}
-          onPress={handlePress}
-        >
-          <Text style={loginstyle.buttonText}>Sign Up</Text>
-        </TouchableOpacity>
-
-        <View style={{ marginTop: 20, alignItems: "center" }}>
-          <TouchableOpacity onPress={() => navigation.navigate("Login")} style={{ marginTop: 10 }}>
-            <Text style={{ color: "#841584", fontWeight: "bold" }}>Already registered? Sign in</Text>
-          </TouchableOpacity>
+          {/* Action Buttons */}
+          <View style={tripstyle2.buttonContainer}>
+          <TouchableOpacity style={tripstyle2.updateButton} onPress={() => setModalVisible(true)}>
+  <Text style={tripstyle2.buttonText}>Update Status</Text>
+</TouchableOpacity>
+            <TouchableOpacity style={tripstyle2.expenseButton}>
+              <Text style={tripstyle2.buttonText}>Report Expense</Text>
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
+     <Modal visible={modalVisible} transparent animationType="slide">
+        <View style={tripstyle.modalContainer}>
+          <View style={tripstyle.modalContent}>
+            <Text style={tripstyle.modalTitle}>Select Status</Text>
+            <TouchableOpacity style={tripstyle.modalButton} onPress={() => handleStatusChange('On-Going')}>
+              <Text style={tripstyle.modalButtonText}>On-Going</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={tripstyle.modalButton} onPress={() => handleStatusChange('Completed')}>
+              <Text style={tripstyle.modalButtonText}>Completed</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={tripstyle.modalButton} onPress={() => handleStatusChange('No Show')}>
+              <Text style={tripstyle.modalButtonText}>No Show</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={tripstyle.cancelButton} onPress={() => setModalVisible(false)}>
+              <Text style={tripstyle.cancelButtonText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+
+        {/* Future Trips */}
+        <Text style={tripstyle2.futureTripsTitle}>Future Trips</Text>
+        <FlatList
+          data={trips}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
+            <View style={tripstyle2.futureTripCard}>
+              <Text style={tripstyle2.tripTitle}>{item.destination}</Text>
+              <Text style={tripstyle2.detailText}>Date : {item.date}</Text>
+              <Text style={tripstyle2.detailText}>Time : {item.time}</Text>
+              <Text style={tripstyle2.detailText}>
+                🚗 Expected Arrival : {item.expectedArrival}
+              </Text>
+            </View>
+          )}
+          keyboardShouldPersistTaps="handled"
+          scrollEnabled={false} // Prevents nested scrolling issues
+        />
+      </ScrollView>
+
+      
+      
+
+      <View style={navbar.bottomNav2}>
+              <TouchableOpacity onPress={() => nav.navigate("Dashboard")}>
+                <Image source={homeIcon} style={navbar.navIcon} />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => nav.navigate("Trips")}>
+                <Image source={userIcon} style={navbar.navIcon} />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => nav.navigate("Expenses")}>
+                <Image source={locationIcon} style={navbar.navIcon} />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => nav.navigate("Profile")}>
+                <Image source={profileicon} style={navbar.navIcon} />
+              </TouchableOpacity>
+            </View>
     </View>
   );
 };
 
-export default Register;
+
+
+export default TripScreen;
