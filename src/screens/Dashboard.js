@@ -1,4 +1,4 @@
-import { View, Image, TouchableOpacity, Text, Switch, Button } from "react-native";
+import { View, Image, TouchableOpacity, Text, Switch, Button, Alert } from "react-native";
 import { useNavigation,useRoute } from "@react-navigation/native";
 import { loginstyle } from "../styles/Styles";
 import React, { useState } from "react";
@@ -16,6 +16,21 @@ function Dashboard({ navigation }) {
   const [locationEnabled, setLocationEnabled] = useState(false);
   const [sensorEnabled, setSensorEnabled] = useState(false);
 
+  const handleLocationToggle = (value) => {
+    if (value) {
+      Alert.alert(
+        "Enable Location?",
+        "Do you want to allow location updates?",
+        [
+          { text: "Cancel", style: "cancel", onPress: () => setLocationEnabled(false) },
+          { text: "Allow", onPress: () => setLocationEnabled(true) }
+        ]
+      );
+    } else {
+      setLocationEnabled(false);
+    }
+  };
+
   const handleLogout = () => {
     nav.navigate("Login"); 
   };
@@ -27,7 +42,7 @@ function Dashboard({ navigation }) {
     <View style={loginstyle.container2}>
       <View style={loginstyle.greetingContainer}>
         <Text style={loginstyle.greetingText}>Hello,</Text>
-        <Text style={loginstyle.greetingText}>Driver</Text> 
+        <Text style={loginstyle.greetingText}>Drivers</Text> 
       </View>
 
       <View style={loginstyle.itemContainer}>
@@ -43,27 +58,21 @@ function Dashboard({ navigation }) {
 
       <View style={loginstyle.locationCard}>
         <View style={{ marginVertical: 30 }} />
-        <Text style={loginstyle.locationTitle}>Location Info</Text>
-        <Text style={loginstyle.locationText}>Latitude: ?????</Text>
-        <Text style={loginstyle.locationText}>Longitude: ?????</Text>
+        <Text style={loginstyle.locationTitle}>GPS Settings</Text>
 
-        <View style={loginstyle.toggleRow}>
-          <Text style={loginstyle.locationText}>Location Update</Text>
-          <Switch
-            value={locationEnabled}
-            onValueChange={(value) => setLocationEnabled(value)}
-          />
-        </View>
+    <View style={loginstyle.toggleRow}>
+      <Text style={loginstyle.locationText}>Location Update: {locationEnabled ? "On" : "Off"}</Text>
+      <Switch value={locationEnabled} onValueChange={handleLocationToggle} />
+    </View>
 
-        <View style={loginstyle.toggleRow}>
-          <Text style={loginstyle.locationText}>Sensor</Text>
-          <Switch
-            value={sensorEnabled}
-            onValueChange={(value) => setSensorEnabled(value)}
-          />
-        </View>
+    <View style={loginstyle.toggleRow}>
+      <Text style={loginstyle.locationText}>Sensor: {sensorEnabled ? "GPS Sensor" : "Cell Tower + WiFi"}</Text>
+        <Switch
+          value={sensorEnabled}
+          onValueChange={(value) => setSensorEnabled(value)}
+        />
+    </View>
 
-        
         <View style={{ marginVertical: 20 }} />
       
         <TouchableOpacity onPress={handleLogout} style={loginstyle.logoutButton}>
