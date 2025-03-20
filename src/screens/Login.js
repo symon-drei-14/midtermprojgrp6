@@ -51,33 +51,38 @@ const Login = ({ navigation }) => {
 
   const handleLogin = () => {
     let valid = true;
-  
+
     if (username.length === 0) {
-      setUsernameError("Username is required.");
-      valid = false;
+        setUsernameError("Username is required.");
+        valid = false;
     } else if (username.length < 4) {
-      setUsernameError("Username must be at least 4 characters.");
-      valid = false;
+        setUsernameError("Username must be at least 4 characters.");
+        valid = false;
+    } else if (username !== "driver") {
+        setUsernameError("Invalid username.");
+        valid = false;
     } else {
-      setUsernameError("");
+        setUsernameError("");
     }
-  
+
     if (password.length === 0) {
-      setPasswordError("Password is required.");
-      valid = false;
+        setPasswordError("Password is required.");
+        valid = false;
     } else if (password.length < 8) {
-      setPasswordError("Password must be at least 8 characters.");
-      valid = false;
+        setPasswordError("Password must be at least 8 characters.");
+        valid = false;
+    } else if (password !== "mansarftw") {
+        setPasswordError("Invalid password.");
+        valid = false;
     } else {
-      setPasswordError("");
+        setPasswordError("");
     }
-  
+
     if (!valid) return;
-  
+
     alert("Login Successful!");
     navigation.navigate("Dashboard", { username });
-  };
-
+};
   return (
     <View style={[loginstyle.container, { backgroundColor: "#FFFAF3" }]}>
       <View style={loginstyle.innerContainer}>
