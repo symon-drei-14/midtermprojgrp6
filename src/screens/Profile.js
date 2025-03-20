@@ -16,7 +16,7 @@ const Profile = () => {
     const [passwordError, setPasswordError] = useState("");
     const [modalVisible, setModalVisible] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
-    const [showNewPassword, setShowNewPassword] = useState(false); // Toggle password visibility in modal
+    const [showNewPassword, setShowNewPassword] = useState(false); 
 
     const handleLogout = () => {
         nav.navigate("Login");

@@ -3,11 +3,11 @@ import { StyleSheet } from "react-native";
 export const dashboardstyles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: "#F8F8F8",
+        backgroundColor:"#e6ecec",
     },
     mapImage: {
       width: "100%",
-      height: 320, 
+      height: 400, 
       position: "absolute",
       top: 0,
       zIndex: -1, 
@@ -18,7 +18,7 @@ export const dashboardstyles = StyleSheet.create({
       padding: 15,
       borderRadius: 15,
       elevation: 5,
-      marginTop: 280, 
+      marginTop: 350, 
   },
     label: {
         fontSize: 14,

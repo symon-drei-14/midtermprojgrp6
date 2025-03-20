@@ -26,8 +26,8 @@ export const navbar = StyleSheet.create({
     width: "380",
     backgroundColor: "#fff",
     paddingVertical: 15, 
-    borderTopLeftRadius: 30,
-    borderTopRightRadius: 30,
+    borderTopLeftRadius: 40,
+    borderTopRightRadius: 40,
     elevation: 5,
     shadowColor: '#000', 
     shadowOffset: { width: 0, height: 2 },
@@ -36,7 +36,8 @@ export const navbar = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-evenly",
     alignItems: "center",
-    marginLeft:-10,
+    marginLeft: 0,
+
   },
   navIcon: {
     resizeMode: "contain", 

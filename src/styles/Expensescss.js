@@ -3,7 +3,7 @@ import { StyleSheet } from "react-native";
 export const expensestyle = StyleSheet.create({
 container: {
     flex: 1,
-    backgroundColor: "#F5F5F5", 
+    backgroundColor:"#e6ecec",
     padding: 20,
     justifyContent:"center",
     textAlign:"center",
@@ -15,17 +15,7 @@ container: {
     marginBottom: 20,
     marginTop: 30,
   },
-  placeholderCircle: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: "#007AFF", 
-  },
-  placeholderSquare: {
-    width: 24,
-    height: 24,
-    backgroundColor: "#007AFF", 
-  },
+ 
   greeting: {
     color: "#333",
     fontSize: 20,
@@ -35,19 +25,23 @@ container: {
     padding: 20,
     borderRadius: 15,
     marginBottom: 20,
-    backgroundColor: "#4CAF50", 
-    elevation: 5,
-    marginTop:-50,
+    backgroundColor: "#f7e2cf", 
+    elevation: 20,
+    marginTop:-20,
+    
   },
+
+  
   balanceTitle: {
-    color: "#FFF",
+    color: "#4c4a49",
     fontSize: 16,
     marginBottom: 5,
   },
   balanceAmount: {
-    color: "#FFF",
+    color: "#4c4a49",
     fontSize: 28,
     fontWeight: "bold",
+    
   },
   buttonText2: {
     color: "#FFF",
@@ -64,7 +58,7 @@ container: {
     alignItems: "center",
     justifyContent: "space-between",
     padding: 15,
-    backgroundColor: "#FFF", 
+    backgroundColor: "#fff", 
     borderRadius: 10,
     marginBottom: 10,
     shadowColor: "#000",

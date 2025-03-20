@@ -91,11 +91,11 @@ export const profilestyle = StyleSheet.create({
     //     padding: 0, 
     // },
     
-    // toggleText: {
-    //     color: "blue",
-    //     fontSize: 14,
-    //     marginLeft: 10,
-    // },
+    toggleText: {
+        color: "blue",
+         fontSize: 14,
+        marginLeft: 10,
+     },
     
     // editButton: {
     //     backgroundColor: "blue",
@@ -114,7 +114,7 @@ export const profilestyle = StyleSheet.create({
     container: {
       flex: 1,
       alignItems: "center",
-      backgroundColor: "#F8F8F8",
+      backgroundColor:"#e6ecec",
       paddingTop: 50,
   },
   avatarContainer: {

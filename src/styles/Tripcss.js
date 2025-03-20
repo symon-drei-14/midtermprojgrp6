@@ -6,7 +6,7 @@ export const tripstyle = StyleSheet.create({
       flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
-      backgroundColor: '#F5F5F5',
+      backgroundColor:"#eae7e6",
       padding: 20,
     },
     title: {
@@ -68,7 +68,7 @@ export const tripstyle = StyleSheet.create({
       marginBottom: 10,
     },
     modalButton: {
-      backgroundColor: '#007BFF',
+      backgroundColor: '#4b769b',
       padding: 10,
       borderRadius: 5,
       width: '100%',
@@ -91,4 +91,5 @@ export const tripstyle = StyleSheet.create({
       color: '#fff',
       fontSize: 16,
     },
+   
   });

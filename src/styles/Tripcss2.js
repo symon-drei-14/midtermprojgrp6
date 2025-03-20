@@ -4,9 +4,9 @@ import { StyleSheet } from "react-native";
 export const tripstyle2=StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: "#FAFAFA",
+        backgroundColor:"#e6ecec",
         paddingHorizontal: 20,
-        paddingTop: 50,
+        paddingTop: 20,
       },
       scrollContainer: {
         paddingBottom: 80,
@@ -18,7 +18,7 @@ export const tripstyle2=StyleSheet.create({
         shadowColor: "#000",
         shadowOpacity: 0.1,
         shadowRadius: 5,
-        elevation: 5,
+        elevation: 4,
         marginBottom: 20,
       },
       tripTitle: {
@@ -67,6 +67,7 @@ export const tripstyle2=StyleSheet.create({
         fontWeight: "bold",
         marginBottom: 10,
         marginTop: 10,
+        textAlign:"center",
       },
       futureTripCard: {
         backgroundColor: "white",
@@ -92,4 +93,5 @@ export const tripstyle2=StyleSheet.create({
         fontSize: 14,
         color: "#444",
       },
+      
   });

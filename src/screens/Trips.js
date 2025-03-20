@@ -55,6 +55,7 @@ const TripScreen = () => {
     setModalVisible(false);
   };
   return (
+
     <View style={tripstyle2.container}>
       <ScrollView contentContainerStyle={tripstyle2.scrollContainer}>
    
@@ -112,7 +113,7 @@ const TripScreen = () => {
 
 
  
-        <Text style={tripstyle2.futureTripsTitle}>Future Trips</Text>
+        <Text style={tripstyle2.futureTripsTitle}> ― ― ― ― ― Future Trips ― ― ― ― ―</Text>
         <FlatList
           data={trips}
           keyExtractor={(item) => item.id}
@@ -149,6 +150,7 @@ const TripScreen = () => {
         </TouchableOpacity>
         </View>
     </View>
+
   );
 };
 
