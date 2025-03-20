@@ -80,14 +80,11 @@ function Dashboard({ navigation }) {
                         <Switch value={sensorEnabled} onValueChange={(value) => setSensorEnabled(value)} />
                     </View>
 
-                    <View style={{ marginVertical: 20 }} />
+                    <View style={{ marginVertical: 5 }} />
 
                     <Text style={styles.coordinates}>Longitude: 39202.2324</Text>
                     <Text style={styles.coordinates}>Latitude: 122.00</Text>
-                    <TouchableOpacity onPress={handleLogout} style={loginstyle.logoutButton}>
-                        <Text style={loginstyle.logoutText}>Logout</Text>
-                    </TouchableOpacity>
-
+                    
                   
                
                 </View>
@@ -117,16 +114,20 @@ const styles = StyleSheet.create({
         backgroundColor: "#F8F8F8",
     },
     mapImage: {
-        width: "100%",
-        height: 300,
-    },
-    card: {
-        backgroundColor: "white",
-        margin: 15,
-        padding: 15,
-        borderRadius: 15,
-        elevation: 5,
-    },
+      width: "100%",
+      height: 320, 
+      position: "absolute",
+      top: 0,
+      zIndex: -1, 
+  },
+  card: {
+      backgroundColor: "white",
+      marginHorizontal: 15,
+      padding: 15,
+      borderRadius: 15,
+      elevation: 5,
+      marginTop: 280, 
+  },
     label: {
         fontSize: 14,
         color: "#888",

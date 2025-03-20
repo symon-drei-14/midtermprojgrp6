@@ -1,114 +1,130 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, Image } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, Image, Modal } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { loginstyle } from "../styles/Styles";
-import { navbar } from "../styles/Navbar";
 import { profilestyle } from "../styles/Profilecss";
+import { navbar } from "../styles/Navbar";
+import userIcon2 from "../assets/profile.png";
 import homeIcon from "../assets/Home2.png";
 import userIcon from "../assets/trip2.png";
-import locationIcon from "../assets/exp2.png";
 import profileicon from "../assets/profile.png";
 
 const Profile = () => {
     const nav = useNavigation();
     const [password, setPassword] = useState(""); 
-    const [savedPassword, setSavedPassword] = useState("password123"); // Store real password
-    const [isPasswordVisible, setIsPasswordVisible] = useState(false);
-    const [isEditing, setIsEditing] = useState(false);
+    const [savedPassword, setSavedPassword] = useState("password123");
     const [passwordError, setPasswordError] = useState("");
+    const [modalVisible, setModalVisible] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
+    const [showNewPassword, setShowNewPassword] = useState(false); // Toggle password visibility in modal
+
+    const handleLogout = () => {
+        nav.navigate("Login");
+    };
 
     const validatePassword = (text) => {
         setPassword(text);
-        if (text.length < 8) {
-            setPasswordError("Password must be at least 8 characters.");
-        } else {
-            setPasswordError("");
-        }
+        setPasswordError(text.trim() === "" ? "Password is required." : text.length < 8 ? "Password must be at least 8 characters." : "");
     };
 
     const handleSave = () => {
+        if (!password.trim()) {
+            setPasswordError("Password is required.");
+            return;
+        }
         if (password.length < 8) {
             setPasswordError("Password must be at least 8 characters.");
             return;
         }
-        setSavedPassword(password); // Save actual password
-        setIsEditing(false);
+        setSavedPassword(password);
+        setModalVisible(false);
         alert("Password updated successfully!");
     };
 
     return (
         <View style={profilestyle.container}>
-            <View style={profilestyle.profileCard}>
-                <View style={profilestyle.avatarContainer}>
-                    <Text style={profilestyle.name}>My Love</Text>
-                    <Text style={profilestyle.role}>Professional Gaslighter</Text>
+       
+            <View style={profilestyle.avatarContainer}>
+                <Image source={userIcon2} style={profilestyle.avatar} />
+            </View>
+
+           
+            <View style={profilestyle.infoCard}>
+                <View style={profilestyle.infoRow}><Text>Name: Lebron James</Text></View>
+                <View style={profilestyle.infoRow}><Text>Email: Lebronjames@gmail.com</Text></View>
+
+      
+                <View style={[profilestyle.infoRow, { flexDirection: "row", alignItems: "center", justifyContent: "space-between" }]}>
+                    <Text>Password: {showPassword ? savedPassword : "******"}</Text>
+                    <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={profilestyle.toggleButton}>
+                        <Text style={profilestyle.toggleText}>{showPassword ? "Hide" : "Show"}</Text>
+                    </TouchableOpacity>
                 </View>
 
-                <View style={profilestyle.detailsContainer}>
-                    <Text style={profilestyle.detailTitle}>Driver Information</Text>
-                    <View style={[profilestyle.inputContainer, { flexDirection: "row", alignItems: "center" }]}>
-    <Text style={{ width: 100 }}>🔒 Password:</Text> 
+                <View style={profilestyle.infoRow}><Text>Contact no: 0912341266</Text></View>
+                <View style={profilestyle.infoRow}><Text>Status: Active</Text></View>
+            </View>
 
-    <View style={{ flex: 1 }}>
-        {isEditing ? (
-            <TextInput
-                value={password}
-                style={[
-                    loginstyle.textinput,
-                    passwordError ? loginstyle.inputError : null,
-                ]}
-                onChangeText={validatePassword}
-                secureTextEntry={!isPasswordVisible}
-                placeholder="Enter new password"
-            />
-        ) : (
-            <Text style={profilestyle.driverInfo}>
-                {isPasswordVisible ? savedPassword : "********"}
-            </Text>
-        )}
+            {/* Buttons */}
+            <View style={profilestyle.buttonContainer}>
+            <TouchableOpacity onPress={() => {setPassword(savedPassword); 
+            setModalVisible(true);
+    }} 
+    style={profilestyle.changePasswordButton}>
+    <Text style={profilestyle.buttonText}>Change Password</Text>
+</TouchableOpacity>
+                <TouchableOpacity onPress={handleLogout} style={profilestyle.logoutButton}>
+                    <Text style={profilestyle.buttonText}>Log Out</Text>
+                </TouchableOpacity>
+            </View>
 
-        {passwordError ? (
-            <Text style={loginstyle.errorText}>{passwordError}</Text>
-        ) : null}
-    </View>
+            {/* Modal for Changing Password */}
+            <Modal visible={modalVisible} transparent animationType="slide">
+                <View style={profilestyle.modalContainer}>
+                    <View style={profilestyle.modalContent}>
+                        <Text style={profilestyle.modalTitle}>Change Password</Text>
+                        
+                     
 
-    <TouchableOpacity onPress={() => setIsPasswordVisible(!isPasswordVisible)}>
-        <Text style={profilestyle.toggleText}>
-            {isPasswordVisible ? "Hide" : "Show"}
-        </Text>
+<View style={[profilestyle.passwordInputContainer, { flexDirection: "row", alignItems: "center" }]}>
+    <TextInput
+        style={[profilestyle.input, { flex: 1 }]}
+        placeholder="Enter new password"
+        secureTextEntry={!showNewPassword}
+        value={password}
+        onChangeText={validatePassword}
+    />
+    <TouchableOpacity onPress={() => setShowNewPassword(!showNewPassword)} style={profilestyle.toggleButton}>
+        <Text style={profilestyle.toggleText}>{showNewPassword ? "Hide" : "Show"}</Text>
     </TouchableOpacity>
 </View>
 
-                    <TouchableOpacity
-                        style={profilestyle.editButton}
-                        onPress={isEditing ? handleSave : () => setIsEditing(true)}
-                    >
-                        <Text style={profilestyle.editButtonText}>
-                            {isEditing ? "Save" : "Edit"}
-                        </Text>
-                    </TouchableOpacity>
-
-                    <Text style={profilestyle.driverInfo}>📞 Phone: (63) 09123456789</Text>
-                    <Text style={profilestyle.driverInfo}>🏠 Address: 123 Banda roon st. Malapit lang</Text>
-                    <Text style={profilestyle.driverInfo}>🚗 Vehicle: Lightning McQueen 2022</Text>
-                    <Text style={profilestyle.driverInfo}>🪪 License: ABC123456</Text>
+                        {passwordError ? <Text style={profilestyle.errorText}>{passwordError}</Text> : null}
+                        
+                        <View style={profilestyle.modalButtonContainer}>
+                            <TouchableOpacity onPress={handleSave} style={profilestyle.saveButton}>
+                                <Text style={profilestyle.buttonText}>Save</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity onPress={() => setModalVisible(false)} style={profilestyle.cancelButton}>
+                                <Text style={profilestyle.buttonText}>Cancel</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
                 </View>
-            </View>
+            </Modal>
 
-          <View style={navbar.bottomNav2}>
-               <TouchableOpacity onPress={() => nav.navigate("Dashboard")}>
-                 <Image source={homeIcon} style={navbar.navIcon} />
-               </TouchableOpacity>
-               <TouchableOpacity onPress={() => nav.navigate("Trips")}>
-                 <Image source={userIcon} style={navbar.navIcon} />
-               </TouchableOpacity>
-               {/* <TouchableOpacity onPress={() => nav.navigate("Expenses")}>
-                 <Image source={locationIcon} style={navbar.navIcon} />
-               </TouchableOpacity> */}
-               <TouchableOpacity onPress={() => nav.navigate("Profile")}>
-                 <Image source={profileicon} style={navbar.navIcon} />
-               </TouchableOpacity>
-               </View>
+            {/* Bottom Navigation */}
+            <View style={navbar.bottomNav2}>
+                <TouchableOpacity onPress={() => nav.navigate("Dashboard")}>
+                    <Image source={homeIcon} style={navbar.navIcon} />
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => nav.navigate("Trips")}>
+                    <Image source={userIcon} style={navbar.navIcon} />
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => nav.navigate("Profile")}>
+                    <Image source={profileicon} style={navbar.navIcon} />
+                </TouchableOpacity>
+            </View>
         </View>
     );
 };
