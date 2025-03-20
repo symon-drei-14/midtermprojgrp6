@@ -15,6 +15,7 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import { loginstyle } from "../styles/Styles";
 import { navbar } from "../styles/Navbar";
+import { dashboardstyles } from "../styles/dashboardcss";
 
 import homeIcon from "../assets/Home2.png";
 import userIcon from "../assets/trip2.png";
@@ -50,22 +51,22 @@ function Dashboard({ navigation }) {
                
                 <Image
                     source={require("../assets/map.png")}
-                    style={styles.mapImage}
+                    style={dashboardstyles.mapImage}
                     resizeMode="cover"
                 />
 
              
-                <View style={styles.card}>
-                    <Text style={styles.label}>Your Location</Text>
+                <View style={dashboardstyles.card}>
+                    <Text style={dashboardstyles.label}>Your Location</Text>
                     <TextInput
-                        style={styles.input}
+                        style={dashboardstyles.input}
                         value={"2972 Westheimer Rd. Santa Ana, Illinois 85486"}
                         editable={false}
                     />
 
-                    <Text style={styles.label}>Destination</Text>
+                    <Text style={dashboardstyles.label}>Destination</Text>
                     <TextInput
-                        style={styles.input}
+                        style={dashboardstyles.input}
                         value={"2972 West Philippine Sea Rd. Santa Ana, Illinois 85486"}
                         editable={false}
                     />
@@ -82,8 +83,8 @@ function Dashboard({ navigation }) {
 
                     <View style={{ marginVertical: 5 }} />
 
-                    <Text style={styles.coordinates}>Longitude: 39202.2324</Text>
-                    <Text style={styles.coordinates}>Latitude: 122.00</Text>
+                    <Text style={dashboardstyles.coordinates}>Longitude: 39202.2324</Text>
+                    <Text style={dashboardstyles.coordinates}>Latitude: 122.00</Text>
                     
                   
                
@@ -108,43 +109,6 @@ function Dashboard({ navigation }) {
     );
 }
 
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: "#F8F8F8",
-    },
-    mapImage: {
-      width: "100%",
-      height: 320, 
-      position: "absolute",
-      top: 0,
-      zIndex: -1, 
-  },
-  card: {
-      backgroundColor: "white",
-      marginHorizontal: 15,
-      padding: 15,
-      borderRadius: 15,
-      elevation: 5,
-      marginTop: 280, 
-  },
-    label: {
-        fontSize: 14,
-        color: "#888",
-        marginTop: 10,
-    },
-    input: {
-        fontSize: 16,
-        padding: 8,
-        borderBottomWidth: 1,
-        borderBottomColor: "#ddd",
-        marginBottom: 10,
-    },
-    coordinates: {
-        fontSize: 14,
-        fontFamily: "monospace",
-        marginTop: 5,
-    }
-});
+
 
 export default Dashboard;
