@@ -19,10 +19,11 @@ const Login = ({ navigation }) => {
 
   if (showSplash) {
     return (
-      <View style={[loginstyle.container, { backgroundColor: "#FFFAF3" }]}>
+      <View style={{ flex: 1, backgroundColor: "#FFFAF3" }}>
         <Image
           source={require("../assets/bgpic.png")}
-          style={{ width: "100%", height: "100%", resizeMode: "cover" }}
+          style={loginstyle.splashImage
+          }
         />
       </View>
     );
