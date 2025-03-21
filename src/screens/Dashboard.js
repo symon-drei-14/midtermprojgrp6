@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import {
    View,
@@ -6,7 +5,6 @@ import {
     TextInput,
     Image,
     Switch,
-    StyleSheet,
     TouchableOpacity,
     Alert,
     ScrollView
@@ -19,7 +17,6 @@ import { dashboardstyles } from "../styles/dashboardcss";
 
 import homeIcon from "../assets/Home2.png";
 import userIcon from "../assets/trip2.png";
-import locationIcon from "../assets/exp2.png";
 import profileicon from "../assets/profile.png";
 
 function Dashboard({ navigation }) {
@@ -48,14 +45,11 @@ function Dashboard({ navigation }) {
     return (
         <View style={{ flex: 1 }}> 
             <ScrollView contentContainerStyle={{ flexGrow: 1, paddingBottom: 80 }}> 
-               
                 <Image
                     source={require("../assets/map.png")}
                     style={dashboardstyles.mapImage}
                     resizeMode="cover"
-                />
-
-             
+                />             
                 <View style={dashboardstyles.card}>
                     <Text style={dashboardstyles.label}>Your Location</Text>
                     <TextInput
@@ -83,32 +77,29 @@ function Dashboard({ navigation }) {
 
                     <View style={{ marginVertical: 5 }} />
 
-                    <Text style={dashboardstyles.coordinates}>Longitude: 39202.2324</Text>
-                    <Text style={dashboardstyles.coordinates}>Latitude: 122.00</Text>
-                    
-                  
-               
+
+                    {locationEnabled && (
+                        <>
+                            <Text style={dashboardstyles.coordinates}>Longitude: 39202.2324</Text>
+                            <Text style={dashboardstyles.coordinates}>Latitude: 122.00</Text>
+                        </>
+                    )}
                 </View>
             </ScrollView>
 
-             <View style={navbar.bottomNav2}>
-                  <TouchableOpacity onPress={() => nav.navigate("Dashboard")}>
+            <View style={navbar.bottomNav2}>
+                <TouchableOpacity onPress={() => nav.navigate("Dashboard")}>
                     <Image source={homeIcon} style={navbar.navIcon} />
-                  </TouchableOpacity>
-                  <TouchableOpacity onPress={() => nav.navigate("Trips")}>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => nav.navigate("Trips")}>
                     <Image source={userIcon} style={navbar.navIcon} />
-                  </TouchableOpacity>
-                  {/* <TouchableOpacity onPress={() => nav.navigate("Expenses")}>
-                    <Image source={locationIcon} style={navbar.navIcon} />
-                  </TouchableOpacity> */}
-                  <TouchableOpacity onPress={() => nav.navigate("Profile")}>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => nav.navigate("Profile")}>
                     <Image source={profileicon} style={navbar.navIcon} />
-                  </TouchableOpacity>
-                  </View>
+                </TouchableOpacity>
+            </View>
         </View>
     );
 }
-
-
 
 export default Dashboard;

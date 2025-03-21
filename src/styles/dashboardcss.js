@@ -5,6 +5,7 @@ export const dashboardstyles = StyleSheet.create({
         flex: 1,
         backgroundColor:"#e6ecec",
     },
+    
     mapImage: {
       width: "100%",
       height: 400, 
