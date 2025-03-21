@@ -146,8 +146,9 @@ export const profilestyle = StyleSheet.create({
   },
   buttonContainer: {
       flexDirection: "row",
-      marginTop: 60,
+      marginTop: 20,
       justifyContent: "space-between",
+      textAlign: "center",
   },
   changePasswordButton: {
       backgroundColor: "#FFEB99",
@@ -157,11 +158,20 @@ export const profilestyle = StyleSheet.create({
       width: 140,
       alignItems: "center",
   },
+
+  messageButton: {
+    backgroundColor: "#88efbc",
+    padding: 12,
+    borderRadius: 20,
+    marginRight: 0,
+    width: 250,
+    alignItems: "center",
+},
   logoutButton: {
       backgroundColor: "#FFB6C1",
       padding: 12,
       borderRadius: 20,
-      width: 100,
+      width: 105,
       alignItems: "center",
   },
   buttonText: {

@@ -12,6 +12,7 @@ import Dashboard from "./src/screens/Dashboard";
 import Trips from "./src/screens/Trips"
 import Expenses from "./src/screens/Expenses";
 import Profile from "./src/screens/Profile";
+import Message from "./src/screens/Message";
 
 const Stack = createStackNavigator();
 
@@ -31,6 +32,7 @@ const App = () => {
             <Stack.Screen name="Trips" component={Trips} />
             <Stack.Screen name="Expenses" component={Expenses} />
             <Stack.Screen name="Profile" component={Profile} />
+            <Stack.Screen name="Message" component={Message} />
           
           
           </Stack.Navigator>

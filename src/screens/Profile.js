@@ -65,7 +65,11 @@ const Profile = () => {
                 <View style={profilestyle.infoRow}><Text>Contact no: 0912341266</Text></View>
                 <View style={profilestyle.infoRow}><Text>Status: Active</Text></View>
             </View>
-
+            <View style={profilestyle.buttonContainer}>
+            <TouchableOpacity onPress={() => nav.navigate("Message")} style={profilestyle.messageButton}>
+    <Text style={profilestyle.buttonText}>Message</Text>
+</TouchableOpacity>
+</View>
             {/* Buttons */}
             <View style={profilestyle.buttonContainer}>
             <TouchableOpacity onPress={() => {setPassword(savedPassword); 
