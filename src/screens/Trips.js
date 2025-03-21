@@ -113,7 +113,7 @@ const TripScreen = () => {
 
 
  
-        <Text style={tripstyle2.futureTripsTitle}> ― ― ― ― ― Future Trips ― ― ― ― ―</Text>
+        <Text style={tripstyle2.futureTripsTitle}> ― ― ― ― ― Scheduled Trips ― ― ― ― ―</Text>
         <FlatList
           data={trips}
           keyExtractor={(item) => item.id}

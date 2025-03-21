@@ -3,6 +3,13 @@ import { StyleSheet } from "react-native";
 
 
 export const loginstyle = StyleSheet.create({
+
+  background: {
+    flex: 1, 
+    width: '100%', 
+    height: '100%', 
+    resizeMode: 'cover', 
+  },
   expenseError:{
     borderColor: "red", 
     borderWidth: 1,
@@ -28,19 +35,15 @@ export const loginstyle = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#f6f6f6",
+    top:200,
   },
   innerContainer: {
     width: "90%",
     maxWidth: 400,
     padding: 20,
-    backgroundColor: "#fff",
     borderRadius: 15,
-    elevation: 5, 
-    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 3,
+    
   },
   title: {
     fontSize: 22,
@@ -51,11 +54,13 @@ export const loginstyle = StyleSheet.create({
   textinput: {
     height: 45,
     borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 10,
+    borderColor: "#125f0f",
+    borderRadius: 100,
     paddingHorizontal: 12,
-    backgroundColor: "#f9f9f9",
+    backgroundColor: "#FFFFFF",
     marginBottom: 10,
+    fontSize:14,
+    color:"black",
   },
   button: {
     backgroundColor: "#841584",
@@ -63,6 +68,8 @@ export const loginstyle = StyleSheet.create({
     borderRadius: 10,
     alignItems: "center",
     marginTop:30,
+  
+
   },
   buttonText: {
     color: "#fff",
@@ -86,6 +93,7 @@ export const loginstyle = StyleSheet.create({
     width: '100%',
     marginBottom: 20, 
     color: 205781,
+
   },
   buttonD: {
     flex: 1, 

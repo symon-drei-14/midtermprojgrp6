@@ -1,6 +1,7 @@
-import React, { useState,useEffect } from "react";
-import { Text, View, TextInput, TouchableOpacity,Image } from "react-native";
+import React, { useState, useEffect } from "react";
+import { Text, View, TextInput, TouchableOpacity, Image, ImageBackground } from "react-native";
 import { loginstyle } from "../styles/Styles";
+import loginbackground from "../assets/loginbg.png";
 
 const Login = ({ navigation }) => {
   const [username, setUsername] = useState("");
@@ -8,11 +9,11 @@ const Login = ({ navigation }) => {
   const [usernameError, setUsernameError] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [isPressed, setIsPressed] = useState(false);
-  const [showSplash, setShowSplash] = useState(true); 
+  const [showSplash, setShowSplash] = useState(true);
 
   useEffect(() => {
     setTimeout(() => {
-      setShowSplash(false); 
+      setShowSplash(false);
     }, 2000);
   }, []);
 
@@ -37,7 +38,7 @@ const Login = ({ navigation }) => {
       setUsernameError("");
     }
   };
-  
+
   const validatePassword = (text) => {
     setPassword(text);
     if (text.length === 0) {
@@ -82,50 +83,53 @@ const Login = ({ navigation }) => {
 
     alert("Login Successful!");
     navigation.navigate("Dashboard", { username });
-};
+  };
+
   return (
-    <View style={[loginstyle.container, { backgroundColor: "#FFFAF3" }]}>
-      <View style={loginstyle.innerContainer}>
-        <Text style={loginstyle.title}>Login</Text>
+    <ImageBackground source={loginbackground} style={loginstyle.background}>
+      <View style={[loginstyle.container, { backgroundColor: "#" }]}>
+        <View style={loginstyle.innerContainer}>
+          <Text style={loginstyle.title}>Login</Text>
 
-        <Text>Username</Text>
-        <TextInput
-          value={username}
-          style={[
-            loginstyle.textinput,
-            usernameError ? loginstyle.inputError :null
-          ]}
-          onChangeText={validateUsername}
-          placeholder="Enter your username"
-        />
-        {usernameError ? <Text style={ loginstyle.errorText}>{usernameError}</Text> : null}
+          <Text>Username</Text>
+          <TextInput
+            value={username}
+            style={[
+              loginstyle.textinput,
+              usernameError ? loginstyle.inputError : null,
+            ]}
+            onChangeText={validateUsername}
+            placeholder="Enter your username"
+          />
+          {usernameError ? <Text style={loginstyle.errorText}>{usernameError}</Text> : null}
 
-        <Text>Password</Text>
-        <TextInput
-          value={password}
-          style={[
-            loginstyle.textinput,
-            passwordError ? loginstyle.inputError :null
-          ]}
-          onChangeText={validatePassword}
-          secureTextEntry={true}
-          placeholder="Enter your password"
-        />
-        {passwordError ? <Text style={ loginstyle.errorText}>{passwordError}</Text> : null}
+          <Text>Password</Text>
+          <TextInput
+            value={password}
+            style={[
+              loginstyle.textinput,
+              passwordError ? loginstyle.inputError : null,
+            ]}
+            onChangeText={validatePassword}
+            secureTextEntry={true}
+            placeholder="Enter your password"
+          />
+          {passwordError ? <Text style={loginstyle.errorText}>{passwordError}</Text> : null}
 
-        <TouchableOpacity
-          style={[
-            loginstyle.button,
-            { backgroundColor: isPressed ? "#6A0DAD" : "#841584" },
-          ]}
-          onPressIn={() => setIsPressed(true)}
-          onPressOut={() => setIsPressed(false)}
-          onPress={handleLogin}
-        >
-          <Text style={loginstyle.buttonText}>Login</Text>
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              loginstyle.button,
+              { backgroundColor: isPressed ? "#6A0DAD" : "#478843" },
+            ]}
+            onPressIn={() => setIsPressed(true)}
+            onPressOut={() => setIsPressed(false)}
+            onPress={handleLogin}
+          >
+            <Text style={loginstyle.buttonText}>Login</Text>
+          </TouchableOpacity>
+        </View>
       </View>
-    </View>
+    </ImageBackground>
   );
 };
 
