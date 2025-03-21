@@ -8,6 +8,7 @@ import userIcon2 from "../assets/profile.png";
 import homeIcon from "../assets/Home2.png";
 import userIcon from "../assets/trip2.png";
 import profileicon from "../assets/profile.png";
+import profilepic from "../assets/prof.png";
 
 const Profile = () => {
     const nav = useNavigation();
@@ -45,7 +46,7 @@ const Profile = () => {
         <View style={profilestyle.container}>
        
             <View style={profilestyle.avatarContainer}>
-                <Image source={userIcon2} style={profilestyle.avatar} />
+                <Image source={profilepic} style={profilestyle.avatar} />
             </View>
 
            
