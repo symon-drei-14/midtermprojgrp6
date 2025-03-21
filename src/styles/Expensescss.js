@@ -1,6 +1,78 @@
 import { StyleSheet } from "react-native";
 
 export const expensestyle = StyleSheet.create({
+
+  
+  historyContainer: {
+    borderRadius: 8,
+    backgroundColor: '#fff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1, 
+    shadowRadius: 4,
+    elevation: 2,
+    marginBottom: 15,
+    width:320,
+  },
+  dropdownContainer: {
+    width: '100%',
+    position: 'relative',
+    zIndex: 1000,
+  },
+  dropdownLabel: {
+    fontSize: 16,
+    fontWeight: '500',
+    marginBottom: 8,
+    color: '#333',
+  },
+  dropdownField: {
+    backgroundColor: '#fff',
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  dropdownText: {
+    fontSize: 16,
+    color: '#333',
+  },
+  dropdownArrow: {
+    fontSize: 16,
+    color: '#666',
+  },
+  dropdownList: {
+    maxHeight: 300,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderTopWidth: 0,
+    borderBottomLeftRadius: 5,
+    borderBottomRightRadius: 5,
+    backgroundColor: '#fff',
+    position: 'absolute',
+    top: '100%',
+    left: 0,
+    right: 0,
+    zIndex: 1000,
+  },
+  dropdownItem: {
+    padding: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  dropdownItemText: {
+    fontSize: 16,
+    color: '#333',
+  },
+  dropdownItemSelected: {
+    backgroundColor: '#f0f0f0',
+  },
+  dropdownItemTextSelected: {
+    fontWeight: 'bold',
+    color: '#0066cc',
+  },
 container: {
     flex: 1,
     backgroundColor:"#e6ecec",
