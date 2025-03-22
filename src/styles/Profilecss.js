@@ -160,7 +160,7 @@ export const profilestyle = StyleSheet.create({
   },
 
   messageButton: {
-    backgroundColor: "#88efbc",
+    backgroundColor: "#7380ef",
     padding: 12,
     borderRadius: 20,
     marginRight: 0,
@@ -178,6 +178,10 @@ export const profilestyle = StyleSheet.create({
       fontWeight: "bold",
       color: "#333",
   },
+  buttonText2: {
+    fontWeight: "bold",
+    color: "#fff",
+},
   inputContainer: {
       marginTop: 15,
       width: "90%",
