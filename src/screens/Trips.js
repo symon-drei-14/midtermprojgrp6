@@ -23,14 +23,14 @@ import profileicon from "../assets/profile.png"
 const trips = [
   {
     id: "1",
-    destination: "Trip to Jerusalem",
+    destination: "Highway to Heaven",
     date: "March 20, 2025",
     time: "11:00 PM",
     expectedArrival: "5:00 AM",
   },
   {
     id: "2",
-    destination: "Trip to Jerusalem",
+    destination: "Highway to Hell",
     date: "March 20, 2025",
     time: "11:00 PM",
     expectedArrival: "5:00 AM",
@@ -60,14 +60,14 @@ const TripScreen = () => {
       <ScrollView contentContainerStyle={tripstyle2.scrollContainer}>
    
         <View style={tripstyle2.tripCard}>
-          <Text style={tripstyle2.tripTitle}>Trip to Manila</Text>
+          <Text style={tripstyle2.tripTitle}>Trip to Jerusalem</Text>
           <Text style={tripstyle2.detailText}>Date : March 20, 2025</Text>
           <Text style={tripstyle2.detailText}>Time : 11:00 PM</Text>
           <Text style={tripstyle2.detailText}>Expected Arrival : 5:00 AM</Text>
 
           <Text style={tripstyle2.infoText}>Alloted budget : 232909402942</Text>
           <Text style={tripstyle2.infoText}>Alloted Fuel budget : 2309329042</Text>
-          <Text style={tripstyle2.infoText}>Dispatcher : Symon</Text>
+          <Text style={tripstyle2.infoText}>Dispatcher : Jesus</Text>
           <View style={tripstyle.tripDetails}>
                     {/* <Text  style={tripstyle2.infoText}>Status:
                     style={[tripstyle.value, { color: status === 'On-Going' ? 'blue' : status === 'Completed' ? 'green' : 'red' }]}
