@@ -60,14 +60,14 @@ const TripScreen = () => {
       <ScrollView contentContainerStyle={tripstyle2.scrollContainer}>
    
         <View style={tripstyle2.tripCard}>
-          <Text style={tripstyle2.tripTitle}>Trip to Jerusalem</Text>
+          <Text style={tripstyle2.tripTitle}>Trip to Manila</Text>
           <Text style={tripstyle2.detailText}>Date : March 20, 2025</Text>
           <Text style={tripstyle2.detailText}>Time : 11:00 PM</Text>
           <Text style={tripstyle2.detailText}>Expected Arrival : 5:00 AM</Text>
 
           <Text style={tripstyle2.infoText}>Alloted budget : 232909402942</Text>
           <Text style={tripstyle2.infoText}>Alloted Fuel budget : 2309329042</Text>
-          <Text style={tripstyle2.infoText}>Dispatcher : Jesus</Text>
+          <Text style={tripstyle2.infoText}>Dispatcher : Symon</Text>
           <View style={tripstyle.tripDetails}>
                     {/* <Text  style={tripstyle2.infoText}>Status:
                     style={[tripstyle.value, { color: status === 'On-Going' ? 'blue' : status === 'Completed' ? 'green' : 'red' }]}
