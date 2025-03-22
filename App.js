@@ -44,15 +44,3 @@ const App = () => {
 
 export default App;
 
-// import React from "react";
-// import { Text, View } from "react-native";
-
-// function App() {
-//   return (
-//     <View>
-//       <Text>Hello, React Native! bitch</Text>
-//     </View>
-//   );
-// }
-
-// export default App;

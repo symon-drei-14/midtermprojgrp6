@@ -79,8 +79,13 @@ export default function Expenses({ navigation }) {
   
   const validateExpenseAmount = (text) => {
     setExpenseAmount(text);
+    
     if (text.length === 0) {
       setExpenseAmountError("Amount is required.");
+    } else if (isNaN(parseFloat(text))) {
+      setExpenseAmountError("Please enter a valid number.");
+    } else if (parseFloat(text) > budget) {
+      setExpenseAmountError("Expense cannot exceed budget amount.");
     } else {
       setExpenseAmountError("");
     }
@@ -89,6 +94,10 @@ export default function Expenses({ navigation }) {
   const handleBlurExpenseAmount = () => {
     if (expenseAmount.length === 0) {
       setExpenseAmountError("Amount is required.");
+    } else if (isNaN(parseFloat(expenseAmount))) {
+      setExpenseAmountError("Please enter a valid number.");
+    } else if (parseFloat(expenseAmount) > budget) {
+      setExpenseAmountError("Expense cannot exceed budget amount.");
     }
   };
   
@@ -98,6 +107,9 @@ export default function Expenses({ navigation }) {
     if (expenseAmount.trim().length === 0) {
       setExpenseAmountError("Amount is required.");
       hasError = true; 
+    } else if (parseFloat(expenseAmount) > budget) {  
+      setExpenseAmountError("Expense cannot exceed budget amount.");
+      hasError = true;  
     } else {
       setExpenseAmountError(""); 
     }
@@ -108,7 +120,7 @@ export default function Expenses({ navigation }) {
     } else {
       setCustomCategoryError(""); 
     }
- 
+  
     if (hasError) {
       return;
     }
@@ -133,6 +145,8 @@ export default function Expenses({ navigation }) {
       setDropdownVisible(false);
     }
   };
+
+  
 
   return (
     // <TouchableWithoutFeedback onPress={closeDropdown}>
@@ -273,9 +287,9 @@ export default function Expenses({ navigation }) {
                 )}
 
                 <View style={{ height: 20 }} />
-                <Button title="Submit" onPress={addExpense} />
+                <Button title="Submit" color="#58984d" te onPress={addExpense} />
                 <View style={{ height: 10 }} />
-                <Button title="Cancel" color="red" onPress={() => setModalVisible(false)} />
+                <Button title="Cancel" color="#ea5050" onPress={() => setModalVisible(false)} />
               </View>
             </View>
           </TouchableWithoutFeedback>

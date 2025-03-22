@@ -86,6 +86,7 @@ container: {
     justifyContent: "space-between",
     marginBottom: 20,
     marginTop: 30,
+    
   },
  
   greeting: {
@@ -168,15 +169,17 @@ container: {
     backgroundColor: "rgba(0, 0, 0, 0.5)", 
   },
   modalContent: {
-    width: "80%",
+    width: "95%",
+    height:"100%",
     padding: 20,
-    backgroundColor: "#FFF",
+    backgroundColor: "#e6ecec",
     borderRadius: 10,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 5,
     elevation: 5,
+    top:180,
   },
   input: {
     borderBottomWidth: 1,
@@ -222,6 +225,12 @@ fontSize: 26,
 buttonText4: {
   color: "#000000",
    fontWeight: "bold",
+
+
+  },
+
+  button: {
+borderRadius:"20",
 
   },
 });
