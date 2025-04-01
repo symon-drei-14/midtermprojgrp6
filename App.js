@@ -7,8 +7,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import Login from "./src/screens/Login";
 import Dashboard from "./src/screens/Dashboard";
-// import Register from "./src/screens/Register";
-// import LandingPage from "./src/screens/LandingPage"
+import Register from "./src/screens/Register";
 import Trips from "./src/screens/Trips"
 import Expenses from "./src/screens/Expenses";
 import Profile from "./src/screens/Profile";
@@ -25,10 +24,9 @@ const App = () => {
             initialRouteName="Login"
             screenOptions={{ headerShown: false }}
           >
-            {/* <Stack.Screen name="Register" component={Register} /> */}
+            <Stack.Screen name="Register" component={Register} />
             <Stack.Screen name="Dashboard" component={Dashboard} />
             <Stack.Screen name="Login" component={Login} />
-            {/* <Stack.Screen name="LandingPage" component={LandingPage} /> */}
             <Stack.Screen name="Trips" component={Trips} />
             <Stack.Screen name="Expenses" component={Expenses} />
             <Stack.Screen name="Profile" component={Profile} />

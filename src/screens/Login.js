@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { Text, View, TextInput, TouchableOpacity, Image, ImageBackground } from "react-native";
 import { loginstyle } from "../styles/Styles";
+import firestore from "@react-native-firebase/firestore";
 import loginbackground from "../assets/loginbg.png";
 
 const Login = ({ navigation }) => {
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [usernameError, setUsernameError] = useState("");
+  const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [isPressed, setIsPressed] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
@@ -20,70 +21,41 @@ const Login = ({ navigation }) => {
   if (showSplash) {
     return (
       <View style={{ flex: 1, backgroundColor: "#FFFAF3" }}>
-        <Image
-          source={require("../assets/bgpic.png")}
-          style={loginstyle.splashImage
-          }
-        />
+        <Image source={require("../assets/bgpic.png")} style={loginstyle.splashImage} />
       </View>
     );
   }
 
-  const validateUsername = (text) => {
-    setUsername(text);
-    if (text.length === 0) {
-      setUsernameError("Username is required.");
-    } else if (text.length < 4) {
-      setUsernameError("Username must be at least 4 characters");
-    } else {
-      setUsernameError("");
-    }
-  };
-
-  const validatePassword = (text) => {
-    setPassword(text);
-    if (text.length === 0) {
-      setPasswordError("Password is required.");
-    } else if (text.length < 8) {
-      setPasswordError("Password must be at least 8 characters");
-    } else {
-      setPasswordError("");
-    }
-  };
-
-  const handleLogin = () => {
-    let valid = true;
-
-    if (username.length === 0) {
-        setUsernameError("Username is required.");
-        valid = false;
-    } else if (username.length < 4) {
-        setUsernameError("Username must be at least 4 characters.");
-        valid = false;
-    } else if (username !== "driver") {
-        setUsernameError("Invalid username.");
-        valid = false;
-    } else {
-        setUsernameError("");
+  const handleLogin = async () => {
+    if (!email || !password) {
+      setEmailError(email ? "" : "Email is required.");
+      setPasswordError(password ? "" : "Password is required.");
+      return;
     }
 
-    if (password.length === 0) {
-        setPasswordError("Password is required.");
-        valid = false;
-    } else if (password.length < 8) {
-        setPasswordError("Password must be at least 8 characters.");
-        valid = false;
-    } else if (password !== "mansarftw") {
+    try {
+      const userQuery = await firestore()
+        .collection("Drivers_table")
+        .where("email", "==", email)
+        .get();
+
+      if (userQuery.empty) {
+        setEmailError("Invalid email.");
+        return;
+      }
+
+      const userData = userQuery.docs[0].data();
+      if (userData.password !== password) {
         setPasswordError("Invalid password.");
-        valid = false;
-    } else {
-        setPasswordError("");
+        return;
+      }
+
+      alert("Login Successful!");
+      navigation.navigate("Dashboard", { email });
+    } catch (error) {
+      console.error("Login Error:", error);
+      alert("Something went wrong. Please try again.");
     }
-
-    if (!valid) return;
-
-    alert("Login Successful!");
-    navigation.navigate("Dashboard", { username });
   };
 
   return (
@@ -92,41 +64,39 @@ const Login = ({ navigation }) => {
         <View style={loginstyle.innerContainer}>
           <Text style={loginstyle.title}>Login</Text>
 
-          <Text>Username</Text>
+          <Text>Email</Text>
           <TextInput
-            value={username}
-            style={[
-              loginstyle.textinput,
-              usernameError ? loginstyle.inputError : null,
-            ]}
-            onChangeText={validateUsername}
-            placeholder="Enter your username"
+            value={email}
+            style={[loginstyle.textinput, emailError ? loginstyle.inputError : null]}
+            onChangeText={(text) => setEmail(text)}
+            placeholder="Enter your email"
           />
-          {usernameError ? <Text style={loginstyle.errorText}>{usernameError}</Text> : null}
+          {emailError ? <Text style={loginstyle.errorText}>{emailError}</Text> : null}
 
           <Text>Password</Text>
           <TextInput
             value={password}
-            style={[
-              loginstyle.textinput,
-              passwordError ? loginstyle.inputError : null,
-            ]}
-            onChangeText={validatePassword}
+            style={[loginstyle.textinput, passwordError ? loginstyle.inputError : null]}
+            onChangeText={(text) => setPassword(text)}
             secureTextEntry={true}
             placeholder="Enter your password"
           />
           {passwordError ? <Text style={loginstyle.errorText}>{passwordError}</Text> : null}
 
           <TouchableOpacity
-            style={[
-              loginstyle.button,
-              { backgroundColor: isPressed ? "#6A0DAD" : "#478843" },
-            ]}
+            style={[loginstyle.button, { backgroundColor: isPressed ? "#6A0DAD" : "#478843" }]}
             onPressIn={() => setIsPressed(true)}
             onPressOut={() => setIsPressed(false)}
             onPress={handleLogin}
           >
             <Text style={loginstyle.buttonText}>Login</Text>
+          </TouchableOpacity>
+
+          {/* Register Link */}
+          <TouchableOpacity onPress={() => navigation.navigate("Register")}>
+            <Text style={{ color: "#478843", marginTop: 10, textAlign: "center" }}>
+              Don't have an account? Register here
+            </Text>
           </TouchableOpacity>
         </View>
       </View>

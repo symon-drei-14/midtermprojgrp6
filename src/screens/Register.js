@@ -1,154 +1,121 @@
-import React, { useState, useCallback, } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  FlatList,
-  ScrollView,
-  Modal,
-  Image
-} from "react-native";
-
-import { useFocusEffect,useNavigation } from "@react-navigation/native";
+import React, { useState } from "react";
+import { Text, View, TextInput, TouchableOpacity, ImageBackground } from "react-native";
 import { loginstyle } from "../styles/Styles";
-import { navbar } from "../styles/Navbar";
-import { tripstyle } from "../styles/Tripcss";
-import { tripstyle2 } from "../styles/Tripcss2";
+import firestore from "@react-native-firebase/firestore";
+import loginbackground from "../assets/loginbg.png";
 
-import homeIcon from "../assets/Home2.png";
-import userIcon from "../assets/trip2.png";
-import locationIcon from "../assets/exp2.png";
-import profileicon from "../assets/profile.png"
-const trips = [
-  {
-    id: "1",
-    destination: "Trip to Jerusalem",
-    date: "March 20, 2025",
-    time: "11:00 PM",
-    expectedArrival: "5:00 AM",
-  },
-  {
-    id: "2",
-    destination: "Trip to Jerusalem",
-    date: "March 20, 2025",
-    time: "11:00 PM",
-    expectedArrival: "5:00 AM",
-  },
-];
+const Register = ({ navigation }) => {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [assignedTruckId, setAssignedTruckId] = useState("");
+  const [errors, setErrors] = useState({});
 
- 
+  const handleRegister = async () => {
+    let newErrors = {};
 
-const TripScreen = () => {
-     const nav = useNavigation();
-  const [status, setStatus] = useState('On-Going');
-  const [modalVisible, setModalVisible] = useState(false);
+    if (!name) newErrors.name = "Full name is required.";
+    if (!email) newErrors.email = "Email is required.";
+    if (!password) newErrors.password = "Password is required.";
+    if (!confirmPassword) newErrors.confirmPassword = "Confirm your password.";
+    if (password !== confirmPassword) newErrors.confirmPassword = "Passwords do not match.";
+    if (!assignedTruckId) newErrors.assignedTruckId = "Assigned truck ID is required.";
 
-  useFocusEffect(
-    useCallback(() => {
-      setModalVisible(false);
-    }, [])
-  );
+    setErrors(newErrors);
+    if (Object.keys(newErrors).length > 0) return;
 
-  const handleStatusChange = (newStatus) => {
-    setStatus(newStatus);
-    setModalVisible(false);
+    try {
+      const emailExists = await firestore().collection("Drivers_table").where("email", "==", email).get();
+      if (!emailExists.empty) {
+        setErrors({ email: "Email is already in use." });
+        return;
+      }
+
+      const newDriverRef = firestore().collection("Drivers_table").doc();
+      await newDriverRef.set({
+        driver_id: newDriverRef.id, // Auto-generated ID
+        name,
+        email,
+        password, // Storing plain text for now (consider hashing)
+        assigned_truck_id: parseInt(assignedTruckId),
+      });
+
+      alert("Registration Successful!");
+      navigation.navigate("Login");
+    } catch (error) {
+      console.error("Registration Error:", error);
+      alert("Something went wrong. Please try again.");
+    }
   };
+
   return (
-    <View style={tripstyle2.container}>
-      <ScrollView contentContainerStyle={tripstyle2.scrollContainer}>
-        {/* Trip Details */}
-        <View style={tripstyle2.tripCard}>
-          <Text style={tripstyle2.tripTitle}>Trip to Jerusalem</Text>
-          <Text style={tripstyle2.detailText}>Date : March 20, 2025</Text>
-          <Text style={tripstyle2.detailText}>Time : 11:00 PM</Text>
-          <Text style={tripstyle2.detailText}>Expected Arrival : 5:00 AM</Text>
+    <ImageBackground source={loginbackground} style={loginstyle.background}>
+      <View style={loginstyle.container}>
+        <View style={loginstyle.innerContainer}>
 
-          <Text style={tripstyle2.infoText}>Alloted budget : 232909402942</Text>
-          <Text style={tripstyle2.infoText}>Alloted Fuel budget : 2309329042</Text>
-          <Text style={tripstyle2.infoText}>Dispatcher : Jesus</Text>
-          <View style={tripstyle.tripDetails}>
-                    {/* <Text  style={tripstyle2.infoText}>Status:
-                    style={[tripstyle.value, { color: status === 'On-Going' ? 'blue' : status === 'Completed' ? 'green' : 'red' }]}
-                      {status}
-                    </Text> */}
-                    <Text
-  style={[ tripstyle2.infoText,  { color: status === 'On-Going' ? 'blue' : status === 'Completed' ? 'green' : 'red' }]}
->Status: {status} </Text>
-                  </View>
+          <Text>Full Name</Text>
+          <TextInput
+            value={name}
+            style={[loginstyle.textinput, errors.name ? loginstyle.inputError : null]}
+            onChangeText={setName}
+            placeholder="Enter full name"
+          />
+          {errors.name && <Text style={loginstyle.errorText}>{errors.name}</Text>}
 
-          {/* Action Buttons */}
-          <View style={tripstyle2.buttonContainer}>
-          <TouchableOpacity style={tripstyle2.updateButton} onPress={() => setModalVisible(true)}>
-  <Text style={tripstyle2.buttonText}>Update Status</Text>
-</TouchableOpacity>
-            <TouchableOpacity style={tripstyle2.expenseButton}>
-              <Text style={tripstyle2.buttonText}>Report Expense</Text>
-            </TouchableOpacity>
-          </View>
+          <Text>Email</Text>
+          <TextInput
+            value={email}
+            style={[loginstyle.textinput, errors.email ? loginstyle.inputError : null]}
+            onChangeText={setEmail}
+            placeholder="Enter email"
+            keyboardType="email-address"
+          />
+          {errors.email && <Text style={loginstyle.errorText}>{errors.email}</Text>}
+
+          <Text>Password</Text>
+          <TextInput
+            value={password}
+            style={[loginstyle.textinput, errors.password ? loginstyle.inputError : null]}
+            onChangeText={setPassword}
+            secureTextEntry={true}
+            placeholder="Enter password"
+          />
+          {errors.password && <Text style={loginstyle.errorText}>{errors.password}</Text>}
+
+          <Text>Confirm Password</Text>
+          <TextInput
+            value={confirmPassword}
+            style={[loginstyle.textinput, errors.confirmPassword ? loginstyle.inputError : null]}
+            onChangeText={setConfirmPassword}
+            secureTextEntry={true}
+            placeholder="Confirm password"
+          />
+          {errors.confirmPassword && <Text style={loginstyle.errorText}>{errors.confirmPassword}</Text>}
+
+          <Text>Assigned Truck ID</Text>
+          <TextInput
+            value={assignedTruckId}
+            style={[loginstyle.textinput, errors.assignedTruckId ? loginstyle.inputError : null]}
+            onChangeText={setAssignedTruckId}
+            placeholder="Enter assigned truck ID"
+            keyboardType="numeric"
+          />
+          {errors.assignedTruckId && <Text style={loginstyle.errorText}>{errors.assignedTruckId}</Text>}
+
+          <TouchableOpacity style={loginstyle.button} onPress={handleRegister}>
+            <Text style={loginstyle.buttonText}>Register</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity onPress={() => navigation.navigate("Login")}>
+            <Text style={{ color: "#478843", textAlign: "center", marginTop: 10 }}>
+              Already have an account? Login here.
+            </Text>
+          </TouchableOpacity>
         </View>
-     <Modal visible={modalVisible} transparent animationType="slide">
-        <View style={tripstyle.modalContainer}>
-          <View style={tripstyle.modalContent}>
-            <Text style={tripstyle.modalTitle}>Select Status</Text>
-            <TouchableOpacity style={tripstyle.modalButton} onPress={() => handleStatusChange('On-Going')}>
-              <Text style={tripstyle.modalButtonText}>On-Going</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={tripstyle.modalButton} onPress={() => handleStatusChange('Completed')}>
-              <Text style={tripstyle.modalButtonText}>Completed</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={tripstyle.modalButton} onPress={() => handleStatusChange('No Show')}>
-              <Text style={tripstyle.modalButtonText}>No Show</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={tripstyle.cancelButton} onPress={() => setModalVisible(false)}>
-              <Text style={tripstyle.cancelButtonText}>Cancel</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
-
-
-        {/* Future Trips */}
-        <Text style={tripstyle2.futureTripsTitle}>Future Trips</Text>
-        <FlatList
-          data={trips}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <View style={tripstyle2.futureTripCard}>
-              <Text style={tripstyle2.tripTitle}>{item.destination}</Text>
-              <Text style={tripstyle2.detailText}>Date : {item.date}</Text>
-              <Text style={tripstyle2.detailText}>Time : {item.time}</Text>
-              <Text style={tripstyle2.detailText}>
-                🚗 Expected Arrival : {item.expectedArrival}
-              </Text>
-            </View>
-          )}
-          keyboardShouldPersistTaps="handled"
-          scrollEnabled={false} // Prevents nested scrolling issues
-        />
-      </ScrollView>
-
-      
-      
-
-      <View style={navbar.bottomNav2}>
-              <TouchableOpacity onPress={() => nav.navigate("Dashboard")}>
-                <Image source={homeIcon} style={navbar.navIcon} />
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => nav.navigate("Trips")}>
-                <Image source={userIcon} style={navbar.navIcon} />
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => nav.navigate("Expenses")}>
-                <Image source={locationIcon} style={navbar.navIcon} />
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => nav.navigate("Profile")}>
-                <Image source={profileicon} style={navbar.navIcon} />
-              </TouchableOpacity>
-            </View>
-    </View>
+      </View>
+    </ImageBackground>
   );
 };
 
-
-
-export default TripScreen;
+export default Register;

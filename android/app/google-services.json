@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "126652289603",
+    "firebase_url": "https://mansartrucking1-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "mansartrucking1",
+    "storage_bucket": "mansartrucking1.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:126652289603:android:134c372ca3624648e07af6",
+        "android_client_info": {
+          "package_name": "com.midtermprojgrp6"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDNiIz2bPzKvbVqGWmATTD4vI1gyNRojbE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
