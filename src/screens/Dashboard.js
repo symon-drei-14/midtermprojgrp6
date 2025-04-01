@@ -183,7 +183,6 @@ function Dashboard({ route, navigation }) {
                             <Text style={dashboardstyles.coordinates}>Last Updated: {new Date(currentLocation.timestamp).toLocaleTimeString()}</Text>
                             <Text style={dashboardstyles.coordinates}>Trip ID: {tripId.substring(0, 12)}</Text>
                             <Text style={dashboardstyles.coordinates}>Driver ID: {userId}</Text>
-                            <Text style={dashboardstyles.coordinates}>Database: {databaseStatus}</Text>
                         </>
                     )}  
                 </View>
