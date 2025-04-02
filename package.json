@@ -11,9 +11,9 @@
   },
   "dependencies": {
     "@react-native-community/geolocation": "^3.4.0",
-    "@react-native-firebase/app": "^21.12.3",
-    "@react-native-firebase/database": "^21.12.3",
-    "@react-native-firebase/firestore": "^21.12.3",
+    "@react-native-firebase/app": "^21.13.0",
+    "@react-native-firebase/database": "^21.13.0",
+    "@react-native-firebase/firestore": "^21.13.0",
     "@react-native-picker/picker": "^2.11.0",
     "@react-navigation/native": "^7.0.14",
     "@react-navigation/stack": "^7.1.1",

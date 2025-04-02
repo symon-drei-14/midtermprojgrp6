@@ -52,6 +52,7 @@ export const loginstyle = StyleSheet.create({
     padding: 20,
     borderRadius: 15,
     shadowOffset: { width: 0, height: 2 },
+    marginBottom:100,
     
   },
   title: {
