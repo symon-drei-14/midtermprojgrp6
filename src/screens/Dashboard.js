@@ -30,9 +30,17 @@ function Dashboard({ route, navigation }) {
     const watchIdRef = useRef(null);
     const [address, setAddress] = useState("2972 Westheimer Rd. Santa Ana, Illinois 85486");
 
-    const userId = route.params?.userId || 'test_driver_123';
+    const userId = route.params?.userId || 'guest_user';
+    const email = route.params?.email || 'guest@example.com';
+    const driverName = route.params?.driverName || 'Guest Driver';
 
-    const tripId = route.params?.tripId || `trip_${Date.now()}`;
+    const truckId = route.params?.truckId || `truck_${Date.now()}`;
+
+    useEffect(() => {
+        if (userId !== 'guest_user') {
+            console.log(`Dashboard loaded for user: ${userId} with truck: ${truckId}`);
+        }
+    }, [userId, truckId]);
 
     const startLocationTracking = () => {
         const options = {
@@ -48,20 +56,14 @@ function Dashboard({ route, navigation }) {
                     const { latitude, longitude } = position.coords;
                     const timestamp = position.timestamp;
                     
-                    console.log(`New location: ${latitude}, ${longitude}`);
+                    console.log(`New location for ${userId}: ${latitude}, ${longitude}`);
                     
                     setCurrentLocation({
                         latitude,
                         longitude,
                         timestamp
                     });
-
-                    const useFirestore = databaseStatus.includes("Firestore");
-                    if (useFirestore) {
-                        storeLocationToFirestore(latitude, longitude, timestamp);
-                    } else {
-                        storeLocationToFirebase(latitude, longitude, timestamp);
-                    }
+                    storeLocationToFirebase(latitude, longitude, timestamp);
                 },
                 (error) => {
                     console.error('Error getting location:', error);
@@ -86,13 +88,15 @@ function Dashboard({ route, navigation }) {
     const storeLocationToFirebase = (latitude, longitude, timestamp) => {
         const logId = `log_${Date.now()}`;
         const currentTime = new Date().toLocaleString("en-US", { timeZone: "Asia/Manila" });
-    
+
         database()
             .ref(`/location_logs/${logId}`)
             .set({
                 log_id: logId,
-                trip_id: tripId,
+                truck_id: truckId, 
                 driver_id: userId,
+                driver_email: email,
+                driver_name: driverName, 
                 latitude,
                 longitude,
                 timestamp: currentTime, 
@@ -105,7 +109,20 @@ function Dashboard({ route, navigation }) {
                         latitude,
                         longitude,
                         timestamp: currentTime, 
-                        trip_id: tripId
+                        truck_id: truckId, 
+                        driver_email: email,
+                        driver_name: driverName 
+                    });
+            })
+            .then(() => {
+
+                return database()
+                    .ref(`/trucks/${truckId}/locations/${logId}`)
+                    .set({
+                        latitude,
+                        longitude,
+                        timestamp: currentTime,
+                        driver_name: driverName
                     });
             })
             .then(() => setDatabaseStatus("Data stored successfully in Realtime DB"))
@@ -137,10 +154,6 @@ function Dashboard({ route, navigation }) {
         }
     };
 
-    
-
-
-
     return (
         <View style={{ flex: 1 }}> 
             <ScrollView contentContainerStyle={{ flexGrow: 1, paddingBottom: 80 }}> 
@@ -150,6 +163,8 @@ function Dashboard({ route, navigation }) {
                     resizeMode="cover"
                 />             
                 <View style={dashboardstyles.card}>
+                    <Text style={dashboardstyles.welcomeText}>Welcome, {driverName}</Text>
+                    
                     <Text style={dashboardstyles.label}>Your Location</Text>
                     <TextInput
                         style={dashboardstyles.input}
@@ -173,29 +188,17 @@ function Dashboard({ route, navigation }) {
                         <Text style={loginstyle.locationText}>Sensor: {sensorEnabled ? "GPS Sensor" : "Cell Tower + WiFi"}</Text>
                         <Switch value={sensorEnabled} onValueChange={(value) => setSensorEnabled(value)} />
                     </View>
-
-                    <View style={{ marginVertical: 5 }} />
-
-                    {locationEnabled && currentLocation && (
-                        <>
-                            <Text style={dashboardstyles.coordinates}>Longitude: {currentLocation.longitude.toFixed(6)}</Text>
-                            <Text style={dashboardstyles.coordinates}>Latitude: {currentLocation.latitude.toFixed(6)}</Text>
-                            <Text style={dashboardstyles.coordinates}>Last Updated: {new Date(currentLocation.timestamp).toLocaleTimeString()}</Text>
-                            <Text style={dashboardstyles.coordinates}>Trip ID: {tripId.substring(0, 12)}</Text>
-                            <Text style={dashboardstyles.coordinates}>Driver ID: {userId}</Text>
-                        </>
-                    )}  
-                </View>
+                    </View>
             </ScrollView>
 
             <View style={navbar.bottomNav2}>
                 <TouchableOpacity onPress={() => nav.navigate("Dashboard")}>
                     <Image source={homeIcon} style={navbar.navIcon} />
                 </TouchableOpacity>
-                <TouchableOpacity onPress={() => nav.navigate("Trips")}>
+                <TouchableOpacity onPress={() => nav.navigate("Trips", { userId, truckId })}>
                     <Image source={userIcon} style={navbar.navIcon} />
                 </TouchableOpacity>
-                <TouchableOpacity onPress={() => nav.navigate("Profile")}>
+                <TouchableOpacity onPress={() => nav.navigate("Profile", { userId, email })}>
                     <Image source={profileicon} style={navbar.navIcon} />
                 </TouchableOpacity>
             </View>

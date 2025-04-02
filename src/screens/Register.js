@@ -34,10 +34,10 @@ const Register = ({ navigation }) => {
 
       const newDriverRef = firestore().collection("Drivers_table").doc();
       await newDriverRef.set({
-        driver_id: newDriverRef.id, // Auto-generated ID
+        driver_id: newDriverRef.id, 
         name,
         email,
-        password, // Storing plain text for now (consider hashing)
+        password,
         assigned_truck_id: parseInt(assignedTruckId),
       });
 

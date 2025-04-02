@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Text, View, TextInput, TouchableOpacity, Image, ImageBackground } from "react-native";
+import { Text, View, TextInput, TouchableOpacity, Image, ImageBackground, Alert } from "react-native";
 import { loginstyle } from "../styles/Styles";
 import firestore from "@react-native-firebase/firestore";
 import loginbackground from "../assets/loginbg.png";
@@ -26,10 +26,31 @@ const Login = ({ navigation }) => {
     );
   }
 
+  const validateInputs = () => {
+    let isValid = true;
+    
+    // Reset previous errors
+    setEmailError("");
+    setPasswordError("");
+    
+    if (!email.trim()) {
+      setEmailError("Email is required.");
+      isValid = false;
+    } else if (!/^\S+@\S+\.\S+$/.test(email)) {
+      setEmailError("Please enter a valid email.");
+      isValid = false;
+    }
+    
+    if (!password) {
+      setPasswordError("Password is required.");
+      isValid = false;
+    }
+    
+    return isValid;
+  };
+
   const handleLogin = async () => {
-    if (!email || !password) {
-      setEmailError(email ? "" : "Email is required.");
-      setPasswordError(password ? "" : "Password is required.");
+    if (!validateInputs()) {
       return;
     }
 
@@ -40,40 +61,61 @@ const Login = ({ navigation }) => {
         .get();
 
       if (userQuery.empty) {
-        setEmailError("Invalid email.");
+        setEmailError("Account not found. Please check your email or register.");
         return;
       }
 
-      const userData = userQuery.docs[0].data();
+      const userDoc = userQuery.docs[0];
+      const userData = userDoc.data();
+      const userId = userDoc.id;
+      
       if (userData.password !== password) {
-        setPasswordError("Invalid password.");
+        setPasswordError("Incorrect password. Please try again.");
         return;
       }
 
-      alert("Login Successful!");
-      navigation.navigate("Dashboard", { email });
+      // Create a new trip ID for this session
+      const tripId = `trip_${Date.now()}`;
+      
+      Alert.alert(
+        "Login Successful",
+        "Welcome back!",
+        [
+          {
+            text: "Continue",
+            onPress: () => navigation.navigate("Dashboard", { 
+              userId: userId, 
+              email: email,
+              tripId: tripId,
+              driverName: userData.name || email.split('@')[0]
+            })
+          }
+        ]
+      );
     } catch (error) {
       console.error("Login Error:", error);
-      alert("Something went wrong. Please try again.");
+      Alert.alert("Login Error", "Something went wrong. Please try again.");
     }
   };
 
   return (
     <ImageBackground source={loginbackground} style={loginstyle.background}>
-      <View style={[loginstyle.container, { backgroundColor: "#" }]}>
+      <View style={[loginstyle.container]}>
         <View style={loginstyle.innerContainer}>
           <Text style={loginstyle.title}>Login</Text>
 
-          <Text>Email</Text>
+          <Text style={loginstyle.label}>Email</Text>
           <TextInput
             value={email}
             style={[loginstyle.textinput, emailError ? loginstyle.inputError : null]}
             onChangeText={(text) => setEmail(text)}
             placeholder="Enter your email"
+            keyboardType="email-address"
+            autoCapitalize="none"
           />
           {emailError ? <Text style={loginstyle.errorText}>{emailError}</Text> : null}
 
-          <Text>Password</Text>
+          <Text style={loginstyle.label}>Password</Text>
           <TextInput
             value={password}
             style={[loginstyle.textinput, passwordError ? loginstyle.inputError : null]}
@@ -92,7 +134,6 @@ const Login = ({ navigation }) => {
             <Text style={loginstyle.buttonText}>Login</Text>
           </TouchableOpacity>
 
-          {/* Register Link */}
           <TouchableOpacity onPress={() => navigation.navigate("Register")}>
             <Text style={{ color: "#478843", marginTop: 10, textAlign: "center" }}>
               Don't have an account? Register here
