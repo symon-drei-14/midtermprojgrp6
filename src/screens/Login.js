@@ -65,7 +65,7 @@ const Login = ({ navigation }) => {
     setLoading(true);
     
     try {
-      const response = await fetch('http://192.168.100.17/Capstone-1-eb/login.php', {
+      const response = await fetch('http://192.168.100.17/Capstone-1-eb/include/handlers/login_handler.php', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
