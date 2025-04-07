@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { Text, View, TextInput, TouchableOpacity, Image, ImageBackground, Alert } from "react-native";
+import { Text, View, TextInput, TouchableOpacity, Image, ImageBackground, Alert, ActivityIndicator } from "react-native";
 import { loginstyle } from "../styles/Styles";
-import firestore from "@react-native-firebase/firestore";
 import loginbackground from "../assets/loginbg.png";
+import auth from '@react-native-firebase/auth';
 
 const Login = ({ navigation }) => {
   const [email, setEmail] = useState("");
@@ -11,12 +11,21 @@ const Login = ({ navigation }) => {
   const [passwordError, setPasswordError] = useState("");
   const [isPressed, setIsPressed] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    setTimeout(() => {
+    const splashTimer = setTimeout(() => {
       setShowSplash(false);
     }, 2000);
+    
+    checkExistingSession();
+    return () => {
+      clearTimeout(splashTimer);
+    };
   }, []);
+
+  const checkExistingSession = async () => {
+  };
 
   if (showSplash) {
     return (
@@ -29,7 +38,6 @@ const Login = ({ navigation }) => {
   const validateInputs = () => {
     let isValid = true;
     
-    // Reset previous errors
     setEmailError("");
     setPasswordError("");
     
@@ -54,47 +62,78 @@ const Login = ({ navigation }) => {
       return;
     }
 
+    setLoading(true);
+    
     try {
-      const userQuery = await firestore()
-        .collection("Drivers_table")
-        .where("email", "==", email)
-        .get();
+      const response = await fetch('http://192.168.100.17/Capstone-1-eb/login.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({
+          email: email,
+          password: password
+        }),
+      });
 
-      if (userQuery.empty) {
-        setEmailError("Account not found. Please check your email or register.");
-        return;
-      }
-
-      const userDoc = userQuery.docs[0];
-      const userData = userDoc.data();
-      const userId = userDoc.id;
+      const rawResponse = await response.text();
+      console.log("Raw API response:", rawResponse);
       
-      if (userData.password !== password) {
-        setPasswordError("Incorrect password. Please try again.");
-        return;
+      let result;
+      try {
+        result = JSON.parse(rawResponse);
+      } catch (parseError) {
+        console.error("JSON parse error:", parseError);
+        throw new Error(`Invalid JSON response: ${rawResponse.substring(0, 100)}...`);
       }
-
-      // Create a new trip ID for this session
-      const tripId = `trip_${Date.now()}`;
       
-      Alert.alert(
-        "Login Successful",
-        "Welcome back!",
-        [
-          {
-            text: "Continue",
-            onPress: () => navigation.navigate("Dashboard", { 
-              userId: userId, 
-              email: email,
-              tripId: tripId,
-              driverName: userData.name || email.split('@')[0]
-            })
-          }
-        ]
-      );
+      if (result.success) {
+        const userData = result.user;
+        const tripId = `trip_${Date.now()}`;
+        
+        setLoading(false);
+        
+        Alert.alert(
+          "Login Successful",
+          "Welcome back!",
+          [
+            {
+              text: "Continue",
+              onPress: () => navigation.reset({
+                index: 0,
+                routes: [{ 
+                  name: "Dashboard", 
+                  params: { 
+                    userId: userData.driver_id, 
+                    email: userData.email,
+                    tripId: tripId,
+                    driverName: userData.name || email.split('@')[0]
+                  }
+                }]
+              })
+            }
+          ]
+        );
+      } else {
+        setLoading(false);
+        
+        if (result.error === "invalid_email") {
+          setEmailError("Account not found. Please check your email or register.");
+        } else if (result.error === "invalid_password") {
+          setPasswordError("Incorrect password. Please try again.");
+        } else {
+          Alert.alert("Login Error", result.message || "Authentication failed. Please try again.");
+        }
+      }
     } catch (error) {
       console.error("Login Error:", error);
-      Alert.alert("Login Error", "Something went wrong. Please try again.");
+      setLoading(false);
+      
+      Alert.alert(
+        "Connection Error", 
+        "Unable to connect to the server. Please check your internet connection and try again."
+      );
     }
   };
 
@@ -112,6 +151,7 @@ const Login = ({ navigation }) => {
             placeholder="Enter your email"
             keyboardType="email-address"
             autoCapitalize="none"
+            editable={!loading}
           />
           {emailError ? <Text style={loginstyle.errorText}>{emailError}</Text> : null}
 
@@ -122,19 +162,29 @@ const Login = ({ navigation }) => {
             onChangeText={(text) => setPassword(text)}
             secureTextEntry={true}
             placeholder="Enter your password"
+            editable={!loading}
           />
           {passwordError ? <Text style={loginstyle.errorText}>{passwordError}</Text> : null}
 
           <TouchableOpacity
-            style={[loginstyle.button, { backgroundColor: isPressed ? "#6A0DAD" : "#478843" }]}
+            style={[
+              loginstyle.button, 
+              { backgroundColor: isPressed ? "#6A0DAD" : "#478843" },
+              loading && { opacity: 0.7 }
+            ]}
             onPressIn={() => setIsPressed(true)}
             onPressOut={() => setIsPressed(false)}
             onPress={handleLogin}
+            disabled={loading}
           >
-            <Text style={loginstyle.buttonText}>Login</Text>
+            {loading ? (
+              <ActivityIndicator color="#FFFFFF" size="small" />
+            ) : (
+              <Text style={loginstyle.buttonText}>Login</Text>
+            )}
           </TouchableOpacity>
 
-          <TouchableOpacity onPress={() => navigation.navigate("Register")}>
+          <TouchableOpacity onPress={() => navigation.navigate("Register")} disabled={loading}>
             <Text style={{ color: "#478843", marginTop: 10, textAlign: "center" }}>
               Don't have an account? Register here
             </Text>

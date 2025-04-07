@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import { Text, View, TextInput, TouchableOpacity, ImageBackground } from "react-native";
+import { Text, View, TextInput, TouchableOpacity, ImageBackground, Alert } from "react-native";
 import { loginstyle } from "../styles/Styles";
-import firestore from "@react-native-firebase/firestore";
+import database from "@react-native-firebase/database";
 import loginbackground from "../assets/loginbg.png";
 
 const Register = ({ navigation }) => {
@@ -11,6 +11,7 @@ const Register = ({ navigation }) => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [assignedTruckId, setAssignedTruckId] = useState("");
   const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
 
   const handleRegister = async () => {
     let newErrors = {};
@@ -20,32 +21,90 @@ const Register = ({ navigation }) => {
     if (!password) newErrors.password = "Password is required.";
     if (!confirmPassword) newErrors.confirmPassword = "Confirm your password.";
     if (password !== confirmPassword) newErrors.confirmPassword = "Passwords do not match.";
-    if (!assignedTruckId) newErrors.assignedTruckId = "Assigned truck ID is required.";
+    if (!assignedTruckId) newErrors.assignedTruckId = "Truck ID is required.";
 
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) return;
 
-    try {
-      const emailExists = await firestore().collection("Drivers_table").where("email", "==", email).get();
-      if (!emailExists.empty) {
-        setErrors({ email: "Email is already in use." });
-        return;
-      }
+    setLoading(true);
 
-      const newDriverRef = firestore().collection("Drivers_table").doc();
-      await newDriverRef.set({
-        driver_id: newDriverRef.id, 
+    try {
+      const driver_id = Date.now().toString();
+      
+      const driverData = {
+        driver_id,
         name,
         email,
         password,
         assigned_truck_id: parseInt(assignedTruckId),
-      });
+        created_at: new Date().toISOString(),
+        last_login: null
+      };
 
-      alert("Registration Successful!");
-      navigation.navigate("Login");
+      await database()
+        .ref(`/drivers/${driver_id}`)
+        .set({
+          ...driverData,
+          location: {
+            latitude: 0,
+            longitude: 0,
+            last_updated: null
+          }
+        });
+
+      try {
+        const apiPayload = {
+          driver_id,
+          firebase_uid: driver_id,
+          name,
+          email,
+          password, 
+          assigned_truck_id: parseInt(assignedTruckId),
+        };
+        
+        console.log("Sending to PHP API:", apiPayload);
+        
+        const response = await fetch('http://192.168.100.17/Capstone-1-eb/drivers.php', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+          body: JSON.stringify(apiPayload),
+        });
+
+        const rawResponse = await response.text();
+        console.log("Raw API response:", rawResponse);
+
+        let result;
+        try {
+          result = JSON.parse(rawResponse);
+        } catch (parseError) {
+          console.error("JSON parse error:", parseError);
+          throw new Error(`Invalid JSON response: ${rawResponse.substring(0, 100)}...`);
+        }
+        
+        if (!result.success) {
+          throw new Error(result.message || "Error saving to MySQL database");
+        }
+        
+        Alert.alert("Success", "Registration successful!");
+        navigation.navigate("Login");
+        
+      } catch (apiError) {
+        console.error("API Error:", apiError);
+        
+        Alert.alert(
+          "Registration Error",
+          "There was an issue with the database connection. Please try again later.",
+          [{ text: "OK" }]
+        );
+      }
     } catch (error) {
       console.error("Registration Error:", error);
-      alert("Something went wrong. Please try again.");
+      Alert.alert("Error", "Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -53,7 +112,6 @@ const Register = ({ navigation }) => {
     <ImageBackground source={loginbackground} style={loginstyle.background}>
       <View style={loginstyle.container}>
         <View style={loginstyle.innerContainer}>
-
           <Text>Full Name</Text>
           <TextInput
             value={name}
@@ -98,16 +156,20 @@ const Register = ({ navigation }) => {
             value={assignedTruckId}
             style={[loginstyle.textinput, errors.assignedTruckId ? loginstyle.inputError : null]}
             onChangeText={setAssignedTruckId}
-            placeholder="Enter assigned truck ID"
+            placeholder="Enter truck ID"
             keyboardType="numeric"
           />
           {errors.assignedTruckId && <Text style={loginstyle.errorText}>{errors.assignedTruckId}</Text>}
 
-          <TouchableOpacity style={loginstyle.button} onPress={handleRegister}>
-            <Text style={loginstyle.buttonText}>Register</Text>
+          <TouchableOpacity 
+            style={[loginstyle.button, loading && loginstyle.buttonDisabled]} 
+            onPress={handleRegister}
+            disabled={loading}
+          >
+            <Text style={loginstyle.buttonText}>{loading ? "Processing..." : "Register"}</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity onPress={() => navigation.navigate("Login")}>
+          <TouchableOpacity onPress={() => navigation.navigate("Login")} disabled={loading}>
             <Text style={{ color: "#478843", textAlign: "center", marginTop: 10 }}>
               Already have an account? Login here.
             </Text>
