@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Text, View, TextInput, TouchableOpacity, Image, ImageBackground, Alert, ActivityIndicator } from "react-native";
 import { loginstyle } from "../styles/Styles";
 import loginbackground from "../assets/loginbg.png";
-import auth from '@react-native-firebase/auth';
+
 
 const Login = ({ navigation }) => {
   const [email, setEmail] = useState("");
@@ -65,7 +65,7 @@ const Login = ({ navigation }) => {
     setLoading(true);
     
     try {
-      const response = await fetch('http://192.168.100.17/Capstone-1-eb/include/handlers/login_handler.php', {
+      const response = await fetch('http://192.168.1.6/Capstone-1-eb/include/handlers/login_handler.php', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
