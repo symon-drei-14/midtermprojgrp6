@@ -64,7 +64,7 @@ const Register = ({ navigation }) => {
         
         console.log("Sending to PHP API:", apiPayload);
         
-        const response = await fetch('http://192.168.1.6/Capstone-1-eb/include/handlers/drivers.php', {
+        const response = await fetch('http://192.168.1.3/Capstone-1-eb/include/handlers/drivers.php', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -109,7 +109,7 @@ const Register = ({ navigation }) => {
   };
 
   return (
-    <ImageBackground source={loginbackground} style={loginstyle.background}>
+    // <ImageBackground source={loginbackground} style={loginstyle.background}>
       <View style={loginstyle.container}>
         <View style={loginstyle.innerContainer}>
           <Text>Full Name</Text>
@@ -176,7 +176,7 @@ const Register = ({ navigation }) => {
           </TouchableOpacity>
         </View>
       </View>
-    </ImageBackground>
+    // </ImageBackground>
   );
 };
 

@@ -44,13 +44,16 @@ export const loginstyle = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    top:200,
+    top:100,
   },
   innerContainer: {
     width: "90%",
     maxWidth: 400,
+    backgroundColor: "#FFFFFF",
+    
+    elevation: 4,
     padding: 20,
-    borderRadius: 15,
+    borderRadius: 30,
     shadowOffset: { width: 0, height: 2 },
     marginBottom:100,
     
