@@ -110,8 +110,8 @@ const Register = ({ navigation }) => {
 
   return (
     // <ImageBackground source={loginbackground} style={loginstyle.background}>
-      <View style={loginstyle.container}>
-        <View style={loginstyle.innerContainer}>
+      <View style={loginstyle.container3}>
+        <View style={loginstyle.innerContainer2}>
           <Text>Full Name</Text>
           <TextInput
             value={name}

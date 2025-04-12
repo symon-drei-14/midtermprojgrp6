@@ -44,9 +44,29 @@ export const loginstyle = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    top:100,
+    top:190,
   },
   innerContainer: {
+    width: "90%",
+    maxWidth: 400,
+    backgroundColor: "#FFFFFF",
+    
+    elevation: 4,
+    padding: 20,
+    borderRadius: 30,
+    shadowOffset: { width: 0, height: 2 },
+    
+    
+  },
+
+  container3: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    top:100,
+  },
+
+  innerContainer2: {
     width: "90%",
     maxWidth: 400,
     backgroundColor: "#FFFFFF",
