@@ -64,7 +64,7 @@ const Register = ({ navigation }) => {
         
         console.log("Sending to PHP API:", apiPayload);
         
-        const response = await fetch('http://192.168.1.3/Capstone-1-eb/include/handlers/drivers.php', {
+        const response = await fetch('http://192.168.247.1/Capstone-1-eb/include/handlers/drivers.php', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
