@@ -5,7 +5,7 @@ import CryptoJS from 'crypto-js';
 
 
 // const API_BASE_URL = 'http://192.168.100.17/Capstone-1-eb';
-const API_BASE_URL = 'http://192.168.247.1/Capstone-1-eb';
+const API_BASE_URL = 'http://192.168.1.3/Capstone-1-eb';
 
 const hashPassword = (password) => {
   return CryptoJS.SHA256(password).toString(CryptoJS.enc.Hex);
