@@ -2,9 +2,9 @@ import React, { useState, useEffect } from "react";
 import { Text, View, TextInput, TouchableOpacity, Image, ImageBackground, Alert, ActivityIndicator } from "react-native";
 import { loginstyle } from "../styles/Styles";
 import loginbackground from "../assets/loginbg.png";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-
-const Login = ({ navigation }) => {
+const Login = ({ navigation, onLoginSuccess, setUserSession }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [emailError, setEmailError] = useState("");
@@ -18,14 +18,10 @@ const Login = ({ navigation }) => {
       setShowSplash(false);
     }, 2000);
     
-    checkExistingSession();
     return () => {
       clearTimeout(splashTimer);
     };
   }, []);
-
-  const checkExistingSession = async () => {
-  };
 
   if (showSplash) {
     return (
@@ -57,6 +53,20 @@ const Login = ({ navigation }) => {
     return isValid;
   };
 
+  const storeUserSession = async (userData) => {
+    try {
+      const sessionData = {
+        ...userData,
+        loginTimestamp: Date.now()
+      };
+      
+      await AsyncStorage.setItem('userSession', JSON.stringify(sessionData));
+      setUserSession(sessionData);
+    } catch (error) {
+      console.error("Error storing session:", error);
+    }
+  };
+
   const handleLogin = async () => {
     if (!validateInputs()) {
       return;
@@ -65,7 +75,7 @@ const Login = ({ navigation }) => {
     setLoading(true);
     
     try {
-      const response = await fetch('http://192.168.1.3/Capstone-1-eb/include/handlers/login_handler.php', {
+      const response = await fetch('http://192.168.100.17/Capstone-1-eb/include/handlers/login_handler.php', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -89,10 +99,19 @@ const Login = ({ navigation }) => {
       }
       
       if (result.success) {
-        const userData = result.user;
-        const tripId = `trip_${Date.now()}`;
+        const userData = {
+          userId: result.user.driver_id,
+          email: result.user.email,
+          driverName: result.user.name || email.split('@')[0],
+          tripId: `trip_${Date.now()}`,
+          truckId: `truck_${Date.now()}`
+        };
+        
+        await storeUserSession(userData);
         
         setLoading(false);
+        
+        onLoginSuccess(true);
         
         Alert.alert(
           "Login Successful",
@@ -100,18 +119,9 @@ const Login = ({ navigation }) => {
           [
             {
               text: "Continue",
-              onPress: () => navigation.reset({
-                index: 0,
-                routes: [{ 
-                  name: "Dashboard", 
-                  params: { 
-                    userId: userData.driver_id, 
-                    email: userData.email,
-                    tripId: tripId,
-                    driverName: userData.name || email.split('@')[0]
-                  }
-                }]
-              })
+              onPress: () => {
+                console.log("Login successful, navigation handled by App.js");
+              }
             }
           ]
         );
