@@ -23,7 +23,7 @@ import { PermissionsAndroid, Linking } from 'react-native';
 import homeIcon from "../assets/Home2.png";
 import userIcon from "../assets/trip2.png";
 import profileicon from "../assets/profile.png";
-import LocationService from "../services/LocationService"; // Import the location service
+import LocationService from "../services/LocationService";
 
 function Dashboard({ route, navigation }) {
     const nav = useNavigation();
@@ -73,21 +73,17 @@ function Dashboard({ route, navigation }) {
     }, []);
 
     useEffect(() => {
-        // Add listener to location service
         LocationService.addListener(handleLocationUpdate);
         
-        // Get initial tracking status
         const status = LocationService.getTrackingStatus();
         setLocationEnabled(status.isTracking);
         setSensorEnabled(status.sensorEnabled);
         setUpdateInterval(status.updateInterval);
 
-        // If already tracking, just update the display
         if (status.isTracking) {
             setLocationUpdateStatus('Tracking');
         }
 
-        // Clean up listener on unmount
         return () => {
             LocationService.removeListener(handleLocationUpdate);
         };
@@ -124,13 +120,10 @@ function Dashboard({ route, navigation }) {
         }
     }, [userId, tripId]);
 
-    // Handle app state changes
     useEffect(() => {
         const subscription = AppState.addEventListener('change', nextAppState => {
             if (appState.current.match(/inactive|background/) && nextAppState === 'active') {
                 console.log('App has come to the foreground');
-                // Location service will continue running in background
-                // Just refresh the display status
                 const status = LocationService.getTrackingStatus();
                 setLocationEnabled(status.isTracking);
             }
@@ -142,7 +135,6 @@ function Dashboard({ route, navigation }) {
         };
     }, []);
 
-    // Update location service settings when they change
     useEffect(() => {
         if (locationEnabled) {
             LocationService.updateSettings(updateInterval, sensorEnabled);
@@ -184,64 +176,114 @@ function Dashboard({ route, navigation }) {
     };
 
     return (
-        <View style={{ flex: 1 }}>
-            <ScrollView contentContainerStyle={{ flexGrow: 1, paddingBottom: 80 }}>
-                <Image
-                    source={require("../assets/map.png")}
-                    style={dashboardstyles.mapImage}
-                    resizeMode="cover"
-                />
-                <View style={dashboardstyles.card}>
-                    <Text style={dashboardstyles.welcomeText}>Welcome, {driverName}</Text>
-
-                    <Text style={dashboardstyles.label}>Your Location</Text>
-                    <TextInput
-                        style={dashboardstyles.input}
-                        value={address}
-                        editable={false}
-                    />
-
-                    <Text style={dashboardstyles.label}>Destination</Text>
-                    <TextInput
-                        style={dashboardstyles.input}
-                        value={"2972 West Philippine Sea Rd. Santa Ana, Illinois 85486"}
-                        editable={false}
-                    />
-                    
-                    {lastUpdated && (
-                        <Text style={dashboardstyles.lastUpdated}>
-                            Last updated: {lastUpdated}
+        <View style={dashboardstyles.mainContainer}>
+            {/* Header Section */}
+            <View style={dashboardstyles.headerSection}>
+                <View style={dashboardstyles.headerGradient}>
+                    <Text style={dashboardstyles.welcomeText}>Welcome back,</Text>
+                    <Text style={dashboardstyles.driverName}>{driverName}</Text>
+                    <View style={dashboardstyles.statusBadge}>
+                        <View style={[dashboardstyles.statusDot, { backgroundColor: locationEnabled ? '#4CAF50' : '#FF5722' }]} />
+                        <Text style={dashboardstyles.statusBadgeText}>
+                            {locationUpdateStatus}
                         </Text>
-                    )}
-                    
-                    <Text style={dashboardstyles.statusText}>
-                        Status: {locationUpdateStatus}
-                    </Text>
-                    
-                    <View style={loginstyle.toggleRow}>
-                        <Text style={loginstyle.locationText}>
-                            Location Updates ({updateInterval}s): {locationEnabled ? "On" : "Off"}
-                        </Text>
-                        <Switch value={locationEnabled} onValueChange={handleLocationToggle} />
+                    </View>
+                </View>
+            </View>
+
+            <ScrollView 
+                style={dashboardstyles.scrollContainer}
+                contentContainerStyle={dashboardstyles.scrollContent}
+                showsVerticalScrollIndicator={false}
+            >
+                {/* Location Cards */}
+                <View style={dashboardstyles.locationSection}>
+                    <View style={dashboardstyles.locationCard}>
+                        <View style={dashboardstyles.cardHeader}>
+                            <View style={dashboardstyles.locationIcon}>
+                                <Text style={dashboardstyles.locationIconText}>📍</Text>
+                            </View>
+                            <Text style={dashboardstyles.cardTitle}>Current Location</Text>
+                        </View>
+                        <Text style={dashboardstyles.addressText}>{address}</Text>
+                        {lastUpdated && (
+                            <Text style={dashboardstyles.lastUpdatedText}>
+                                Last updated: {lastUpdated}
+                            </Text>
+                        )}
                     </View>
 
-                    <View style={loginstyle.toggleRow}>
-                        <Text style={loginstyle.locationText}>
-                            Sensor: {sensorEnabled ? "GPS Sensor" : "Cell Tower + WiFi"}
+                    <View style={dashboardstyles.locationCard}>
+                        <View style={dashboardstyles.cardHeader}>
+                            <View style={dashboardstyles.destinationIcon}>
+                                <Text style={dashboardstyles.locationIconText}>🎯</Text>
+                            </View>
+                            <Text style={dashboardstyles.cardTitle}>Destination</Text>
+                        </View>
+                        <Text style={dashboardstyles.addressText}>
+                            2972 West Philippine Sea Rd. Santa Ana, Illinois 85486
                         </Text>
-                        <Switch value={sensorEnabled} onValueChange={handleSensorToggle} />
+                    </View>
+                </View>
+
+                {/* Controls Section */}
+                <View style={dashboardstyles.controlsSection}>
+                    <Text style={dashboardstyles.sectionTitle}>Tracking Settings</Text>
+                    
+                    <View style={dashboardstyles.controlCard}>
+                        <View style={dashboardstyles.controlHeader}>
+                            <View style={dashboardstyles.controlInfo}>
+                                <Text style={dashboardstyles.controlTitle}>Location Updates</Text>
+                                <Text style={dashboardstyles.controlSubtitle}>
+                                    Updates every {updateInterval} seconds
+                                </Text>
+                            </View>
+                            <Switch 
+                                value={locationEnabled} 
+                                onValueChange={handleLocationToggle}
+                                trackColor={{ false: "#E0E0E0", true: "#81C784" }}
+                                thumbColor={locationEnabled ? "#4CAF50" : "#BDBDBD"}
+                            />
+                        </View>
+                    </View>
+
+                    <View style={dashboardstyles.controlCard}>
+                        <View style={dashboardstyles.controlHeader}>
+                            <View style={dashboardstyles.controlInfo}>
+                                <Text style={dashboardstyles.controlTitle}>Location Method</Text>
+                                <Text style={dashboardstyles.controlSubtitle}>
+                                    {sensorEnabled ? "GPS Sensor (High Accuracy)" : "Cell Tower + WiFi (Battery Saver)"}
+                                </Text>
+                            </View>
+                            <Switch 
+                                value={sensorEnabled} 
+                                onValueChange={handleSensorToggle}
+                                trackColor={{ false: "#E0E0E0", true: "#81C784" }}
+                                thumbColor={sensorEnabled ? "#4CAF50" : "#BDBDBD"}
+                            />
+                        </View>
                     </View>
                 </View>
             </ScrollView>
 
+            {/* Bottom Navigation */}
             <View style={navbar.bottomNav2}>
-                <TouchableOpacity onPress={() => nav.navigate("Dashboard")}>
+                <TouchableOpacity 
+                    onPress={() => nav.navigate("Dashboard")}
+                    style={dashboardstyles.navButton}
+                >
                     <Image source={homeIcon} style={navbar.navIcon} />
                 </TouchableOpacity>
-                <TouchableOpacity onPress={() => nav.navigate("Trips", { userId, tripId, truckId })}>
+                <TouchableOpacity 
+                    onPress={() => nav.navigate("Trips", { userId, tripId, truckId })}
+                    style={dashboardstyles.navButton}
+                >
                     <Image source={userIcon} style={navbar.navIcon} />
                 </TouchableOpacity>
-                <TouchableOpacity onPress={() => nav.navigate("Profile", { userId, email })}>
+                <TouchableOpacity 
+                    onPress={() => nav.navigate("Profile", { userId, email })}
+                    style={dashboardstyles.navButton}
+                >
                     <Image source={profileicon} style={navbar.navIcon} />
                 </TouchableOpacity>
             </View>
