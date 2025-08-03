@@ -43,45 +43,19 @@ export default function Expenses({ navigation, route }) {
   const [totalExpenses, setTotalExpenses] = useState(0);
   const [remainingBalance, setRemainingBalance] = useState(0);
 
-  // Enhanced tripId extraction with better debugging
   const tripId = route?.params?.tripId;
-  
-  // Debug logging function
-  const debugLog = (section, data) => {
-    console.log(`=== ${section.toUpperCase()} ===`);
-    if (typeof data === 'object') {
-      console.log(JSON.stringify(data, null, 2));
-    } else {
-      console.log(data);
-    }
+
+  const handleOpenModal = () => {
+    setModalVisible(true);
   };
 
-  // Enhanced debugging on component mount
-  useEffect(() => {
-    debugLog('COMPONENT MOUNT DEBUG', {
-      'Full route object': route,
-      'Route params': route?.params,
-      'Trip ID from params': tripId,
-      'Trip ID type': typeof tripId,
-      'Trip ID is valid': tripId && !isNaN(tripId)
-    });
-  }, []);
-
-  const API_BASE_URL = 'http://192.168.100.17/capstone-1-eb';
+  const API_BASE_URL = 'http://192.168.0.100/capstone-1-eb';
 
   const quickAmounts = [100, 500, 1000, 5000];
   const expenseCategories = ["Gas", "Toll Gate", "Maintenance", "Food", "Parking", "Other"];
 
   useFocusEffect(
     useCallback(() => {
-      debugLog('FOCUS EFFECT DEBUG', {
-        'Screen focused': true,
-        'Trip ID': tripId,
-        'Trip ID type': typeof tripId,
-        'Route params on focus': route?.params,
-        'Has valid tripId': tripId && !isNaN(tripId)
-      });
-      
       setModalVisible(false);
       setDropdownVisible(false);
       initializeData();
@@ -98,14 +72,13 @@ export default function Expenses({ navigation, route }) {
             driver_id: session.userId,
             name: session.driverName,
           };
-          debugLog('DRIVER INFO RETRIEVED', driver);
+          
           setDriverInfo(driver);
           return driver;
         }
       }
-      debugLog('DRIVER INFO ERROR', 'No valid session data found');
     } catch (error) {
-      debugLog('DRIVER INFO ERROR', error.message);
+      console.error('Driver info error:', error.message);
     }
     return null;
   };
@@ -113,34 +86,20 @@ export default function Expenses({ navigation, route }) {
   const initializeData = async () => {
     try {
       setLoading(true);
-      debugLog('DATA INITIALIZATION START', {
-        'Provided tripId': tripId,
-        'Has tripId': !!tripId
-      });
       
       const driver = await getDriverInfo();
       if (!driver) {
-        debugLog('INITIALIZATION ERROR', 'No driver info found');
         setLoading(false);
         return;
       }
 
-      // Enhanced tripId handling with validation
       if (tripId && !isNaN(tripId)) {
-        debugLog('USING PROVIDED TRIP ID', {
-          'tripId': tripId,
-          'type': typeof tripId,
-          'isValid': !isNaN(tripId)
-        });
         await fetchExpensesByTripId(tripId);
       } else {
-        debugLog('FETCHING CURRENT TRIP', 'No valid tripId provided');
         const trip = await fetchCurrentTrip(driver);
         if (trip) {
-          debugLog('CURRENT TRIP FOUND', trip);
           await fetchExpensesByTripId(trip.trip_id);
         } else {
-          debugLog('NO CURRENT TRIP', 'Setting empty state');
           setExpenses([]);
           setTotalExpenses(0);
           setTotalBudget(0);
@@ -148,7 +107,7 @@ export default function Expenses({ navigation, route }) {
         }
       }
     } catch (error) {
-      debugLog('INITIALIZATION ERROR', error.message);
+      console.error('Initialization error:', error.message);
       Alert.alert('Error', 'Failed to load data');
     } finally {
       setLoading(false);
@@ -157,11 +116,6 @@ export default function Expenses({ navigation, route }) {
 
   const fetchCurrentTrip = async (driver) => {
     try {
-      debugLog('FETCHING CURRENT TRIP', {
-        'driver_id': driver.driver_id,
-        'driver_name': driver.name
-      });
-      
       const response = await fetch(`${API_BASE_URL}/include/handlers/trip_handler.php`, {
         method: 'POST',
         headers: {
@@ -175,18 +129,16 @@ export default function Expenses({ navigation, route }) {
       });
 
       const data = await response.json();
-      debugLog('CURRENT TRIP RESPONSE', data);
       
       if (data.success && data.trip) {
         setCurrentTrip(data.trip);
         return data.trip;
       } else {
-        debugLog('NO CURRENT TRIP', data.message || 'No trip found');
         setCurrentTrip(null);
         return null;
       }
     } catch (error) {
-      debugLog('FETCH CURRENT TRIP ERROR', error.message);
+      console.error('Fetch current trip error:', error.message);
       setCurrentTrip(null);
       return null;
     }
@@ -194,18 +146,10 @@ export default function Expenses({ navigation, route }) {
 
   const fetchExpensesByTripId = async (targetTripId) => {
     try {
-      debugLog('FETCH EXPENSES START', {
-        'Target Trip ID': targetTripId,
-        'Target Trip ID Type': typeof targetTripId,
-        'API Base URL': API_BASE_URL,
-        'Full API URL': `${API_BASE_URL}/include/handlers/expense_handler.php`
-      });
-      
       const requestBody = {
         action: 'get_expenses_by_trip',
         trip_id: targetTripId
       };
-      debugLog('REQUEST BODY', requestBody);
       
       const response = await fetch(`${API_BASE_URL}/include/handlers/expense_handler.php`, {
         method: 'POST',
@@ -215,68 +159,31 @@ export default function Expenses({ navigation, route }) {
         body: JSON.stringify(requestBody)
       });
 
-      debugLog('RESPONSE INFO', {
-        'Status': response.status,
-        'OK': response.ok,
-        'Status Text': response.statusText
-      });
-
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const responseText = await response.text();
-      debugLog('RAW RESPONSE TEXT', responseText);
 
       let data;
       try {
         data = JSON.parse(responseText);
-        debugLog('PARSED JSON RESPONSE', data);
       } catch (parseError) {
-        debugLog('JSON PARSE ERROR', {
-          'error': parseError.message,
-          'raw_response': responseText
-        });
         throw new Error('Invalid JSON response from server');
       }
       
       if (data.success) {
-        debugLog('SUCCESS - EXTRACTED VALUES', {
-          'Total Budget (raw)': data.total_budget,
-          'Total Budget (type)': typeof data.total_budget,
-          'Total Expenses (raw)': data.total_expenses,
-          'Total Expenses (type)': typeof data.total_expenses,
-          'Remaining Balance (raw)': data.remaining_balance,
-          'Remaining Balance (type)': typeof data.remaining_balance,
-          'Expenses Array Length': data.expenses ? data.expenses.length : 'null/undefined'
-        });
-        
         const expensesList = data.expenses || [];
         const budget = parseFloat(data.total_budget) || 0;
         const expenses = parseFloat(data.total_expenses) || 0;
         const balance = parseFloat(data.remaining_balance) || 0;
 
-        debugLog('AFTER PARSING', {
-          'Parsed Budget': budget,
-          'Parsed Expenses': expenses,
-          'Parsed Balance': balance,
-          'Expenses Count': expensesList.length
-        });
-
         setExpenses(expensesList);
         setTotalBudget(budget);
         setTotalExpenses(expenses);
         setRemainingBalance(balance);
-
-        debugLog('STATE SET COMPLETE', 'All state variables updated');
         
       } else {
-        debugLog('API ERROR', {
-          'success': false,
-          'message': data.message,
-          'full_response': data
-        });
-        
         setExpenses([]);
         setTotalBudget(0);
         setTotalExpenses(0);
@@ -285,11 +192,7 @@ export default function Expenses({ navigation, route }) {
         Alert.alert('Error', data.message || 'Failed to load expenses data');
       }
     } catch (error) {
-      debugLog('FETCH ERROR', {
-        'error_type': error.constructor.name,
-        'error_message': error.message,
-        'error_stack': error.stack
-      });
+      console.error('Fetch error:', error.message);
       
       setExpenses([]);
       setTotalBudget(0);
@@ -360,7 +263,7 @@ export default function Expenses({ navigation, route }) {
   const addExpense = async () => {
     let hasError = false; 
     const expenseAmountNum = parseFloat(expenseAmount);
-  
+
     if (expenseAmount.trim().length === 0) {
       setExpenseAmountError("Amount is required.");
       hasError = true; 
@@ -373,14 +276,14 @@ export default function Expenses({ navigation, route }) {
     } else {
       setExpenseAmountError(""); 
     }
-  
+
     if (showCustomInput && customCategory.trim().length === 0) {
       setCustomCategoryError("Category is required.");
       hasError = true; 
     } else {
       setCustomCategoryError(""); 
     }
-  
+
     if (hasError) {
       return;
     }
@@ -390,18 +293,21 @@ export default function Expenses({ navigation, route }) {
       return;
     }
 
-    // Enhanced trip ID determination with debugging
-    const targetTripId = tripId || (currentTrip && currentTrip.trip_id);
+    let targetTripId = null;
+    let targetTruckId = null;
     
-    debugLog('ADD EXPENSE - TRIP ID DETERMINATION', {
-      'provided_tripId': tripId,
-      'currentTrip_id': currentTrip?.trip_id,
-      'final_targetTripId': targetTripId,
-      'has_valid_tripId': !!targetTripId
-    });
+    if (tripId && !isNaN(parseInt(tripId)) && parseInt(tripId) > 0) {
+      targetTripId = parseInt(tripId);
+    } else if (currentTrip && currentTrip.trip_id && !isNaN(parseInt(currentTrip.trip_id)) && parseInt(currentTrip.trip_id) > 0) {
+      targetTripId = parseInt(currentTrip.trip_id);
+    }
     
-    if (!targetTripId) {
-      Alert.alert('Error', 'No active trip found');
+    if (currentTrip && currentTrip.truck_id && !isNaN(parseInt(currentTrip.truck_id)) && parseInt(currentTrip.truck_id) > 0) {
+      targetTruckId = parseInt(currentTrip.truck_id);
+    }
+    
+    if (!targetTripId || targetTripId <= 0) {
+      Alert.alert('Error', 'No valid active trip found. Please ensure you have an active trip.');
       return;
     }
 
@@ -409,27 +315,33 @@ export default function Expenses({ navigation, route }) {
       setSubmitting(true);
       
       const expenseData = {
+        action: 'add_expense',
         trip_id: targetTripId,
-        driver_id: driverInfo.driver_id,
-        expense_type: showCustomInput ? customCategory : expenseName,
+        driver_id: parseInt(driverInfo.driver_id),
+        expense_type: showCustomInput ? customCategory.trim() : expenseName,
         amount: expenseAmountNum
       };
       
-      debugLog('ADDING EXPENSE', expenseData);
+      if (targetTruckId && targetTruckId > 0) {
+        expenseData.truck_id = targetTruckId;
+      }
       
       const response = await fetch(`${API_BASE_URL}/include/handlers/expense_handler.php`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-          action: 'add_expense',
-          ...expenseData
-        })
+        body: JSON.stringify(expenseData)
       });
 
-      const data = await response.json();
-      debugLog('ADD EXPENSE RESPONSE', data);
+      const responseText = await response.text();
+
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (parseError) {
+        throw new Error('Invalid response from server');
+      }
       
       if (data.success) {
         Alert.alert('Success', 'Expense added successfully');
@@ -443,14 +355,14 @@ export default function Expenses({ navigation, route }) {
         setCustomCategoryError("");
         setModalVisible(false);
         
-        // Refresh expenses list immediately
+        // Refresh expenses list
         await fetchExpensesByTripId(targetTripId);
       } else {
         Alert.alert('Error', data.message || 'Failed to add expense');
       }
     } catch (error) {
-      debugLog('ADD EXPENSE ERROR', error.message);
-      Alert.alert('Error', 'Failed to add expense. Please check your connection.');
+      console.error('Add expense error:', error.message);
+      Alert.alert('Error', 'Failed to add expense. Please check your connection and try again.');
     } finally {
       setSubmitting(false);
     }
@@ -469,7 +381,6 @@ export default function Expenses({ navigation, route }) {
     });
   };
 
-  // Function to get budget status indicator
   const getBudgetStatus = () => {
     if (totalBudget === 0) return { color: '#666', text: 'No Budget Set' };
     
@@ -513,7 +424,6 @@ export default function Expenses({ navigation, route }) {
           ₱ {formatCurrency(remainingBalance)}
         </Text>
         
-        {/* Budget Status Indicator */}
         <View style={{
           backgroundColor: budgetStatus.color,
           paddingHorizontal: 12,
@@ -569,7 +479,7 @@ export default function Expenses({ navigation, route }) {
 
       <TouchableOpacity 
         style={[expensestyle.expensebutton, { marginBottom: 100 }]} 
-        onPress={() => setModalVisible(true)}
+        onPress={handleOpenModal}
       >
         <Text style={expensestyle.buttonText3}>+</Text>
       </TouchableOpacity>
@@ -580,7 +490,6 @@ export default function Expenses({ navigation, route }) {
             <View style={expensestyle.modalContent}>
               <Text style={expensestyle.sectionTitle}>Report Expense</Text>
               
-              {/* Show current balance info in modal */}
               <View style={{backgroundColor: '#f5f5f5', padding: 10, borderRadius: 5, marginBottom: 15}}>
                 <Text style={{fontSize: 14, color: '#666', textAlign: 'center'}}>
                   Available Balance: ₱{formatCurrency(remainingBalance)}
@@ -609,7 +518,6 @@ export default function Expenses({ navigation, route }) {
               
               <Text style={expensestyle.dropdownLabel}>Expense Category</Text>
               
-              {/* Dropdown for expense categories */}
               <View style={expensestyle.dropdownContainer}>
                 <TouchableOpacity 
                   style={[
@@ -675,7 +583,6 @@ export default function Expenses({ navigation, route }) {
 
               <View style={{ height: 20 }} />
               
-              {/* Quick amount buttons */}
               <Text style={expensestyle.dropdownLabel}>Quick Amounts</Text>
               <View style={{flexDirection: 'row', flexWrap: 'wrap', marginBottom: 20}}>
                 {quickAmounts.map((amount) => (

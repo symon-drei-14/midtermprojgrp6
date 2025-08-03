@@ -31,7 +31,7 @@ const TripScreen = () => {
   const [updating, setUpdating] = useState(false);
   const [driverInfo, setDriverInfo] = useState(null);
 
-  const API_BASE_URL = 'http://192.168.100.17/capstone-1-eb';
+  const API_BASE_URL = 'http://192.168.0.100/capstone-1-eb';
 
   const getDriverInfo = async () => {
     try {
