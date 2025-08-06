@@ -49,7 +49,7 @@ export default function Expenses({ navigation, route }) {
     setModalVisible(true);
   };
 
-  const API_BASE_URL = 'http://192.168.0.100/capstone-1-eb';
+  const API_BASE_URL = 'http://192.168.100.17/capstone-1-eb';
 
   const quickAmounts = [100, 500, 1000, 5000];
   const expenseCategories = ["Gas", "Toll Gate", "Maintenance", "Food", "Parking", "Other"];
@@ -381,20 +381,6 @@ export default function Expenses({ navigation, route }) {
     });
   };
 
-  const getBudgetStatus = () => {
-    if (totalBudget === 0) return { color: '#666', text: 'No Budget Set' };
-    
-    const percentage = (totalExpenses / totalBudget) * 100;
-    
-    if (percentage >= 100) {
-      return { color: '#ea5050', text: 'Over Budget' };
-    } else if (percentage >= 80) {
-      return { color: '#ff9500', text: 'Near Limit' };
-    } else {
-      return { color: '#58984d', text: 'Within Budget' };
-    }
-  };
-
   if (loading) {
     return (
       <View style={[expensestyle.container, { justifyContent: 'center', alignItems: 'center' }]}>
@@ -403,8 +389,6 @@ export default function Expenses({ navigation, route }) {
       </View>
     );
   }
-
-  const budgetStatus = getBudgetStatus();
 
   return (
     <View style={expensestyle.container}>
@@ -424,28 +408,9 @@ export default function Expenses({ navigation, route }) {
           ₱ {formatCurrency(remainingBalance)}
         </Text>
         
-        <View style={{
-          backgroundColor: budgetStatus.color,
-          paddingHorizontal: 12,
-          paddingVertical: 4,
-          borderRadius: 12,
-          alignSelf: 'center',
-          marginTop: 8
-        }}>
-          <Text style={{color: 'white', fontSize: 12, fontWeight: 'bold'}}>
-            {budgetStatus.text}
-          </Text>
-        </View>
-        
         {remainingBalance < 0 && (
           <Text style={{color: '#ea5050', fontSize: 12, fontStyle: 'italic', textAlign: 'center', marginTop: 5}}>
             ⚠️ Over budget by ₱{formatCurrency(Math.abs(remainingBalance))}
-          </Text>
-        )}
-        
-        {totalBudget > 0 && (
-          <Text style={{color: '#666', fontSize: 12, textAlign: 'center', marginTop: 5}}>
-            {((totalExpenses / totalBudget) * 100).toFixed(1)}% of budget used
           </Text>
         )}
       </View>
@@ -494,11 +459,6 @@ export default function Expenses({ navigation, route }) {
                 <Text style={{fontSize: 14, color: '#666', textAlign: 'center'}}>
                   Available Balance: ₱{formatCurrency(remainingBalance)}
                 </Text>
-                {totalBudget > 0 && (
-                  <Text style={{fontSize: 12, color: '#666', textAlign: 'center', marginTop: 2}}>
-                    Budget: ₱{formatCurrency(totalBudget)} | Used: {((totalExpenses / totalBudget) * 100).toFixed(1)}%
-                  </Text>
-                )}
               </View>
               
               <TextInput

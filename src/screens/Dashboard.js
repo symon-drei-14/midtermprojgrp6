@@ -16,6 +16,7 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import database from '@react-native-firebase/database';
 import auth from '@react-native-firebase/auth';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { loginstyle } from "../styles/Styles";
 import { navbar } from "../styles/Navbar";
 import { dashboardstyles } from "../styles/dashboardcss";
@@ -38,6 +39,14 @@ function Dashboard({ route, navigation }) {
     const [updateInterval, setUpdateInterval] = useState(10); 
     const [locationUpdateStatus, setLocationUpdateStatus] = useState('Idle');
     const [heading, setHeading] = useState(0);
+    const [isBalanceVisible, setIsBalanceVisible] = useState(true);
+    
+    // New state for trip and balance data
+    const [currentTrip, setCurrentTrip] = useState(null);
+    const [balanceData, setBalanceData] = useState({
+        remainingBalance: 0
+    });
+    const [driverInfo, setDriverInfo] = useState(null);
 
     const currentUser = auth().currentUser;
     const userId = currentUser?.uid || route.params?.userId || 'guest_user';
@@ -46,6 +55,124 @@ function Dashboard({ route, navigation }) {
 
     const tripId = route.params?.tripId || `trip_${Date.now()}`;
     const truckId = route.params?.truckId || `truck_${Date.now()}`;
+
+    const API_BASE_URL = 'http://192.168.100.17/capstone-1-eb';
+
+    // Get driver info from AsyncStorage
+    const getDriverInfo = async () => {
+        try {
+            const sessionData = await AsyncStorage.getItem('userSession');
+            if (sessionData) {
+                const session = JSON.parse(sessionData);
+                if (session?.userId && session?.driverName) {
+                    const driver = {
+                        driver_id: session.userId,
+                        name: session.driverName,
+                    };
+                    setDriverInfo(driver);
+                    return driver;
+                }
+            }
+        } catch (error) {
+            console.error('Error getting driver info:', error);
+        }
+        return null;
+    };
+
+    // Fetch current trip data
+    const fetchCurrentTrip = async (driver) => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/include/handlers/trip_handler.php`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'get_driver_current_trip',
+                    driver_id: driver.driver_id,
+                    driver_name: driver.name,
+                }),
+            });
+
+            const data = await response.json();
+            
+            if (data.success && data.trip) {
+                setCurrentTrip(data.trip);
+                return data.trip;
+            } else {
+                setCurrentTrip(null);
+                return null;
+            }
+        } catch (error) {
+            console.error('Error fetching current trip:', error);
+            setCurrentTrip(null);
+            return null;
+        }
+    };
+
+    // Fetch balance/expense data
+    const fetchBalanceData = async (tripId) => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/include/handlers/expense_handler.php`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'get_expenses_by_trip',
+                    trip_id: tripId
+                }),
+            });
+
+            const data = await response.json();
+            
+            if (data.success) {
+                setBalanceData({
+                    totalBudget: parseFloat(data.total_budget) || 0,
+                    totalExpenses: parseFloat(data.total_expenses) || 0,
+                    remainingBalance: parseFloat(data.remaining_balance) || 0
+                });
+            } else {
+                setBalanceData({
+                    totalBudget: 0,
+                    totalExpenses: 0,
+                    remainingBalance: 0
+                });
+            }
+        } catch (error) {
+            console.error('Error fetching balance data:', error);
+            setBalanceData({
+                totalBudget: 0,
+                totalExpenses: 0,
+                remainingBalance: 0
+            });
+        }
+    };
+
+    // Initialize trip and balance data
+    const initializeTripData = async () => {
+        const driver = await getDriverInfo();
+        if (driver) {
+            const trip = await fetchCurrentTrip(driver);
+            if (trip && trip.trip_id) {
+                await fetchBalanceData(trip.trip_id);
+            }
+        }
+    };
+
+    // Format currency helper
+    const formatCurrency = (amount) => {
+        return parseFloat(amount || 0).toLocaleString('en-PH', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+    };
+
+    // Toggle balance visibility
+    const toggleBalanceVisibility = () => {
+        setIsBalanceVisible(!isBalanceVisible);
+    };
+
+    // Handle report navigation
+    const handleReportPress = () => {
+        nav.navigate("Reports", { userId, tripId, truckId });
+    };
 
     // Location service listener callback
     const handleLocationUpdate = useCallback((data) => {
@@ -83,6 +210,9 @@ function Dashboard({ route, navigation }) {
         if (status.isTracking) {
             setLocationUpdateStatus('Tracking');
         }
+
+        // Initialize trip and balance data
+        initializeTripData();
 
         return () => {
             LocationService.removeListener(handleLocationUpdate);
@@ -126,6 +256,8 @@ function Dashboard({ route, navigation }) {
                 console.log('App has come to the foreground');
                 const status = LocationService.getTrackingStatus();
                 setLocationEnabled(status.isTracking);
+                // Refresh trip and balance data when app comes to foreground
+                initializeTripData();
             }
             appState.current = nextAppState;
         });
@@ -196,33 +328,58 @@ function Dashboard({ route, navigation }) {
                 contentContainerStyle={dashboardstyles.scrollContent}
                 showsVerticalScrollIndicator={false}
             >
-                {/* Location Cards */}
+                <View style={dashboardstyles.balanceCard}>
+                    <View style={dashboardstyles.balanceHeader}>
+                        <View style={dashboardstyles.balanceTitleContainer}>
+                            <Text style={dashboardstyles.balanceTitle}>Available Balance</Text>
+                            <TouchableOpacity 
+                                onPress={toggleBalanceVisibility}
+                                style={dashboardstyles.eyeButton}
+                            >
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+
+                    <View style={dashboardstyles.balanceAmountContainer}>
+                        <Text style={dashboardstyles.balanceAmount}>
+                            {isBalanceVisible 
+                                ? `₱ ${formatCurrency(balanceData.remainingBalance)}` 
+                                : '₱ ••••••••'
+                            }
+                        </Text>
+                    </View>
+
+                    <View style={dashboardstyles.balanceActions}>
+                        <TouchableOpacity 
+                            style={dashboardstyles.reportButton}
+                            onPress={() => nav.navigate('Expenses', { tripId: currentTrip.trip_id })}
+                        >
+                            <Text style={dashboardstyles.reportButtonText}>Report</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+
+                {/* Location Cards - Current Trip */}
                 <View style={dashboardstyles.locationSection}>
                     <View style={dashboardstyles.locationCard}>
                         <View style={dashboardstyles.cardHeader}>
                             <View style={dashboardstyles.locationIcon}>
-                                <Text style={dashboardstyles.locationIconText}>📍</Text>
+                                <Text style={dashboardstyles.locationIconText}>🚛</Text>
                             </View>
-                            <Text style={dashboardstyles.cardTitle}>Current Location</Text>
-                        </View>
-                        <Text style={dashboardstyles.addressText}>{address}</Text>
-                        {lastUpdated && (
-                            <Text style={dashboardstyles.lastUpdatedText}>
-                                Last updated: {lastUpdated}
-                            </Text>
-                        )}
-                    </View>
-
-                    <View style={dashboardstyles.locationCard}>
-                        <View style={dashboardstyles.cardHeader}>
-                            <View style={dashboardstyles.destinationIcon}>
-                                <Text style={dashboardstyles.locationIconText}>🎯</Text>
-                            </View>
-                            <Text style={dashboardstyles.cardTitle}>Destination</Text>
+                            <Text style={dashboardstyles.cardTitle}>Current Trip</Text>
                         </View>
                         <Text style={dashboardstyles.addressText}>
-                            2972 West Philippine Sea Rd. Santa Ana, Illinois 85486
+                            {currentTrip ? (
+                                `${currentTrip.destination || 'No destination'}\n${currentTrip.client || 'No client'} - ${currentTrip.plate_no || 'No truck'}`
+                            ) : (
+                                'No active trip'
+                            )}
                         </Text>
+                        {currentTrip && (
+                            <Text style={dashboardstyles.lastUpdatedText}>
+                                Status: {currentTrip.status || 'Unknown'}
+                            </Text>
+                        )}
                     </View>
                 </View>
 
@@ -234,32 +391,12 @@ function Dashboard({ route, navigation }) {
                         <View style={dashboardstyles.controlHeader}>
                             <View style={dashboardstyles.controlInfo}>
                                 <Text style={dashboardstyles.controlTitle}>Location Updates</Text>
-                                <Text style={dashboardstyles.controlSubtitle}>
-                                    Updates every {updateInterval} seconds
-                                </Text>
                             </View>
                             <Switch 
                                 value={locationEnabled} 
                                 onValueChange={handleLocationToggle}
                                 trackColor={{ false: "#E0E0E0", true: "#81C784" }}
                                 thumbColor={locationEnabled ? "#4CAF50" : "#BDBDBD"}
-                            />
-                        </View>
-                    </View>
-
-                    <View style={dashboardstyles.controlCard}>
-                        <View style={dashboardstyles.controlHeader}>
-                            <View style={dashboardstyles.controlInfo}>
-                                <Text style={dashboardstyles.controlTitle}>Location Method</Text>
-                                <Text style={dashboardstyles.controlSubtitle}>
-                                    {sensorEnabled ? "GPS Sensor (High Accuracy)" : "Cell Tower + WiFi (Battery Saver)"}
-                                </Text>
-                            </View>
-                            <Switch 
-                                value={sensorEnabled} 
-                                onValueChange={handleSensorToggle}
-                                trackColor={{ false: "#E0E0E0", true: "#81C784" }}
-                                thumbColor={sensorEnabled ? "#4CAF50" : "#BDBDBD"}
                             />
                         </View>
                     </View>

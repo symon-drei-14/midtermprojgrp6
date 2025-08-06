@@ -79,6 +79,82 @@ export const dashboardstyles = StyleSheet.create({
         paddingBottom: 100,
     },
 
+    // Enhanced Balance Card Styles
+    balanceCard: {
+        backgroundColor: '#FFFFFF',
+        borderRadius: 16,
+        padding: 24,
+        marginBottom: 20,
+        shadowColor: '#000700ff',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 12,
+        elevation: 8,
+        borderWidth: 1,
+        borderColor: 'rgba(76, 175, 80, 0.2)',
+        marginTop: 8,
+    },
+
+    balanceHeader: {
+        marginBottom: 16,
+    },
+
+    balanceTitleContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+    },
+
+    balanceTitle: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#2E7D32',
+    },
+
+    eyeButton: {
+        padding: 4,
+        borderRadius: 8,
+        backgroundColor: 'rgba(255, 255, 255, 0.5)',
+    },
+
+    eyeIcon: {
+        fontSize: 16,
+    },
+
+    balanceAmountContainer: {
+        marginBottom: 20,
+    },
+
+    balanceAmount: {
+        fontSize: 32,
+        fontWeight: '700',
+        color: '#1B5E20',
+        letterSpacing: -0.5,
+    },
+
+    balanceActions: {
+        flexDirection: 'row',
+        justifyContent: 'flex-start',
+    },
+
+    reportButton: {
+        backgroundColor: '#4CAF50',
+        paddingHorizontal: 24,
+        paddingVertical: 12,
+        borderRadius: 12,
+        shadowColor: '#4CAF50',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 6,
+        elevation: 4,
+    },
+
+    reportButtonText: {
+        color: '#FFFFFF',
+        fontSize: 16,
+        fontWeight: '600',
+    },
+
     // Location Section
     locationSection: {
         marginBottom: 24,
