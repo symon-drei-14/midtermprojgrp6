@@ -30,24 +30,28 @@ export const tripstyle = StyleSheet.create({
 
   // Header Section
   headerSection: {
-    backgroundColor: '#2196F3',
+    backgroundColor: '#7a0f0fff',
     paddingHorizontal: 24,
-    paddingTop: 60,
-    paddingBottom: 30,
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
+    paddingTop: 25,
+    paddingBottom: 25,
+    borderBottomLeftRadius: 35,
+    borderBottomRightRadius: 35,
     shadowColor: '#2196F3',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.3,
     shadowRadius: 16,
     elevation: 12,
+     marginBottom: 10,
+      flexDirection: 'row',
+  justifyContent: 'space-between',
+  alignItems: 'center',
   },
 
   headerTitle: {
     fontSize: 28,
     color: '#FFFFFF',
     fontWeight: '700',
-    marginBottom: 4,
+    marginBottom: 4 ,
   },
 
   headerSubtitle: {
@@ -59,7 +63,7 @@ export const tripstyle = StyleSheet.create({
   // Scroll Container
   scrollContainer: {
     flex: 1,
-    marginTop: -20,
+ 
   },
 
   scrollContent: {
@@ -86,11 +90,11 @@ export const tripstyle = StyleSheet.create({
     color: '#1A1A1A',
   },
 
-  // Status Badges
   statusBadge: {
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
+    alignSelf: 'flex-start', 
   },
 
   statusText: {
@@ -117,34 +121,37 @@ export const tripstyle = StyleSheet.create({
 
   // Active Trip Card
   activeCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#ffffffff',
     borderRadius: 20,
     padding: 24,
-    shadowColor: '#000',
+    shadowColor: '#0000006e',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.12,
     shadowRadius: 12,
     elevation: 8,
     borderWidth: 1,
-    borderColor: 'rgba(0, 0, 0, 0.05)',
+    borderColor: 'rgba(244, 0, 0, 0)',
   },
 
   cardHeader: {
     marginBottom: 20,
   },
 
-  destinationContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
+ destinationRow: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  marginBottom: 10, 
+
+},
 
   destinationIcon: {
-    fontSize: 24,
-    marginRight: 12,
+    fontSize: 18,
+    marginRight: 2,
+    fontWeight:'500',
   },
 
   destinationText: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: '700',
     color: '#1A1A1A',
     flex: 1,
@@ -169,6 +176,14 @@ export const tripstyle = StyleSheet.create({
     color: '#757575',
     fontWeight: '500',
     flex: 1,
+    includeFontPadding: false,
+    flexShrink: 1,
+    adjustsFontSizeToFit: true,
+    minimumFontScale: 0.8, 
+    numberOfLines: 1 ,     
+     flexWrap: 'nowrap',
+      flexShrink: 1,
+    
   },
 
   detailValue: {
@@ -198,8 +213,9 @@ export const tripstyle = StyleSheet.create({
     flex: 1,
     paddingVertical: 16,
     borderRadius: 12,
+    
     alignItems: 'center',
-    shadowColor: '#2196F3',
+    shadowColor: '#0372cdd6',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
@@ -208,17 +224,17 @@ export const tripstyle = StyleSheet.create({
 
   primaryButtonText: {
     color: '#FFFFFF',
-    fontSize: 16,
+    fontSize: 14 ,
     fontWeight: '600',
   },
 
   secondaryButton: {
-    backgroundColor: '#FF9800',
+    backgroundColor: '#eda02bff',
     flex: 1,
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',
-    shadowColor: '#FF9800',
+    shadowColor: '#ff9900ec',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
@@ -227,7 +243,7 @@ export const tripstyle = StyleSheet.create({
 
   secondaryButtonText: {
     color: '#FFFFFF',
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600',
   },
 
@@ -258,6 +274,8 @@ export const tripstyle = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
+    alignSelf: 'flex-start', 
+    marginTop:10
   },
 
   pendingText: {
@@ -282,20 +300,23 @@ export const tripstyle = StyleSheet.create({
     alignItems: 'center',
     marginTop: 8,
     paddingTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: '#F5F5F5',
+    flexWrap: 'nowrap',
   },
 
   cashAdvanceLabel: {
     fontSize: 14,
     color: '#757575',
     fontWeight: '500',
+    flexWrap: 'nowrap',
+
   },
 
   cashAdvanceValue: {
     fontSize: 16,
     color: '#4CAF50',
     fontWeight: '700',
+    flexWrap: 'nowrap',
+      flexShrink: 0, 
   },
 
   // Empty States
@@ -392,7 +413,7 @@ export const tripstyle = StyleSheet.create({
   },
 
   enRouteButton: {
-    backgroundColor: '#FF9800',
+    backgroundColor: '#f3a531ff',
   },
 
   completedButton: {
@@ -400,7 +421,7 @@ export const tripstyle = StyleSheet.create({
   },
 
   noShowButton: {
-    backgroundColor: '#F44336',
+    backgroundColor: '#a92117ff',
   },
 
   modalButtonIcon: {
@@ -417,12 +438,12 @@ export const tripstyle = StyleSheet.create({
   modalCancelButton: {
     paddingVertical: 16,
     alignItems: 'center',
-    backgroundColor: '#F5F5F5',
+    backgroundColor: '#c6c1c1ff',
     borderRadius: 12,
   },
 
   modalCancelText: {
-    color: '#757575',
+    color: '#ffffffff',
     fontSize: 16,
     fontWeight: '600',
   },
@@ -572,4 +593,14 @@ export const tripstyle = StyleSheet.create({
     fontSize: 14,
     color: "#444",
   },
+
+  dateText: {
+  color: 'rgba(255, 255, 255, 0.9)',
+  fontSize: 16,
+  fontWeight: '500',
+  backgroundColor: 'rgba(0, 0, 0, 0.1)',
+  paddingHorizontal: 10,
+  paddingVertical: 4,
+  borderRadius: 12,
+},
 });

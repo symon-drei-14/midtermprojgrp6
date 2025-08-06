@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { View, Text, TextInput, TouchableOpacity, Image, Modal, Alert } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, Image, Modal, Alert, ScrollView } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { loginstyle } from "../styles/Styles";
 import { profilestyle } from "../styles/Profilecss";
 import { navbar } from "../styles/Navbar";
 import userIcon2 from "../assets/profile.png";
-import homeIcon from "../assets/Home2.png";
-import userIcon from "../assets/trip2.png";
-import profileicon from "../assets/profile.png";
+import homeIcon from "../assets/Home.png";
+import userIcon from "../assets/schedule.png";
+import profileicon from "../assets/profile2.png";
 import profilepic from "../assets/prof.png";
 import LocationService from "../services/LocationService"; // Import the location service
 
@@ -142,63 +142,98 @@ const Profile = ({ route }) => {
         Alert.alert("Success", "Password updated successfully!");
     };
 
-    return (
+   return (
         <View style={profilestyle.container}>
-            <View style={profilestyle.avatarContainer}>
-                <Image source={profilepic} style={profilestyle.avatar} />
-            </View>
-
-            <View style={profilestyle.infoCard}>
-                <View style={profilestyle.infoRow}>
-                    <Text>Name: {driverName || "Lebron James"}</Text>
+            <ScrollView contentContainerStyle={profilestyle.scrollContainer}>
+                {/* Profile Header */}
+                <View style={profilestyle.profileHeader}>
+                    <View style={profilestyle.avatarContainer}>
+                        <Text style={profilestyle.avatar}>👻</Text>
+                        <TouchableOpacity style={profilestyle.editIcon}>
+                            <Text style={profilestyle.editIconText}>📷</Text>
+                        </TouchableOpacity>
+                    </View>
+                    <Text style={profilestyle.name}>{driverName || "Lebron James"}</Text>
+                    <Text style={profilestyle.email}>{email || "lebronjames@gmail.com"}</Text>
                 </View>
-                <View style={profilestyle.infoRow}>
-                    <Text>Email: {email || "Lebronjames@gmail.com"}</Text>
+
+                {/* Info Card */}
+                <View style={profilestyle.infoCard}>
+                    <View style={profilestyle.cardHeader}>
+                        <Text style={profilestyle.icon}>ℹ️</Text>
+                        <Text style={profilestyle.cardTitle}>Driver Information</Text>
+                    </View>
+
+                    <View style={profilestyle.infoItem}>
+                        <Text style={profilestyle.icon}>📞</Text>
+                        <Text style={profilestyle.infoText}>0912341266</Text>
+                    </View>
+
+                    <View style={profilestyle.infoItem}>
+                        <Text style={profilestyle.icon}>🛡️</Text>
+                        <Text style={profilestyle.infoText}>Status: Active</Text>
+                    </View>
+
+                    <View style={profilestyle.infoItem}>
+                        <Text style={profilestyle.icon}>📍</Text>
+                        <Text style={profilestyle.infoText}>Location Tracking: </Text>
+                        <Text style={[profilestyle.infoText, { 
+                            color: isLocationTracking ? '#4CAF50' : '#a11b1bff',
+                            fontWeight: 'bold'
+                        }]}>
+                            {isLocationTracking ? `ON (${locationStatus})` : 'OFF'}
+                        </Text>
+                    </View>
+
+                    <View style={profilestyle.passwordItem}>
+                        <Text style={profilestyle.icon}>🔒</Text>
+                        <Text style={profilestyle.infoText}>Password: {showPassword ? savedPassword2 : "••••••••"}</Text>
+                        <TouchableOpacity 
+                            onPress={() => setShowPassword(!showPassword)} 
+                            style={profilestyle.toggleButton}>
+                            <Text style={profilestyle.toggleText}>{showPassword ? "🙈" : "👁️"}</Text>
+                        </TouchableOpacity>
+                    </View>
                 </View>
 
-                <View style={[profilestyle.infoRow, { flexDirection: "row", alignItems: "center", justifyContent: "space-between" }]}>
-                    <Text>Password: {showPassword ? savedPassword2 : "******"}</Text>
-                    <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={profilestyle.toggleButton}>
-                        <Text style={profilestyle.toggleText}>{showPassword ? "Hide" : "Show"}</Text>
+                {/* Action Buttons */}
+                <View style={profilestyle.actionButtons}>
+                    <TouchableOpacity 
+                        onPress={() => {
+                            setPassword("");
+                            setPassword2("");
+                            setPasswordError("");
+                            setConfirmPasswordError("");
+                            setModalVisible(true);
+                        }} 
+                        style={profilestyle.primaryButton}>
+                        <Text style={profilestyle.buttonIcon}>🔑</Text>
+                        <Text style={profilestyle.primaryButtonText}>Change Password</Text>
+                    </TouchableOpacity>
+                    
+                    <TouchableOpacity 
+                        onPress={handleLogout} 
+                        style={[profilestyle.secondaryButton, isLoggingOut && { opacity: 0.6 }]}
+                        disabled={isLoggingOut}>
+                        <Text style={profilestyle.buttonIcon}>🚪</Text>
+                        <Text style={profilestyle.secondaryButtonText}>
+                            {isLoggingOut ? "Logging out..." : "Log Out"}
+                        </Text>
                     </TouchableOpacity>
                 </View>
+            </ScrollView>
 
-                <View style={profilestyle.infoRow}><Text>Contact no: 0912341266</Text></View>
-                <View style={profilestyle.infoRow}><Text>Status: Active</Text></View>
-                
-                {/* Location tracking status */}
-                <View style={profilestyle.infoRow}>
-                    <Text>Location Tracking: </Text>
-                    <Text style={{ 
-                        color: isLocationTracking ? '#4CAF50' : '#757575',
-                        fontWeight: 'bold'
-                    }}>
-                        {isLocationTracking ? `ON (${locationStatus})` : 'OFF'}
-                    </Text>
-                </View>
+            {/* Password Change Modal */}
+            <Modal visible={modalVisible} transparent animationType="slide">
+                {/* ... [keep your existing modal code] ... */}
+            </Modal>
+
+            {/* Bottom Navigation */}
+            <View style={navbar.bottomNav2}>
+                {/* ... [keep your existing bottom nav code] ... */}
             </View>
 
-            <View style={profilestyle.buttonContainer}>
-                <TouchableOpacity 
-                    onPress={() => {
-                        setPassword("");
-                        setPassword2("");
-                        setPasswordError("");
-                        setConfirmPasswordError("");
-                        setModalVisible(true);
-                    }} 
-                    style={profilestyle.changePasswordButton}>
-                    <Text style={profilestyle.buttonText}>Change Password</Text>
-                </TouchableOpacity>
-                <TouchableOpacity 
-                    onPress={handleLogout} 
-                    style={[profilestyle.logoutButton, isLoggingOut && { opacity: 0.6 }]}
-                    disabled={isLoggingOut}>
-                    <Text style={profilestyle.buttonText}>
-                        {isLoggingOut ? "Logging out..." : "Log Out"}
-                    </Text>
-                </TouchableOpacity>
-            </View>
+ 
 
             <Modal visible={modalVisible} transparent animationType="slide">
                 <View style={profilestyle.modalContainer}>

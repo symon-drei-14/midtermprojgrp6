@@ -5,68 +5,101 @@ const { width, height } = Dimensions.get('window');
 export const dashboardstyles = StyleSheet.create({
     mainContainer: {
         flex: 1,
-        backgroundColor: "#F8FAFB",
-    },
-
-    // Header Section
-    headerSection: {
-        height: 200,
-        position: 'relative',
-        overflow: 'hidden',
+        backgroundColor: "#F5F7FA",
     },
     
-    headerGradient: {
-        flex: 1,
-        backgroundColor: '#2196F3',
-        paddingHorizontal: 24,
-        paddingTop: 60,
-        paddingBottom: 30,
-        justifyContent: 'center',
-        borderBottomLeftRadius: 30,
-        borderBottomRightRadius: 30,
-        shadowColor: '#2196F3',
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.3,
-        shadowRadius: 16,
-        elevation: 12,
+    headerSection: {
+        height: 180, 
+        position: 'relative',
+        overflow: 'hidden',
+        marginBottom: 20, 
     },
+    
+     headerGradient: {
+        flex: 1,
+        backgroundColor: '#7a0f0fff', 
+        paddingHorizontal: 24,
+        paddingTop: 100, 
+        paddingBottom: 25,
+        justifyContent: 'flex-end', 
+        borderBottomLeftRadius: 32,
+        borderBottomRightRadius: 32,
+        shadowColor: '#0D47A1',
+        shadowOffset: { width: 0, height: 10 },
+        shadowOpacity: 0.3,
+        shadowRadius: 20,
+        elevation: 15,
+        width: '100%',
+        position: 'relative', 
+    },
+    headerTextContainer: {
+  marginTop: 10,
+},
 
-    welcomeText: {
+      welcomeText: {
         fontSize: 16,
-        color: 'rgba(255, 255, 255, 0.8)',
-        fontWeight: '400',
+        color: 'rgba(255, 255, 255, 0.9)',
+        fontWeight: '500', 
         marginBottom: 4,
     },
 
-    driverName: {
-        fontSize: 28,
+     driverName: {
+        fontSize: 32, 
         color: '#FFFFFF',
-        fontWeight: '700',
+        fontWeight: '800', 
         marginBottom: 16,
+        textShadowColor: 'rgba(0, 0, 0, 0.2)',
+        textShadowOffset: { width: 0, height: 1 },
+        textShadowRadius: 2,
     },
-
-    statusBadge: {
+     statusBadge: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: 'rgba(255, 255, 255, 0.2)',
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-        borderRadius: 20,
+        backgroundColor: 'rgba(255, 255, 255, 0.25)',
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        borderRadius: 24,
         alignSelf: 'flex-start',
+        
     },
-
+   
     statusDot: {
-        width: 8,
-        height: 8,
-        borderRadius: 4,
+        width: 10,
+        height: 10,
+        borderRadius: 5,
         marginRight: 8,
     },
 
     statusBadgeText: {
         color: '#FFFFFF',
         fontSize: 14,
-        fontWeight: '600',
+        fontWeight: '700',
+        textTransform: 'uppercase',
+        letterSpacing: 0.5,
     },
+
+    profileContainer: {
+        position: 'absolute',
+        top: Platform.OS === 'android' ? 40 : 60,
+        right: 24,
+        zIndex: 10,
+        },
+
+    profilePlaceholder: {
+        width: 48,
+        height: 48,
+        borderRadius: 24,
+        backgroundColor: 'rgba(255, 255, 255, 0.3)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderWidth: 2,
+        borderColor: 'rgba(255, 255, 255, 0.5)',
+         right: 24,
+        },
+
+    profileEmoji: {
+        fontSize: 24,
+        },
 
     // Scroll Container
     scrollContainer: {
@@ -80,20 +113,21 @@ export const dashboardstyles = StyleSheet.create({
     },
 
     // Enhanced Balance Card Styles
-    balanceCard: {
+      balanceCard: {
         backgroundColor: '#FFFFFF',
-        borderRadius: 16,
+        borderRadius: 20,
         padding: 24,
         marginBottom: 20,
-        shadowColor: '#000700ff',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.15,
-        shadowRadius: 12,
+        shadowColor: '#2E7D32',
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.1,
+        shadowRadius: 16,
         elevation: 8,
         borderWidth: 1,
-        borderColor: 'rgba(76, 175, 80, 0.2)',
-        marginTop: 8,
+        borderColor: 'rgba(76, 175, 80, 0.15)',
+        marginTop: 10, 
     },
+
 
     balanceHeader: {
         marginBottom: 16,
@@ -125,11 +159,12 @@ export const dashboardstyles = StyleSheet.create({
         marginBottom: 20,
     },
 
-    balanceAmount: {
-        fontSize: 32,
-        fontWeight: '700',
+      balanceAmount: {
+        fontSize: 36, 
+        fontWeight: '800', 
         color: '#1B5E20',
-        letterSpacing: -0.5,
+        letterSpacing: -0.8,
+        marginVertical: 8,
     },
 
     balanceActions: {
@@ -137,22 +172,25 @@ export const dashboardstyles = StyleSheet.create({
         justifyContent: 'flex-start',
     },
 
-    reportButton: {
-        backgroundColor: '#4CAF50',
-        paddingHorizontal: 24,
-        paddingVertical: 12,
-        borderRadius: 12,
-        shadowColor: '#4CAF50',
-        shadowOffset: { width: 0, height: 2 },
+        reportButton: {
+        backgroundColor: '#2E7D32',
+        paddingHorizontal: 28,
+        paddingVertical: 14,
+        borderRadius: 14,
+        shadowColor: '#2E7D32',
+        shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
-        shadowRadius: 6,
-        elevation: 4,
+        shadowRadius: 8,
+        elevation: 6,
+        flexDirection: 'row',
+        alignItems: 'center',
     },
 
-    reportButtonText: {
+        reportButtonText: {
         color: '#FFFFFF',
         fontSize: 16,
-        fontWeight: '600',
+        fontWeight: '700',
+  
     },
 
     // Location Section
@@ -162,32 +200,32 @@ export const dashboardstyles = StyleSheet.create({
 
     locationCard: {
         backgroundColor: '#FFFFFF',
-        borderRadius: 16,
-        padding: 20,
-        marginBottom: 12,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
+        borderRadius: 18,
+        padding: 22,
+        marginBottom: 16,
+        shadowColor: '#1565C0',
+        shadowOffset: { width: 0, height: 3 },
         shadowOpacity: 0.1,
-        shadowRadius: 8,
-        elevation: 4,
+        shadowRadius: 10,
+        elevation: 6,
         borderWidth: 1,
-        borderColor: 'rgba(0, 0, 0, 0.05)',
+        borderColor: 'rgba(33, 150, 243, 0.1)',
     },
 
     cardHeader: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 12,
+        marginBottom: 16,
     },
 
-    locationIcon: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
+   locationIcon: {
+        width: 44,
+        height: 44,
+        borderRadius: 22,
         backgroundColor: '#E3F2FD',
         justifyContent: 'center',
         alignItems: 'center',
-        marginRight: 12,
+        marginRight: 14,
     },
 
     destinationIcon: {
@@ -200,22 +238,24 @@ export const dashboardstyles = StyleSheet.create({
         marginRight: 12,
     },
 
-    locationIconText: {
-        fontSize: 18,
+   locationIconText: {
+        fontSize: 20,
     },
 
+
     cardTitle: {
-        fontSize: 16,
-        fontWeight: '600',
-        color: '#1A1A1A',
+        fontSize: 18,
+        fontWeight: '700',
+        color: '#0D47A1',
     },
 
     addressText: {
-        fontSize: 15,
-        color: '#4A4A4A',
-        lineHeight: 22,
-        marginBottom: 8,
+        fontSize: 16,
+        color: '#424242',
+        lineHeight: 24,
+        marginBottom: 12,
     },
+
 
     lastUpdatedText: {
         fontSize: 12,
@@ -236,18 +276,18 @@ export const dashboardstyles = StyleSheet.create({
         marginLeft: 4,
     },
 
-    controlCard: {
+      controlCard: {
         backgroundColor: '#FFFFFF',
-        borderRadius: 16,
+        borderRadius: 18,
         padding: 20,
-        marginBottom: 12,
+        marginBottom: 16,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 8,
-        elevation: 4,
+        shadowOpacity: 0.08,
+        shadowRadius: 12,
+        elevation: 5,
         borderWidth: 1,
-        borderColor: 'rgba(0, 0, 0, 0.05)',
+        borderColor: 'rgba(0, 0, 0, 0.03)',
     },
 
     controlHeader: {
@@ -261,11 +301,11 @@ export const dashboardstyles = StyleSheet.create({
         marginRight: 16,
     },
 
-    controlTitle: {
-        fontSize: 16,
+        controlTitle: {
+        fontSize: 17,
         fontWeight: '600',
-        color: '#1A1A1A',
-        marginBottom: 4,
+        color: '#212121',
+        marginBottom: 2,
     },
 
     controlSubtitle: {
@@ -275,12 +315,27 @@ export const dashboardstyles = StyleSheet.create({
     },
 
     // Navigation
-    navButton: {
-        padding: 8,
+       navButton: {
+        padding: 12,
         borderRadius: 12,
+        alignItems: 'center',
     },
 
-    // Deprecated/Legacy styles (keeping for compatibility)
+      bottomNav2: {
+        flexDirection: "row",
+        justifyContent: "space-around",
+        backgroundColor: "#FFFFFF",
+        paddingVertical: 12,
+        borderTopWidth: 1,
+        borderTopColor: "rgba(0, 0, 0, 0.08)",
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: -2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 8,
+        elevation: 10,
+    },
+
+
     container: {
         flex: 1,
         backgroundColor: "#F8FAFB",
@@ -321,5 +376,29 @@ export const dashboardstyles = StyleSheet.create({
         fontSize: 14,
         fontFamily: "monospace",
         marginTop: 5,
-    }
+    },
+
+  
+dateTimeContainer: {
+  position: 'absolute',
+  bottom: 28,
+  right: 20,
+  color: 'rgba(255, 255, 255, 0.9)',
+  fontSize: 16,
+  fontWeight: '500',
+  backgroundColor: 'rgba(0, 0, 0, 0.1)',
+  paddingHorizontal: 10,
+  paddingVertical: 4,
+  borderRadius: 12,
+},
+dateTimeText: {
+  color: '#FFF',
+  fontSize: 14,
+  fontWeight: '500',
+  textAlign: 'right',
+},
+
+
+
+
 });

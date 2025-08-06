@@ -17,9 +17,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { tripstyle } from "../styles/Tripcss";
 import { navbar } from "../styles/Navbar";
 
-import homeIcon from "../assets/Home2.png";
-import userIcon from "../assets/trip2.png";
-import profileicon from "../assets/profile.png";
+import homeIcon from "../assets/Home.png";
+import userIcon from "../assets/schedule.png";
+import profileicon from "../assets/profile2.png";
 
 const TripScreen = () => {
   const nav = useNavigation();
@@ -31,7 +31,7 @@ const TripScreen = () => {
   const [updating, setUpdating] = useState(false);
   const [driverInfo, setDriverInfo] = useState(null);
 
-  const API_BASE_URL = 'http://192.168.100.17/capstone-1-eb';
+  const API_BASE_URL = 'http://192.168.1.27/capstone-1-eb';
 
   const getDriverInfo = async () => {
     try {
@@ -131,13 +131,18 @@ const TripScreen = () => {
     }, [])
   );
 
-  const formatDate = (dateString) => {
-    if (!dateString) return 'N/A';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric', month: 'long', day: 'numeric'
-    });
-  };
+const formatDate = (dateString) => {
+  if (!dateString) return 'N/A';
+  const date = new Date(dateString);
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true
+  });
+};
 
   const getStatusColor = (tripStatus) => {
     switch(tripStatus) {
@@ -164,8 +169,18 @@ const TripScreen = () => {
     <View style={tripstyle.mainContainer}>
       {/* Header Section */}
       <View style={tripstyle.headerSection}>
-        <Text style={tripstyle.headerTitle}>My Trips</Text>
-      </View>
+      <Text style={tripstyle.headerTitle}>My Trips</Text>
+      <Text style={tripstyle.dateText}>
+        {new Date().toLocaleDateString('en-US', { 
+          weekday: 'short', 
+          month: 'short', 
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: true
+        })}
+    </Text>
+    </View>
 
       <ScrollView 
         style={tripstyle.scrollContainer}
@@ -174,22 +189,26 @@ const TripScreen = () => {
       >
         {/* Current Trip Section */}
         <View style={tripstyle.sectionContainer}>
-          <View style={tripstyle.sectionHeader}>
-            {currentTrip && (
-              <View style={[tripstyle.statusBadge, { backgroundColor: getStatusColor(status) }]}>
-                <Text style={tripstyle.statusText}>{status}</Text>
-              </View>
-            )}
-          </View>
+         
+          
 
           {currentTrip ? (
-            <View style={tripstyle.activeCard}>
-              <View style={tripstyle.cardHeader}>
-                <View style={tripstyle.destinationContainer}>
-                  <Text style={tripstyle.destinationIcon}>🎯</Text>
-                  <Text style={tripstyle.destinationText}>{currentTrip.destination}</Text>
-                </View>
-              </View>
+ <View style={tripstyle.activeCard}>
+  <View style={tripstyle.cardHeader}>
+    {/* Destination Row */}
+    <View style={tripstyle.destinationRow}>
+      <Text style={tripstyle.destinationIcon}>📍Destination: </Text>
+      <Text style={tripstyle.destinationText}>{currentTrip.destination}</Text>
+    </View>
+    
+    {currentTrip && (
+      <View style={tripstyle.statusRow}>
+        <View style={[tripstyle.statusBadge, { backgroundColor: getStatusColor(status) }]}>
+          <Text style={tripstyle.statusText}>{status}</Text>
+        </View>
+      </View>
+    )}
+  </View>
 
               <View style={tripstyle.tripDetails}>
                 <View style={tripstyle.detailRow}>
@@ -201,7 +220,7 @@ const TripScreen = () => {
                   <Text style={tripstyle.detailValue}>{currentTrip.plate_no}</Text>
                 </View>
                 <View style={tripstyle.detailRow}>
-                  <Text style={tripstyle.detailLabel}>📦 Container</Text>
+                  <Text style={tripstyle.scheduledLabel}>📦 Container no.</Text>
                   <Text style={tripstyle.detailValue}>{currentTrip.container_no}</Text>
                 </View>
                 <View style={tripstyle.detailRow}>
@@ -213,7 +232,7 @@ const TripScreen = () => {
                   <Text style={tripstyle.detailValue}>{currentTrip.consignee}</Text>
                 </View>
                 <View style={tripstyle.detailRow}>
-                  <Text style={tripstyle.detailLabel}>💰 Cash Advance</Text>
+                  <Text style={tripstyle.cashAdvanceLabel}>💰 Cash Advance</Text>
                   <Text style={tripstyle.cashValue}>₱{currentTrip.cash_adv || '0'}</Text>
                 </View>
                 <View style={tripstyle.detailRow}>
@@ -237,14 +256,14 @@ const TripScreen = () => {
                   disabled={updating}
                 >
                   <Text style={tripstyle.primaryButtonText}>
-                    {updating ? 'Updating...' : '🔄 Update Status'}
+                    {updating ? 'Updating...' : '🔃 Update Status'}
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={tripstyle.secondaryButton}
                   onPress={() => nav.navigate('Expenses', { tripId: currentTrip.trip_id })}
                 >
-                  <Text style={tripstyle.secondaryButtonText}>💸 Report Expense</Text>
+                  <Text style={tripstyle.secondaryButtonText}>📝 Report Expense</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -274,8 +293,7 @@ const TripScreen = () => {
                 <View style={tripstyle.scheduledCard}>
                   <View style={tripstyle.cardHeader}>
                     <View style={tripstyle.destinationContainer}>
-                      <Text style={tripstyle.destinationIcon}>📍</Text>
-                      <Text style={tripstyle.scheduledDestination}>{item.destination}</Text>
+                      <Text style={tripstyle.scheduledDestination}>📍{item.destination}</Text>
                     </View>
                     <View style={tripstyle.pendingBadge}>
                       <Text style={tripstyle.pendingText}>Pending</Text>
@@ -287,11 +305,11 @@ const TripScreen = () => {
                       <Text style={tripstyle.scheduledLabel}>📅 {formatDate(item.date)}</Text>
                     </View>
                     <View style={tripstyle.detailRow}>
-                      <Text style={tripstyle.scheduledLabel}>🚛 {item.plate_no}</Text>
-                      <Text style={tripstyle.scheduledLabel}>📦 {item.container_no}</Text>
+                      <Text style={tripstyle.scheduledLabel}>🚛 Truck: {item.plate_no}</Text>
+                      <Text style={tripstyle.scheduledLabel}>📦 Container no: {item.container_no}</Text>
                     </View>
                     <View style={tripstyle.detailRow}>
-                      <Text style={tripstyle.scheduledLabel}>🏢 {item.client}</Text>
+                      <Text style={tripstyle.scheduledLabel}>🏢 Client: {item.client}</Text>
                     </View>
                     <View style={tripstyle.cashRow}>
                       <Text style={tripstyle.cashAdvanceLabel}>💰 Cash Advance: </Text>

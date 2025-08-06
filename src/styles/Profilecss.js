@@ -90,12 +90,7 @@ export const profilestyle = StyleSheet.create({
     //     backgroundColor: "transparent", 
     //     padding: 0, 
     // },
-    
-    toggleText: {
-        color: "blue",
-         fontSize: 14,
-        marginLeft: 10,
-     },
+ 
     
     // editButton: {
     //     backgroundColor: "blue",
@@ -111,34 +106,9 @@ export const profilestyle = StyleSheet.create({
     // },
     
   
-    container: {
-      flex: 1,
-      alignItems: "center",
-      backgroundColor:"#e6ecec",
-      paddingTop: 50,
-  },
-  avatarContainer: {
-      alignItems: "center",
-      marginBottom: 20,
-  },
-  avatar: {
-      width: 80,
-      height: 80,
-      borderRadius: 50,
-      backgroundColor: "#EAEAEA",
-  },
-  infoCard: {
-      width: "90%",
-      backgroundColor: "#FFF",
-      borderRadius: 10,
-      marginTop:20,
-      padding: 10,
-      shadowColor: "#000",
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 4,
-      elevation: 3,
-  },
+      
+ 
+ 
   infoRow: {
       padding: 12,
       borderBottomWidth: 1,
@@ -260,4 +230,166 @@ cancelButton: {
     alignItems: "center",
     marginLeft: 5,
 },
+
+
+
+      container: {
+        flex: 1,
+        backgroundColor: "#F8FAFB",
+    },
+    scrollContainer: {
+        paddingBottom: 80,
+    },
+    profileHeader: {
+        alignItems: 'center',
+        paddingVertical: 20,
+        backgroundColor: '#7a0f0f',
+        borderBottomLeftRadius: 30,
+        borderBottomRightRadius: 30,
+        marginBottom: 20,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+        elevation: 5,
+    },
+    avatarContainer: {
+        position: 'relative',
+        marginBottom: 15,
+    },
+    avatar: {
+        fontSize:90,
+        borderRadius: 60,
+        borderWidth: 3,
+        borderColor: '#fff',
+    },
+    editIcon: {
+        position: 'absolute',
+        bottom: 5,
+        right: 5,
+        backgroundColor: '#7a0f0f',
+        borderRadius: 15,
+        padding: 5,
+        borderWidth: 2,
+        borderColor: '#fff',
+    },
+    editIconText: {
+        fontSize: 20,
+    },
+    name: {
+        fontSize: 24,
+        fontWeight: '700',
+        color: '#fff',
+        marginBottom: 5,
+    },
+    email: {
+        fontSize: 16,
+        color: 'rgba(255,255,255,0.8)',
+    },
+    infoCard: {
+        backgroundColor: '#fff',
+        borderRadius: 15,
+        padding: 20,
+        marginHorizontal: 20,
+        marginBottom: 20,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 6,
+        elevation: 3,
+    },
+    cardHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 10,
+        borderBottomWidth: 1,
+        borderBottomColor: '#f0f0f0',
+        paddingBottom: 10,
+    },
+    icon: {
+        fontSize: 20,
+        marginRight: 10,
+    },
+    cardTitle: {
+        fontSize: 18,
+        fontWeight: '700',
+        color: '#1A1A1A',
+        marginLeft: 5,
+    },
+    infoItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 9,
+        borderBottomWidth: 1,
+        borderBottomColor: '#f5f5f5',
+    },
+    passwordItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 12,
+    },
+    infoText: {
+        fontSize: 16,
+        color: '#333',
+        marginLeft: 10,
+        
+        flexWrap: 'nowrap',
+        
+    },
+    actionButtons: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        paddingHorizontal: 20,
+        marginBottom: 20,
+    },
+    primaryButton: {
+        flex: 1,
+        backgroundColor: '#a62626ff',
+        padding: 15,
+        borderRadius: 10,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginRight: 10,
+        shadowColor: '#7a0f0f',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2,
+        shadowRadius: 8,
+        elevation: 5,
+    },
+    secondaryButton: {
+        flex: 1,
+        backgroundColor: '#333',
+        padding: 10,
+        borderRadius: 10,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2,
+        shadowRadius: 8,
+        elevation: 5,
+    },
+    buttonIcon: {
+        fontSize: 14,
+        marginRight: 8,
+    },
+    primaryButtonText: {
+        color: '#fff',
+        fontWeight: '600',
+        fontSize: 16,
+    },
+    secondaryButtonText: {
+        color: '#fff',
+        fontWeight: '600',
+        fontSize: 16,
+    },
+    toggleButton: {
+        padding: 5,
+        marginLeft: 30,
+    },
+    toggleText: {
+        fontSize: 20,
+    },
 });

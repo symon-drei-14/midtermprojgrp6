@@ -21,9 +21,9 @@ import { loginstyle } from "../styles/Styles";
 import { navbar } from "../styles/Navbar";
 import { dashboardstyles } from "../styles/dashboardcss";
 import { PermissionsAndroid, Linking } from 'react-native';
-import homeIcon from "../assets/Home2.png";
-import userIcon from "../assets/trip2.png";
-import profileicon from "../assets/profile.png";
+import homeIcon from "../assets/Home.png";
+import userIcon from "../assets/schedule.png";
+import profileicon from "../assets/profile2.png";
 import LocationService from "../services/LocationService";
 
 function Dashboard({ route, navigation }) {
@@ -56,7 +56,7 @@ function Dashboard({ route, navigation }) {
     const tripId = route.params?.tripId || `trip_${Date.now()}`;
     const truckId = route.params?.truckId || `truck_${Date.now()}`;
 
-    const API_BASE_URL = 'http://192.168.100.17/capstone-1-eb';
+    const API_BASE_URL = 'http://192.168.1.27/capstone-1-eb';
 
     // Get driver info from AsyncStorage
     const getDriverInfo = async () => {
@@ -199,6 +199,15 @@ function Dashboard({ route, navigation }) {
         }
     }, []);
 
+    const [currentTime, setCurrentTime] = useState(new Date());
+        useEffect(() => {
+        const timer = setInterval(() => {
+            setCurrentTime(new Date());
+        }, 60000); // Update every minute
+
+        return () => clearInterval(timer);
+        }, []);
+
     useEffect(() => {
         LocationService.addListener(handleLocationUpdate);
         
@@ -310,19 +319,42 @@ function Dashboard({ route, navigation }) {
     return (
         <View style={dashboardstyles.mainContainer}>
             {/* Header Section */}
-            <View style={dashboardstyles.headerSection}>
-                <View style={dashboardstyles.headerGradient}>
-                    <Text style={dashboardstyles.welcomeText}>Welcome back,</Text>
-                    <Text style={dashboardstyles.driverName}>{driverName}</Text>
-                    <View style={dashboardstyles.statusBadge}>
-                        <View style={[dashboardstyles.statusDot, { backgroundColor: locationEnabled ? '#4CAF50' : '#FF5722' }]} />
-                        <Text style={dashboardstyles.statusBadgeText}>
-                            {locationUpdateStatus}
-                        </Text>
-                    </View>
-                </View>
-            </View>
+           <View style={dashboardstyles.headerSection}>
+  <View style={dashboardstyles.headerGradient}>
+    {/* Add this profile container at the top */}
+    <View style={dashboardstyles.profileContainer}>
+      <TouchableOpacity 
+        onPress={() => nav.navigate("Profile", { userId, email })}
+        style={dashboardstyles.profilePlaceholder}
+      >
+        <Text style={dashboardstyles.profileEmoji}>👻</Text>
+      </TouchableOpacity>
 
+     
+    </View>
+    
+    <Text style={dashboardstyles.welcomeText}>Welcome back,</Text>
+    <Text style={dashboardstyles.driverName}>{driverName}</Text>
+    <View style={dashboardstyles.statusBadge}>
+      <View style={[dashboardstyles.statusDot, { backgroundColor: locationEnabled ? '#4CAF50' : '#FF5722' }]} />
+      <Text style={dashboardstyles.statusBadgeText}>
+        {locationUpdateStatus}
+      </Text>
+    </View>
+      <View style={dashboardstyles.dateTimeContainer}>
+        <Text style={dashboardstyles.dateTimeText}>
+        {currentTime.toLocaleDateString('en-US', { 
+            weekday: 'short', 
+            month: 'short', 
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true
+        })}
+        </Text>
+      </View>
+  </View>
+</View>
             <ScrollView 
                 style={dashboardstyles.scrollContainer}
                 contentContainerStyle={dashboardstyles.scrollContent}
