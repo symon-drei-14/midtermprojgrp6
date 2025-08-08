@@ -603,4 +603,37 @@ export const tripstyle = StyleSheet.create({
   paddingVertical: 4,
   borderRadius: 12,
 },
+
+checklistButton: {
+  backgroundColor: '#4CAF50',
+  padding: 10,
+  borderRadius: 5,
+  marginTop: 10,
+  alignSelf: 'center'
+},
+checklistButtonText: {
+  color: 'white',
+  fontWeight: 'bold'
+},
+checklistItem: {
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  paddingVertical: 15,
+  borderBottomWidth: 1,
+  borderBottomColor: '#eee'
+},
+checklistQuestion: {
+  fontSize: 16,
+  flex: 1,
+  marginRight: 10
+},
+checklistInput: {
+  borderWidth: 1,
+  borderColor: '#ddd',
+  borderRadius: 5,
+  padding: 10,
+  width: 100,
+  textAlign: 'center'
+}
 });

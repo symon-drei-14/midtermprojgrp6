@@ -100,7 +100,7 @@ const App = () => {
       if (firebaseUser) {
         await auth().signOut();
       }
-xamppp
+
       await AsyncStorage.removeItem('userSession');
 
       setIsAuthenticated(false);

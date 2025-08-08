@@ -10,6 +10,8 @@ import {
   Image,
   Alert,
   ActivityIndicator,
+  Switch,        
+  TextInput,  
 } from "react-native";
 
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
@@ -31,7 +33,7 @@ const TripScreen = () => {
   const [updating, setUpdating] = useState(false);
   const [driverInfo, setDriverInfo] = useState(null);
 
-  const API_BASE_URL = 'http://192.168.1.27/capstone-1-eb';
+  const API_BASE_URL = 'http://192.168.1.6/capstone-1-eb';
 
   const getDriverInfo = async () => {
     try {
@@ -142,6 +144,81 @@ const formatDate = (dateString) => {
     minute: '2-digit',
     hour12: true
   });
+};
+
+const [checklistModalVisible, setChecklistModalVisible] = useState(false);
+const [currentTripId, setCurrentTripId] = useState(null);
+const [checklistData, setChecklistData] = useState({
+  noFatigue: false,
+  noDrugs: false,
+  noDistractions: false,
+  noIllness: false,
+  fitToWork: false,
+  alcoholTest: '',
+  hoursSleep: ''
+});
+
+const submitChecklist = async () => {
+  try {
+    setUpdating(true);
+    const response = await fetch(`${API_BASE_URL}/include/handlers/trip_handler.php`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'save_checklist',
+        trip_id: currentTripId,
+        no_fatigue: checklistData.noFatigue,
+        no_drugs: checklistData.noDrugs,
+        no_distractions: checklistData.noDistractions,
+        no_illness: checklistData.noIllness,
+        fit_to_work: checklistData.fitToWork,
+        alcohol_test: parseFloat(checklistData.alcoholTest) || 0,
+        hours_sleep: parseFloat(checklistData.hoursSleep) || 0
+      }),
+    });
+
+    const data = await response.json();
+    if (data.success) {
+      Alert.alert('Success', 'Checklist submitted successfully!');
+      setChecklistModalVisible(false);
+    } else {
+      Alert.alert('Error', data.message || 'Failed to submit checklist');
+    }
+  } catch (error) {
+    console.error('Error submitting checklist:', error);
+    Alert.alert('Error', 'Failed to submit checklist');
+  } finally {
+    setUpdating(false);
+  }
+};
+
+// Add this function to fetch checklist data
+const fetchChecklistData = async (tripId) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/include/handlers/trip_handler.php`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'get_checklist',
+        trip_id: tripId
+      }),
+    });
+
+    const data = await response.json();
+    if (data.success && data.checklist) {
+      setChecklistData({
+        noFatigue: Boolean(data.checklist.no_fatigue),
+        noDrugs: Boolean(data.checklist.no_drugs),
+        noDistractions: Boolean(data.checklist.no_distractions),
+        noIllness: Boolean(data.checklist.no_illness),
+        fitToWork: Boolean(data.checklist.fit_to_work),
+        alcoholTest: data.checklist.alcohol_test.toString(),
+        hoursSleep: data.checklist.hours_sleep.toString()
+      });
+    }
+  } catch (error) {
+    console.error('Error fetching checklist:', error);
+  }
 };
 
   const getStatusColor = (tripStatus) => {
@@ -316,6 +393,17 @@ const formatDate = (dateString) => {
                       <Text style={tripstyle.cashAdvanceValue}>₱{item.cash_adv || '0'}</Text>
                     </View>
                   </View>
+
+                   <TouchableOpacity 
+        style={tripstyle.checklistButton} 
+        onPress={() => {
+          setCurrentTripId(item.trip_id);
+          fetchChecklistData(item.trip_id);
+          setChecklistModalVisible(true);
+        }}
+      >
+        <Text style={tripstyle.checklistButtonText}>Complete Checklist</Text>
+      </TouchableOpacity>
                 </View>
               )}
               keyboardShouldPersistTaps="handled"
@@ -331,6 +419,100 @@ const formatDate = (dateString) => {
           )}
         </View>
       </ScrollView>
+
+      <Modal visible={checklistModalVisible} transparent animationType="slide">
+  <View style={tripstyle.modalOverlay}>
+    <View style={tripstyle.modalContainer}>
+      <View style={tripstyle.modalHeader}>
+        <Text style={tripstyle.modalTitle}>Good to Go Checklist</Text>
+        <Text style={tripstyle.modalSubtitle}>Please complete the checklist before starting the trip</Text>
+      </View>
+      
+      <ScrollView style={{ maxHeight: '70%' }}>
+        <View style={tripstyle.checklistItem}>
+          <Text style={tripstyle.checklistQuestion}>No body fatigue?</Text>
+          <Switch
+            value={checklistData.noFatigue}
+            onValueChange={(value) => setChecklistData({...checklistData, noFatigue: value})}
+          />
+        </View>
+        
+        <View style={tripstyle.checklistItem}>
+          <Text style={tripstyle.checklistQuestion}>Did not take illegal drugs?</Text>
+          <Switch
+            value={checklistData.noDrugs}
+            onValueChange={(value) => setChecklistData({...checklistData, noDrugs: value})}
+          />
+        </View>
+        
+        <View style={tripstyle.checklistItem}>
+          <Text style={tripstyle.checklistQuestion}>No mental distractions?</Text>
+          <Switch
+            value={checklistData.noDistractions}
+            onValueChange={(value) => setChecklistData({...checklistData, noDistractions: value})}
+          />
+        </View>
+        
+        <View style={tripstyle.checklistItem}>
+          <Text style={tripstyle.checklistQuestion}>No body illness?</Text>
+          <Switch
+            value={checklistData.noIllness}
+            onValueChange={(value) => setChecklistData({...checklistData, noIllness: value})}
+          />
+        </View>
+        
+        <View style={tripstyle.checklistItem}>
+          <Text style={tripstyle.checklistQuestion}>Fit to work?</Text>
+          <Switch
+            value={checklistData.fitToWork}
+            onValueChange={(value) => setChecklistData({...checklistData, fitToWork: value})}
+          />
+        </View>
+        
+        <View style={tripstyle.checklistItem}>
+          <Text style={tripstyle.checklistQuestion}>Alcohol test reading (goal is 0):</Text>
+          <TextInput
+            style={tripstyle.checklistInput}
+            keyboardType="numeric"
+            value={checklistData.alcoholTest}
+            onChangeText={(text) => setChecklistData({...checklistData, alcoholTest: text})}
+            placeholder="0.00"
+          />
+        </View>
+        
+        <View style={tripstyle.checklistItem}>
+          <Text style={tripstyle.checklistQuestion}>Number of hours sleep (goal is 6-9 hours):</Text>
+          <TextInput
+            style={tripstyle.checklistInput}
+            keyboardType="numeric"
+            value={checklistData.hoursSleep}
+            onChangeText={(text) => setChecklistData({...checklistData, hoursSleep: text})}
+            placeholder="0.0"
+          />
+        </View>
+      </ScrollView>
+      
+      <View style={tripstyle.modalButtons}>
+        <TouchableOpacity 
+          style={[tripstyle.modalButton, tripstyle.completedButton]} 
+          onPress={submitChecklist}
+          disabled={updating}
+        >
+          <Text style={tripstyle.modalButtonText}>
+            {updating ? 'Submitting...' : 'Submit Checklist'}
+          </Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity 
+          style={tripstyle.modalCancelButton} 
+          onPress={() => setChecklistModalVisible(false)}
+        >
+          <Text style={tripstyle.modalCancelText}>Cancel</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  </View>
+</Modal>
 
       {/* Status Update Modal */}
       <Modal visible={modalVisible} transparent animationType="slide">
