@@ -1,6 +1,8 @@
 import { StyleSheet } from "react-native";
 
 export const expensestyle = StyleSheet.create({
+
+  
   historyContainer: {
     borderRadius: 8,
     backgroundColor: '#fff',
@@ -71,15 +73,11 @@ export const expensestyle = StyleSheet.create({
     fontWeight: 'bold',
     color: '#0066cc',
   },
-  container: {
+container: {
     flex: 1,
     backgroundColor:"#e6ecec",
-    paddingTop: 20,
-    paddingBottom: 0,
-  },
-  contentContainer: {
-    paddingHorizontal: 20,
-    flex: 1,
+    padding: 20,
+    textAlign:"center",
   },
   header: {
     flexDirection: "row",
@@ -87,7 +85,9 @@ export const expensestyle = StyleSheet.create({
     justifyContent: "space-between",
     marginBottom: 20,
     marginTop: 30,
+    
   },
+ 
   greeting: {
     color: "#333",
     fontSize: 20,
@@ -100,7 +100,10 @@ export const expensestyle = StyleSheet.create({
     backgroundColor: "#f7e2cf", 
     elevation: 20,
     marginTop:-20,
+    
   },
+
+  
   balanceTitle: {
     color: "#4c4a49",
     fontSize: 16,
@@ -110,6 +113,7 @@ export const expensestyle = StyleSheet.create({
     color: "#4c4a49",
     fontSize: 28,
     fontWeight: "bold",
+    
   },
   buttonText2: {
     color: "#FFF",
@@ -121,11 +125,6 @@ export const expensestyle = StyleSheet.create({
     fontWeight: "bold",
     marginBottom: 10,
   },
-  // Fixed expense list container
-  expenseListContainer: {
-    flex: 1,
-    paddingBottom: 100, // Proper spacing for nav bar
-  },
   expenseItem: {
     flexDirection: "row",
     alignItems: "center",
@@ -134,24 +133,15 @@ export const expensestyle = StyleSheet.create({
     backgroundColor: "#fff", 
     borderRadius: 10,
     marginBottom: 10,
-    marginHorizontal: 0, // Ensure it doesn't add extra margin
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 5,
     elevation: 3,
   },
-  expenseDetails: {
-    flex: 1,
-  },
   expenseText: {
     color: "#333",
     fontSize: 16,
-  },
-  expenseDate: {
-    color: "#666",
-    fontSize: 12,
-    marginTop: 2,
   },
   expenseAmount: {
     color: "#E53935", 
@@ -166,7 +156,7 @@ export const expensestyle = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     position: "absolute",
-    bottom: 110, // Adjusted to sit above nav bar properly
+    bottom: 100,
     right: 20, 
     elevation: 5,
     shadowColor: "#000",
@@ -174,6 +164,7 @@ export const expensestyle = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 4,
   },
+  
   modalContainer: {
     flex: 1,
     justifyContent: "center",
@@ -214,8 +205,9 @@ export const expensestyle = StyleSheet.create({
   },
   categoryContainer: {
     flexDirection: "row",
+    // justifyContent: "space-around",
     flexWrap: "wrap", 
-    gap: 8, 
+gap: 8, 
     marginBottom: 10,
   },
   categoryButton: {
@@ -226,15 +218,22 @@ export const expensestyle = StyleSheet.create({
     backgroundColor: "white",
     borderWidth: 2,
   },
-  buttonText3: {
-    color: "#000000",
-    fontSize: 26,
+  sectionTitle: { color: "#000", fontSize: 18, fontWeight: "bold", marginBottom: 10 },
+buttonText2: { color: "#000" }, 
+buttonText3: {
+color: "#000000",
+// fontWeight: "bold",
+fontSize: 26,
+},
+buttonText4: {
+  color: "#000000",
+   fontWeight: "bold",
+
+
   },
-  buttonText4: {
-    color: "#000000",
-    fontWeight: "bold",
-  },
+
   button: {
-    borderRadius:"20",
+borderRadius:"20",
+
   },
 });
