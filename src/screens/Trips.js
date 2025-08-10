@@ -34,8 +34,8 @@ const TripScreen = () => {
   const [driverInfo, setDriverInfo] = useState(null);
   const state = useNavigationState((state) => state);
   const currentRoute = state.routes[state.index].name;
-  const API_BASE_URL = 'http://192.168.0.100/capstone-1-eb';
-  //const API_BASE_URL = 'http://192.168.1.6/capstone-1-eb';
+  // const API_BASE_URL = 'http://192.168.0.100/capstone-1-eb';
+  const API_BASE_URL = 'http://192.168.1.6/capstone-1-eb';
 
   const getDriverInfo = async () => {
     try {
@@ -57,41 +57,59 @@ const TripScreen = () => {
     return null;
   };
 
-  const fetchTrips = async () => {
-    try {
-      setLoading(true);
-      let driver = driverInfo;
-      if (!driver) {
-        driver = await getDriverInfo();
-        if (!driver) return;
-      }
-
-      const response = await fetch(`${API_BASE_URL}/include/handlers/trip_handler.php`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'get_trips_with_drivers',
-          driver_id: driver.driver_id,
-          driver_name: driver.name,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        const allTrips = data.trips || [];
-        const activeTrip = allTrips.find(trip => trip.status === 'En Route');
-        const pending = allTrips.filter(trip => trip.status === 'Pending');
-        setCurrentTrip(activeTrip);
-        setScheduledTrips(pending);
-        if (activeTrip) setStatus(activeTrip.status);
-      }
-    } catch (error) {
-      console.error('Error fetching trips:', error);
-    } finally {
-      setLoading(false);
+ const fetchTrips = async () => {
+  try {
+    setLoading(true);
+    let driver = driverInfo;
+    if (!driver) {
+      driver = await getDriverInfo();
+      if (!driver) return;
     }
-  };
+
+    const response = await fetch(`${API_BASE_URL}/include/handlers/trip_handler.php`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'get_trips_with_drivers',
+        driver_id: driver.driver_id,
+        driver_name: driver.name,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      const allTrips = data.trips || [];
+      const activeTrip = allTrips.find(trip => trip.status === 'En Route');
+      const pending = allTrips.filter(trip => trip.status === 'Pending');
+      
+      // Fetch checklist status for each pending trip
+      const tripsWithChecklistStatus = await Promise.all(pending.map(async trip => {
+        const checklistResponse = await fetch(`${API_BASE_URL}/include/handlers/trip_handler.php`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'get_checklist',
+            trip_id: trip.trip_id,
+          }),
+        });
+        const checklistData = await checklistResponse.json();
+        return {
+          ...trip,
+          hasChecklist: checklistData.success && checklistData.checklist
+        };
+      }));
+      
+      setCurrentTrip(activeTrip);
+      setScheduledTrips(tripsWithChecklistStatus);
+      if (activeTrip) setStatus(activeTrip.status);
+    }
+  } catch (error) {
+    console.error('Error fetching trips:', error);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const updateTripStatus = async (newStatus, tripId) => {
     if (!currentTrip) return;
@@ -397,15 +415,24 @@ const fetchChecklistData = async (tripId) => {
                   </View>
 
                    <TouchableOpacity 
-        style={tripstyle.checklistButton} 
-        onPress={() => {
-          setCurrentTripId(item.trip_id);
-          fetchChecklistData(item.trip_id);
-          setChecklistModalVisible(true);
-        }}
-      >
-        <Text style={tripstyle.checklistButtonText}>Complete Checklist</Text>
-      </TouchableOpacity>
+  style={[
+    tripstyle.checklistButton, 
+    item.hasChecklist && tripstyle.checklistSubmittedButton
+  ]} 
+  onPress={() => {
+    if (item.hasChecklist) return;
+    setCurrentTripId(item.trip_id);
+    fetchChecklistData(item.trip_id);
+    setChecklistModalVisible(true);
+  }}
+>
+  <Text style={[
+    tripstyle.checklistButtonText,
+    item.hasChecklist && tripstyle.checklistSubmittedText
+  ]}>
+    {item.hasChecklist ? 'Checklist Submitted' : 'Complete Checklist'}
+  </Text>
+</TouchableOpacity>
                 </View>
               )}
               keyboardShouldPersistTaps="handled"

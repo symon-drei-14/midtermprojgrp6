@@ -635,5 +635,12 @@ checklistInput: {
   padding: 10,
   width: 100,
   textAlign: 'center'
+},
+
+checklistSubmittedButton: {
+  backgroundColor: '#2196F3',
+},
+checklistSubmittedText: {
+  color: 'white',
 }
 });
