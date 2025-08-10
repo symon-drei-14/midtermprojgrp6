@@ -15,14 +15,12 @@ import {
 } from "react-native";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { loginstyle } from "../styles/Styles";
 import { navbar } from "../styles/Navbar";
 import { expensestyle } from "../styles/Expensescss";
-
-import homeIcon from "../assets/Home2.png";
-import userIcon from "../assets/trip2.png";
-import locationIcon from "../assets/exp2.png";
-import profileicon from "../assets/profile.png"
+import { useNavigationState } from "@react-navigation/native";
+import homeIcon from "../assets/Home.png";
+import userIcon from "../assets/schedule.png";
+import profileicon from "../assets/profile2.png";
 
 export default function Expenses({ navigation, route }) {
   const [expenses, setExpenses] = useState([]);
@@ -42,14 +40,16 @@ export default function Expenses({ navigation, route }) {
   const [totalBudget, setTotalBudget] = useState(0);
   const [totalExpenses, setTotalExpenses] = useState(0);
   const [remainingBalance, setRemainingBalance] = useState(0);
-
+  const state = useNavigationState((state) => state);
+  const currentRoute = state.routes[state.index].name;
   const tripId = route?.params?.tripId;
 
   const handleOpenModal = () => {
     setModalVisible(true);
   };
 
-  const API_BASE_URL = 'http://192.168.1.6/capstone-1-eb';
+  const API_BASE_URL = 'http://192.168.0.100/capstone-1-eb';
+  //const API_BASE_URL = 'http://192.168.1.6/capstone-1-eb';
 
   const quickAmounts = [100, 500, 1000, 5000];
   const expenseCategories = ["Gas", "Toll Gate", "Maintenance", "Food", "Parking", "Other"];
@@ -392,30 +392,31 @@ export default function Expenses({ navigation, route }) {
 
   return (
     <View style={expensestyle.container}>
-      <View style={expensestyle.header}></View>
+    <View style={expensestyle.header}></View>
 
-      <View style={expensestyle.balanceCard}>
-        <Text style={expensestyle.balanceTitle}>Total Budget</Text>
-        <Text style={expensestyle.balanceAmount}>₱ {formatCurrency(totalBudget)}</Text>
-        
-        <Text style={expensestyle.balanceTitle}>Total Expenses</Text>
-        <Text style={[expensestyle.balanceAmount, {fontSize: 18, color: '#ea5050'}]}>
-          ₱ {formatCurrency(totalExpenses)}
+    <View style={expensestyle.balanceCard}>
+      <Text style={expensestyle.balanceTitle}>Total Budget</Text>
+      <Text style={expensestyle.balanceAmount}>₱ {formatCurrency(totalBudget)}</Text>
+      
+      <Text style={expensestyle.balanceTitle}>Total Expenses</Text>
+      <Text style={[expensestyle.balanceAmount, {fontSize: 18, color: '#ea5050'}]}>
+        ₱ {formatCurrency(totalExpenses)}
+      </Text>
+      
+      <Text style={expensestyle.balanceTitle}>Remaining Balance</Text>
+      <Text style={[expensestyle.balanceAmount, {color: remainingBalance >= 0 ? '#58984d' : '#ea5050'}]}>
+        ₱ {formatCurrency(remainingBalance)}
+      </Text>
+      
+      {remainingBalance < 0 && (
+        <Text style={{color: '#ea5050', fontSize: 12, fontStyle: 'italic', textAlign: 'center', marginTop: 5}}>
+          ⚠️ Over budget by ₱{formatCurrency(Math.abs(remainingBalance))}
         </Text>
-        
-        <Text style={expensestyle.balanceTitle}>Remaining Balance</Text>
-        <Text style={[expensestyle.balanceAmount, {color: remainingBalance >= 0 ? '#58984d' : '#ea5050'}]}>
-          ₱ {formatCurrency(remainingBalance)}
-        </Text>
-        
-        {remainingBalance < 0 && (
-          <Text style={{color: '#ea5050', fontSize: 12, fontStyle: 'italic', textAlign: 'center', marginTop: 5}}>
-            ⚠️ Over budget by ₱{formatCurrency(Math.abs(remainingBalance))}
-          </Text>
-        )}
-      </View>
+      )}
+    </View>
 
       <Text style={expensestyle.sectionTitle}>Expense History</Text>
+      <View style={{flex: 1, marginBottom: 90}}> {/* Add marginBottom for navbar space */}
       {expenses.length > 0 ? (
         <FlatList
           data={expenses}
@@ -435,19 +436,20 @@ export default function Expenses({ navigation, route }) {
             </View>
           )}
           showsVerticalScrollIndicator={true}
-        />
+          contentContainerStyle={{paddingBottom: 20}}/>
       ) : (
         <View style={expensestyle.expenseItem}>
           <Text style={expensestyle.expenseText}>No expenses recorded yet</Text>
         </View>
       )}
+    </View>
 
       <TouchableOpacity 
-        style={[expensestyle.expensebutton, { marginBottom: 100 }]} 
-        onPress={handleOpenModal}
-      >
-        <Text style={expensestyle.buttonText3}>+</Text>
-      </TouchableOpacity>
+      style={[expensestyle.expensebutton, { bottom: 100 }]} 
+      onPress={handleOpenModal}
+    >
+      <Text style={expensestyle.buttonText3}>+</Text>
+    </TouchableOpacity>
 
       <Modal visible={modalVisible} animationType="slide" transparent={true}>
         <TouchableWithoutFeedback onPress={closeDropdown}>
@@ -598,17 +600,31 @@ export default function Expenses({ navigation, route }) {
         </TouchableWithoutFeedback>
       </Modal>
 
-      <View style={navbar.bottomNav2}>
-        <TouchableOpacity onPress={() => nav.navigate("Dashboard")}>
-          <Image source={homeIcon} style={navbar.navIcon} />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => nav.navigate("Trips")}>
-          <Image source={userIcon} style={navbar.navIcon} />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => nav.navigate("Profile")}>
-          <Image source={profileicon} style={navbar.navIcon} />
-        </TouchableOpacity>
-      </View>
+      <View style={navbar.bottomNav}>
+      <TouchableOpacity style={navbar.navButton} onPress={() => nav.navigate("Dashboard")}>
+        {currentRoute === "Dashboard" && <View style={navbar.activeIndicator} />}
+        <Image source={homeIcon} style={navbar.navIcon} />
+        <Text style={currentRoute === "Dashboard" ? navbar.activeNavLabel : navbar.navLabel}>
+          Home
+        </Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity style={navbar.navButton} onPress={() => nav.navigate("Trips")}>
+        {(currentRoute === "Trips" || currentRoute === "Expenses") && <View style={navbar.activeIndicator} />}
+        <Image source={userIcon} style={navbar.navIcon} />
+        <Text style={(currentRoute === "Trips" || currentRoute === "Expenses") ? navbar.activeNavLabel : navbar.navLabel}>
+          Trips
+        </Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity style={navbar.navButton} onPress={() => nav.navigate("Profile")}>
+        {currentRoute === "Profile" && <View style={navbar.activeIndicator} />}
+        <Image source={profileicon} style={navbar.navIcon} />
+        <Text style={currentRoute === "Profile" ? navbar.activeNavLabel : navbar.navLabel}>
+          Profile
+        </Text>
+      </TouchableOpacity>
+    </View>
     </View>
   );
 }

@@ -17,14 +17,13 @@ import { useNavigation } from "@react-navigation/native";
 import database from '@react-native-firebase/database';
 import auth from '@react-native-firebase/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { loginstyle } from "../styles/Styles";
 import { navbar } from "../styles/Navbar";
 import { dashboardstyles } from "../styles/dashboardcss";
-import { PermissionsAndroid, Linking } from 'react-native';
 import homeIcon from "../assets/Home.png";
 import userIcon from "../assets/schedule.png";
 import profileicon from "../assets/profile2.png";
 import LocationService from "../services/LocationService";
+import { useNavigationState } from "@react-navigation/native";
 
 function Dashboard({ route, navigation }) {
     const nav = useNavigation();
@@ -40,7 +39,9 @@ function Dashboard({ route, navigation }) {
     const [locationUpdateStatus, setLocationUpdateStatus] = useState('Idle');
     const [heading, setHeading] = useState(0);
     const [isBalanceVisible, setIsBalanceVisible] = useState(true);
-    
+    const state = useNavigationState((state) => state);
+    const currentRoute = state.routes[state.index].name;
+
     // New state for trip and balance data
     const [currentTrip, setCurrentTrip] = useState(null);
     const [balanceData, setBalanceData] = useState({
@@ -56,7 +57,8 @@ function Dashboard({ route, navigation }) {
     const tripId = route.params?.tripId || `trip_${Date.now()}`;
     const truckId = route.params?.truckId || `truck_${Date.now()}`;
 
-    const API_BASE_URL = 'http://192.168.1.6/capstone-1-eb';
+    const API_BASE_URL = 'http://192.168.0.100/capstone-1-eb';
+    //const API_BASE_URL = 'http://192.168.1.6/capstone-1-eb';
 
     // Get driver info from AsyncStorage
     const getDriverInfo = async () => {
@@ -436,24 +438,29 @@ function Dashboard({ route, navigation }) {
             </ScrollView>
 
             {/* Bottom Navigation */}
-            <View style={navbar.bottomNav2}>
-                <TouchableOpacity 
-                    onPress={() => nav.navigate("Dashboard")}
-                    style={dashboardstyles.navButton}
-                >
+            <View style={navbar.bottomNav}>
+                <TouchableOpacity style={navbar.navButton} onPress={() => nav.navigate("Dashboard")}>
+                    {currentRoute === "Dashboard" && <View style={navbar.activeIndicator} />}
                     <Image source={homeIcon} style={navbar.navIcon} />
+                    <Text style={currentRoute === "Dashboard" ? navbar.activeNavLabel : navbar.navLabel}>
+                        Home
+                    </Text>
                 </TouchableOpacity>
-                <TouchableOpacity 
-                    onPress={() => nav.navigate("Trips", { userId, tripId, truckId })}
-                    style={dashboardstyles.navButton}
-                >
+
+                <TouchableOpacity style={navbar.navButton} onPress={() => nav.navigate("Trips")}>
+                    {currentRoute === "Trips" && <View style={navbar.activeIndicator} />}
                     <Image source={userIcon} style={navbar.navIcon} />
+                    <Text style={currentRoute === "Trips" ? navbar.activeNavLabel : navbar.navLabel}>
+                        Trips
+                    </Text>
                 </TouchableOpacity>
-                <TouchableOpacity 
-                    onPress={() => nav.navigate("Profile", { userId, email })}
-                    style={dashboardstyles.navButton}
-                >
+            
+                <TouchableOpacity style={navbar.navButton} onPress={() => nav.navigate("Profile")}>
+                    {currentRoute === "Profile" && <View style={navbar.activeIndicator} />}
                     <Image source={profileicon} style={navbar.navIcon} />
+                    <Text style={currentRoute === "Profile" ? navbar.activeNavLabel : navbar.navLabel}>
+                        Profile
+                    </Text>
                 </TouchableOpacity>
             </View>
         </View>

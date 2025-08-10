@@ -77,7 +77,6 @@ container: {
     flex: 1,
     backgroundColor:"#e6ecec",
     padding: 20,
-    justifyContent:"center",
     textAlign:"center",
   },
   header: {
@@ -157,9 +156,13 @@ container: {
     justifyContent: "center",
     alignItems: "center",
     position: "absolute",
-    bottom: 30, 
+    bottom: 100,
     right: 20, 
-    elevation: 5, 
+    elevation: 5,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
   },
   
   modalContainer: {

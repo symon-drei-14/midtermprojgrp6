@@ -10,6 +10,7 @@ import userIcon from "../assets/schedule.png";
 import profileicon from "../assets/profile2.png";
 import profilepic from "../assets/prof.png";
 import LocationService from "../services/LocationService"; // Import the location service
+import { useNavigationState } from "@react-navigation/native";
 
 const Profile = ({ route }) => {
     const nav = useNavigation();
@@ -25,7 +26,8 @@ const Profile = ({ route }) => {
     const [showPassword2, setShowPassword2] = useState(false);
     const [showNewPassword2, setShowNewPassword2] = useState(false);
     const [isLoggingOut, setIsLoggingOut] = useState(false);
-    
+    const state = useNavigationState((state) => state);
+    const currentRoute = state.routes[state.index].name;
     // Location tracking status
     const [locationStatus, setLocationStatus] = useState('Idle');
     const [isLocationTracking, setIsLocationTracking] = useState(false);
@@ -282,18 +284,32 @@ const Profile = ({ route }) => {
                 </View>
             </Modal>
 
-            <View style={navbar.bottomNav2}>
-                <TouchableOpacity onPress={() => nav.navigate("Dashboard")}>
-                    <Image source={homeIcon} style={navbar.navIcon} />
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => nav.navigate("Trips")}>
-                    <Image source={userIcon} style={navbar.navIcon} />
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => nav.navigate("Profile")}>
-                    <Image source={profileicon} style={navbar.navIcon} />
-                </TouchableOpacity>
-            </View>
+            <View style={navbar.bottomNav}>
+    <TouchableOpacity style={navbar.navButton} onPress={() => nav.navigate("Dashboard")}>
+        {currentRoute === "Dashboard" && <View style={navbar.activeIndicator} />}
+        <Image source={homeIcon} style={navbar.navIcon} />
+        <Text style={currentRoute === "Dashboard" ? navbar.activeNavLabel : navbar.navLabel}>
+            Home
+        </Text>
+    </TouchableOpacity>
+
+    <TouchableOpacity style={navbar.navButton} onPress={() => nav.navigate("Trips")}>
+        {currentRoute === "Trips" && <View style={navbar.activeIndicator} />}
+        <Image source={userIcon} style={navbar.navIcon} />
+        <Text style={currentRoute === "Trips" ? navbar.activeNavLabel : navbar.navLabel}>
+            Trips
+        </Text>
+    </TouchableOpacity>
+
+    <TouchableOpacity style={navbar.navButton} onPress={() => nav.navigate("Profile")}>
+        {currentRoute === "Profile" && <View style={navbar.activeIndicator} />}
+        <Image source={profileicon} style={navbar.navIcon} />
+        <Text style={currentRoute === "Profile" ? navbar.activeNavLabel : navbar.navLabel}>
+            Profile
+        </Text>
+    </TouchableOpacity>
         </View>
+    </View>
     );
 };
 

@@ -18,7 +18,7 @@ import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { tripstyle } from "../styles/Tripcss";
 import { navbar } from "../styles/Navbar";
-
+import { useNavigationState } from "@react-navigation/native";
 import homeIcon from "../assets/Home.png";
 import userIcon from "../assets/schedule.png";
 import profileicon from "../assets/profile2.png";
@@ -32,8 +32,10 @@ const TripScreen = () => {
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [driverInfo, setDriverInfo] = useState(null);
-
-  const API_BASE_URL = 'http://192.168.1.6/capstone-1-eb';
+  const state = useNavigationState((state) => state);
+  const currentRoute = state.routes[state.index].name;
+  const API_BASE_URL = 'http://192.168.0.100/capstone-1-eb';
+  //const API_BASE_URL = 'http://192.168.1.6/capstone-1-eb';
 
   const getDriverInfo = async () => {
     try {
@@ -560,25 +562,30 @@ const fetchChecklistData = async (tripId) => {
       </Modal>
 
       {/* Bottom Navigation */}
-      <View style={navbar.bottomNav2}>
-        <TouchableOpacity 
-          onPress={() => nav.navigate("Dashboard")}
-          style={tripstyle.navButton}
-        >
-          <Image source={homeIcon} style={navbar.navIcon} />
-        </TouchableOpacity>
-        <TouchableOpacity 
-          onPress={() => nav.navigate("Trips")}
-          style={tripstyle.navButton}
-        >
-          <Image source={userIcon} style={navbar.navIcon} />
-        </TouchableOpacity>
-        <TouchableOpacity 
-          onPress={() => nav.navigate("Profile")}
-          style={tripstyle.navButton}
-        >
-          <Image source={profileicon} style={navbar.navIcon} />
-        </TouchableOpacity>
+      <View style={navbar.bottomNav}>
+          <TouchableOpacity style={navbar.navButton} onPress={() => nav.navigate("Dashboard")}>
+              {currentRoute === "Dashboard" && <View style={navbar.activeIndicator} />}
+              <Image source={homeIcon} style={navbar.navIcon} />
+              <Text style={currentRoute === "Dashboard" ? navbar.activeNavLabel : navbar.navLabel}>
+                  Home
+              </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={navbar.navButton} onPress={() => nav.navigate("Trips")}>
+              {currentRoute === "Trips" && <View style={navbar.activeIndicator} />}
+              <Image source={userIcon} style={navbar.navIcon} />
+              <Text style={currentRoute === "Trips" ? navbar.activeNavLabel : navbar.navLabel}>
+                  Trips
+              </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={navbar.navButton} onPress={() => nav.navigate("Profile")}>
+              {currentRoute === "Profile" && <View style={navbar.activeIndicator} />}
+              <Image source={profileicon} style={navbar.navIcon} />
+              <Text style={currentRoute === "Profile" ? navbar.activeNavLabel : navbar.navLabel}>
+                  Profile
+              </Text>
+          </TouchableOpacity>
       </View>
     </View>
   );
