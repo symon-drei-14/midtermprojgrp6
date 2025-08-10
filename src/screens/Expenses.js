@@ -390,217 +390,229 @@ export default function Expenses({ navigation, route }) {
     );
   }
 
-  return (
-    <View style={expensestyle.container}>
-    <View style={expensestyle.header}></View>
+  // Replace the main return statement in your Expenses component with this:
 
-    <View style={expensestyle.balanceCard}>
-      <Text style={expensestyle.balanceTitle}>Total Budget</Text>
-      <Text style={expensestyle.balanceAmount}>₱ {formatCurrency(totalBudget)}</Text>
-      
-      <Text style={expensestyle.balanceTitle}>Total Expenses</Text>
-      <Text style={[expensestyle.balanceAmount, {fontSize: 18, color: '#ea5050'}]}>
-        ₱ {formatCurrency(totalExpenses)}
-      </Text>
-      
-      <Text style={expensestyle.balanceTitle}>Remaining Balance</Text>
-      <Text style={[expensestyle.balanceAmount, {color: remainingBalance >= 0 ? '#58984d' : '#ea5050'}]}>
-        ₱ {formatCurrency(remainingBalance)}
-      </Text>
-      
-      {remainingBalance < 0 && (
-        <Text style={{color: '#ea5050', fontSize: 12, fontStyle: 'italic', textAlign: 'center', marginTop: 5}}>
-          ⚠️ Over budget by ₱{formatCurrency(Math.abs(remainingBalance))}
+// Replace the main return statement in your Expenses component with this:
+
+return (
+  <View style={expensestyle.container}>
+    <View style={expensestyle.contentContainer}>
+      <View style={expensestyle.header}></View>
+
+      <View style={expensestyle.balanceCard}>
+        <Text style={expensestyle.balanceTitle}>Total Budget</Text>
+        <Text style={expensestyle.balanceAmount}>₱ {formatCurrency(totalBudget)}</Text>
+        
+        <Text style={expensestyle.balanceTitle}>Total Expenses</Text>
+        <Text style={[expensestyle.balanceAmount, {fontSize: 18, color: '#ea5050'}]}>
+          ₱ {formatCurrency(totalExpenses)}
         </Text>
-      )}
-    </View>
+        
+        <Text style={expensestyle.balanceTitle}>Remaining Balance</Text>
+        <Text style={[expensestyle.balanceAmount, {color: remainingBalance >= 0 ? '#58984d' : '#ea5050'}]}>
+          ₱ {formatCurrency(remainingBalance)}
+        </Text>
+        
+        {remainingBalance < 0 && (
+          <Text style={{color: '#ea5050', fontSize: 12, fontStyle: 'italic', textAlign: 'center', marginTop: 5}}>
+            ⚠️ Over budget by ₱{formatCurrency(Math.abs(remainingBalance))}
+          </Text>
+        )}
+      </View>
 
       <Text style={expensestyle.sectionTitle}>Expense History</Text>
-      <View style={{flex: 1, marginBottom: 90}}> {/* Add marginBottom for navbar space */}
-      {expenses.length > 0 ? (
-        <FlatList
-          data={expenses}
-          keyExtractor={(item) => item.expense_id.toString()}
-          renderItem={({ item }) => (
-            <View style={expensestyle.expenseItem}>
-              <View style={expensestyle.expenseDetails}>
-                <Text style={expensestyle.expenseText}>{item.expense_type}</Text>
-                <Text style={expensestyle.expenseDate}>{item.formatted_date}</Text>
-                {item.destination && (
-                  <Text style={[expensestyle.expenseDate, {fontSize: 12, color: '#666'}]}>
-                    Trip: {item.destination}
-                  </Text>
-                )}
+      
+      {/* Fixed expense list container */}
+      <View style={expensestyle.expenseListContainer}>
+        {expenses.length > 0 ? (
+          <FlatList
+            data={expenses}
+            keyExtractor={(item) => item.expense_id.toString()}
+            renderItem={({ item }) => (
+              <View style={expensestyle.expenseItem}>
+                <View style={expensestyle.expenseDetails}>
+                  <Text style={expensestyle.expenseText}>{item.expense_type}</Text>
+                  <Text style={expensestyle.expenseDate}>{item.formatted_date}</Text>
+                  {item.destination && (
+                    <Text style={[expensestyle.expenseDate, {fontSize: 12, color: '#666'}]}>
+                      Trip: {item.destination}
+                    </Text>
+                  )}
+                </View>
+                <Text style={expensestyle.expenseAmount}>₱ {formatCurrency(item.amount)}</Text>
               </View>
-              <Text style={expensestyle.expenseAmount}>₱ {formatCurrency(item.amount)}</Text>
-            </View>
-          )}
-          showsVerticalScrollIndicator={true}
-          contentContainerStyle={{paddingBottom: 20}}/>
-      ) : (
-        <View style={expensestyle.expenseItem}>
-          <Text style={expensestyle.expenseText}>No expenses recorded yet</Text>
-        </View>
-      )}
+            )}
+            showsVerticalScrollIndicator={true}
+            contentContainerStyle={{paddingBottom: 20}}
+          />
+        ) : (
+          <View style={expensestyle.expenseItem}>
+            <Text style={expensestyle.expenseText}>No expenses recorded yet</Text>
+          </View>
+        )}
+      </View>
+
+      {/* Fixed floating action button position */}
+      <TouchableOpacity 
+        style={expensestyle.expensebutton} 
+        onPress={handleOpenModal}
+      >
+        <Text style={expensestyle.buttonText3}>+</Text>
+      </TouchableOpacity>
     </View>
 
-      <TouchableOpacity 
-      style={[expensestyle.expensebutton, { bottom: 100 }]} 
-      onPress={handleOpenModal}
-    >
-      <Text style={expensestyle.buttonText3}>+</Text>
-    </TouchableOpacity>
+    {/* Modal remains the same */}
+    <Modal visible={modalVisible} animationType="slide" transparent={true}>
+      <TouchableWithoutFeedback onPress={closeDropdown}>
+        <View style={expensestyle.modalContainer}>
+          <View style={expensestyle.modalContent}>
+            <Text style={expensestyle.sectionTitle}>Report Expense</Text>
+            
+            <View style={{backgroundColor: '#f5f5f5', padding: 10, borderRadius: 5, marginBottom: 15}}>
+              <Text style={{fontSize: 14, color: '#666', textAlign: 'center'}}>
+                Available Balance: ₱{formatCurrency(remainingBalance)}
+              </Text>
+            </View>
+            
+            <TextInput
+              style={[
+                expensestyle.input,
+                expenseAmountError ? {borderColor: 'red'} : null
+              ]}
+              placeholder="Enter Amount"
+              keyboardType="numeric"
+              value={expenseAmount}
+              onChangeText={validateExpenseAmount}
+              onBlur={handleBlurExpenseAmount}
+            />
+            {expenseAmountError ? <Text style={{color: 'red', fontSize: 12}}>{expenseAmountError}</Text> : null}
 
-      <Modal visible={modalVisible} animationType="slide" transparent={true}>
-        <TouchableWithoutFeedback onPress={closeDropdown}>
-          <View style={expensestyle.modalContainer}>
-            <View style={expensestyle.modalContent}>
-              <Text style={expensestyle.sectionTitle}>Report Expense</Text>
-              
-              <View style={{backgroundColor: '#f5f5f5', padding: 10, borderRadius: 5, marginBottom: 15}}>
-                <Text style={{fontSize: 14, color: '#666', textAlign: 'center'}}>
-                  Available Balance: ₱{formatCurrency(remainingBalance)}
-                </Text>
-              </View>
-              
-              <TextInput
+            <View style={{ height: 20 }} />
+            
+            <Text style={expensestyle.dropdownLabel}>Expense Category</Text>
+            
+            <View style={expensestyle.dropdownContainer}>
+              <TouchableOpacity 
                 style={[
-                  expensestyle.input,
-                  expenseAmountError ? {borderColor: 'red'} : null
-                ]}
-                placeholder="Enter Amount"
-                keyboardType="numeric"
-                value={expenseAmount}
-                onChangeText={validateExpenseAmount}
-                onBlur={handleBlurExpenseAmount}
-              />
-              {expenseAmountError ? <Text style={{color: 'red', fontSize: 12}}>{expenseAmountError}</Text> : null}
-
-              <View style={{ height: 20 }} />
+                  expensestyle.dropdownField,
+                  dropdownVisible ? {borderBottomLeftRadius: 0, borderBottomRightRadius: 0} : null
+                ]} 
+                onPress={() => setDropdownVisible(!dropdownVisible)}
+              >
+                <Text style={[
+                  expensestyle.dropdownText, 
+                  expenseName === "" ? {color: '#999'} : {color: '#333'}
+                ]}>
+                  {expenseName || "Select Category"}
+                </Text>
+                <Text style={expensestyle.dropdownArrow}>{dropdownVisible ? '▲' : '▼'}</Text>
+              </TouchableOpacity>
               
-              <Text style={expensestyle.dropdownLabel}>Expense Category</Text>
-              
-              <View style={expensestyle.dropdownContainer}>
-                <TouchableOpacity 
-                  style={[
-                    expensestyle.dropdownField,
-                    dropdownVisible ? {borderBottomLeftRadius: 0, borderBottomRightRadius: 0} : null
-                  ]} 
-                  onPress={() => setDropdownVisible(!dropdownVisible)}
-                >
-                  <Text style={[
-                    expensestyle.dropdownText, 
-                    expenseName === "" ? {color: '#999'} : {color: '#333'}
-                  ]}>
-                    {expenseName || "Select Category"}
-                  </Text>
-                  <Text style={expensestyle.dropdownArrow}>{dropdownVisible ? '▲' : '▼'}</Text>
-                </TouchableOpacity>
-                
-                {dropdownVisible && (
-                  <View style={expensestyle.dropdownList}>
-                    <ScrollView 
-                      nestedScrollEnabled={true} 
-                      style={{maxHeight: 200}}
-                      showsVerticalScrollIndicator={true}
-                      scrollEventThrottle={16}
-                    >
-                      {expenseCategories.map((category) => (
-                        <TouchableOpacity
-                          key={category}
-                          style={[
-                            expensestyle.dropdownItem,
-                            expenseName === category ? expensestyle.dropdownItemSelected : null
-                          ]}
-                          onPress={() => handleCategorySelect(category)}
-                        >
-                          <Text style={[
-                            expensestyle.dropdownItemText,
-                            expenseName === category ? expensestyle.dropdownItemTextSelected : null
-                          ]}>
-                            {category}
-                          </Text>
-                        </TouchableOpacity>
-                      ))}
-                    </ScrollView>
-                  </View>
-                )}
-              </View>
-
-              {showCustomInput && (
-                <View style={{marginTop: 15}}>
-                  <TextInput
-                    style={[
-                      expensestyle.input,
-                      customCategoryError ? {borderColor: 'red'} : null
-                    ]}
-                    placeholder="Enter Custom Category"
-                    value={customCategory}
-                    onChangeText={validateCustomCategory}
-                    onBlur={handleBlurCustomCategory}
-                  />
-                  {customCategoryError ? <Text style={{color: 'red', fontSize: 12}}>{customCategoryError}</Text> : null}
+              {dropdownVisible && (
+                <View style={expensestyle.dropdownList}>
+                  <ScrollView 
+                    nestedScrollEnabled={true} 
+                    style={{maxHeight: 200}}
+                    showsVerticalScrollIndicator={true}
+                    scrollEventThrottle={16}
+                  >
+                    {expenseCategories.map((category) => (
+                      <TouchableOpacity
+                        key={category}
+                        style={[
+                          expensestyle.dropdownItem,
+                          expenseName === category ? expensestyle.dropdownItemSelected : null
+                        ]}
+                        onPress={() => handleCategorySelect(category)}
+                      >
+                        <Text style={[
+                          expensestyle.dropdownItemText,
+                          expenseName === category ? expensestyle.dropdownItemTextSelected : null
+                        ]}>
+                          {category}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
                 </View>
               )}
-
-              <View style={{ height: 20 }} />
-              
-              <Text style={expensestyle.dropdownLabel}>Quick Amounts</Text>
-              <View style={{flexDirection: 'row', flexWrap: 'wrap', marginBottom: 20}}>
-                {quickAmounts.map((amount) => (
-                  <TouchableOpacity
-                    key={amount}
-                    style={{
-                      backgroundColor: amount <= remainingBalance ? '#e8f5e8' : '#f0f0f0',
-                      padding: 8,
-                      margin: 4,
-                      borderRadius: 5,
-                      minWidth: 60,
-                      alignItems: 'center',
-                      opacity: amount <= remainingBalance ? 1 : 0.5
-                    }}
-                    onPress={() => {
-                      if (amount <= remainingBalance) {
-                        setExpenseAmount(amount.toString());
-                        setExpenseAmountError("");
-                      }
-                    }}
-                    disabled={amount > remainingBalance}
-                  >
-                    <Text style={{color: amount <= remainingBalance ? '#333' : '#999'}}>
-                      ₱{amount}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-
-              <Button 
-                title={submitting ? "Submitting..." : "Submit"} 
-                color="#58984d" 
-                onPress={addExpense} 
-                disabled={submitting}
-              />
-              <View style={{ height: 10 }} />
-              <Button 
-                title="Cancel" 
-                color="#ea5050" 
-                onPress={() => {
-                  setModalVisible(false);
-                  setExpenseAmount("");
-                  setCustomCategory("");
-                  setShowCustomInput(false);
-                  setExpenseName("Gas");
-                  setExpenseAmountError("");
-                  setCustomCategoryError("");
-                }} 
-                disabled={submitting}
-              />
             </View>
-          </View>
-        </TouchableWithoutFeedback>
-      </Modal>
 
-      <View style={navbar.bottomNav}>
+            {showCustomInput && (
+              <View style={{marginTop: 15}}>
+                <TextInput
+                  style={[
+                    expensestyle.input,
+                    customCategoryError ? {borderColor: 'red'} : null
+                  ]}
+                  placeholder="Enter Custom Category"
+                  value={customCategory}
+                  onChangeText={validateCustomCategory}
+                  onBlur={handleBlurCustomCategory}
+                />
+                {customCategoryError ? <Text style={{color: 'red', fontSize: 12}}>{customCategoryError}</Text> : null}
+              </View>
+            )}
+
+            <View style={{ height: 20 }} />
+            
+            <Text style={expensestyle.dropdownLabel}>Quick Amounts</Text>
+            <View style={{flexDirection: 'row', flexWrap: 'wrap', marginBottom: 20}}>
+              {quickAmounts.map((amount) => (
+                <TouchableOpacity
+                  key={amount}
+                  style={{
+                    backgroundColor: amount <= remainingBalance ? '#e8f5e8' : '#f0f0f0',
+                    padding: 8,
+                    margin: 4,
+                    borderRadius: 5,
+                    minWidth: 60,
+                    alignItems: 'center',
+                    opacity: amount <= remainingBalance ? 1 : 0.5
+                  }}
+                  onPress={() => {
+                    if (amount <= remainingBalance) {
+                      setExpenseAmount(amount.toString());
+                      setExpenseAmountError("");
+                    }
+                  }}
+                  disabled={amount > remainingBalance}
+                >
+                  <Text style={{color: amount <= remainingBalance ? '#333' : '#999'}}>
+                    ₱{amount}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <Button 
+              title={submitting ? "Submitting..." : "Submit"} 
+              color="#58984d" 
+              onPress={addExpense} 
+              disabled={submitting}
+            />
+            <View style={{ height: 10 }} />
+            <Button 
+              title="Cancel" 
+              color="#ea5050" 
+              onPress={() => {
+                setModalVisible(false);
+                setExpenseAmount("");
+                setCustomCategory("");
+                setShowCustomInput(false);
+                setExpenseName("Gas");
+                setExpenseAmountError("");
+                setCustomCategoryError("");
+              }} 
+              disabled={submitting}
+            />
+          </View>
+        </View>
+      </TouchableWithoutFeedback>
+    </Modal>
+
+    {/* Bottom Navigation - positioned absolutely to extend full width */}
+    <View style={navbar.bottomNav}>
       <TouchableOpacity style={navbar.navButton} onPress={() => nav.navigate("Dashboard")}>
         {currentRoute === "Dashboard" && <View style={navbar.activeIndicator} />}
         <Image source={homeIcon} style={navbar.navIcon} />
@@ -625,6 +637,6 @@ export default function Expenses({ navigation, route }) {
         </Text>
       </TouchableOpacity>
     </View>
-    </View>
-  );
+  </View>
+);
 }

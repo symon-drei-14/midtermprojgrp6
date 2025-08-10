@@ -1,8 +1,6 @@
 import { StyleSheet } from "react-native";
 
 export const expensestyle = StyleSheet.create({
-
-  
   historyContainer: {
     borderRadius: 8,
     backgroundColor: '#fff',
@@ -73,11 +71,15 @@ export const expensestyle = StyleSheet.create({
     fontWeight: 'bold',
     color: '#0066cc',
   },
-container: {
+  container: {
     flex: 1,
     backgroundColor:"#e6ecec",
-    padding: 20,
-    textAlign:"center",
+    paddingTop: 20,
+    paddingBottom: 0,
+  },
+  contentContainer: {
+    paddingHorizontal: 20,
+    flex: 1,
   },
   header: {
     flexDirection: "row",
@@ -85,9 +87,7 @@ container: {
     justifyContent: "space-between",
     marginBottom: 20,
     marginTop: 30,
-    
   },
- 
   greeting: {
     color: "#333",
     fontSize: 20,
@@ -100,10 +100,7 @@ container: {
     backgroundColor: "#f7e2cf", 
     elevation: 20,
     marginTop:-20,
-    
   },
-
-  
   balanceTitle: {
     color: "#4c4a49",
     fontSize: 16,
@@ -113,7 +110,6 @@ container: {
     color: "#4c4a49",
     fontSize: 28,
     fontWeight: "bold",
-    
   },
   buttonText2: {
     color: "#FFF",
@@ -125,6 +121,11 @@ container: {
     fontWeight: "bold",
     marginBottom: 10,
   },
+  // Fixed expense list container
+  expenseListContainer: {
+    flex: 1,
+    paddingBottom: 100, // Proper spacing for nav bar
+  },
   expenseItem: {
     flexDirection: "row",
     alignItems: "center",
@@ -133,15 +134,24 @@ container: {
     backgroundColor: "#fff", 
     borderRadius: 10,
     marginBottom: 10,
+    marginHorizontal: 0, // Ensure it doesn't add extra margin
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 5,
     elevation: 3,
   },
+  expenseDetails: {
+    flex: 1,
+  },
   expenseText: {
     color: "#333",
     fontSize: 16,
+  },
+  expenseDate: {
+    color: "#666",
+    fontSize: 12,
+    marginTop: 2,
   },
   expenseAmount: {
     color: "#E53935", 
@@ -156,7 +166,7 @@ container: {
     justifyContent: "center",
     alignItems: "center",
     position: "absolute",
-    bottom: 100,
+    bottom: 110, // Adjusted to sit above nav bar properly
     right: 20, 
     elevation: 5,
     shadowColor: "#000",
@@ -164,7 +174,6 @@ container: {
     shadowOpacity: 0.3,
     shadowRadius: 4,
   },
-  
   modalContainer: {
     flex: 1,
     justifyContent: "center",
@@ -205,9 +214,8 @@ container: {
   },
   categoryContainer: {
     flexDirection: "row",
-    // justifyContent: "space-around",
     flexWrap: "wrap", 
-gap: 8, 
+    gap: 8, 
     marginBottom: 10,
   },
   categoryButton: {
@@ -218,22 +226,15 @@ gap: 8,
     backgroundColor: "white",
     borderWidth: 2,
   },
-  sectionTitle: { color: "#000", fontSize: 18, fontWeight: "bold", marginBottom: 10 },
-buttonText2: { color: "#000" }, 
-buttonText3: {
-color: "#000000",
-// fontWeight: "bold",
-fontSize: 26,
-},
-buttonText4: {
-  color: "#000000",
-   fontWeight: "bold",
-
-
+  buttonText3: {
+    color: "#000000",
+    fontSize: 26,
   },
-
+  buttonText4: {
+    color: "#000000",
+    fontWeight: "bold",
+  },
   button: {
-borderRadius:"20",
-
+    borderRadius:"20",
   },
 });
