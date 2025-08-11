@@ -401,4 +401,59 @@ dateTimeText: {
 
 
 
+
+});
+
+export const additionalDashboardStyles = StyleSheet.create({
+    
+    miniStatusDot: {
+        width: 8,
+        height: 8,
+        borderRadius: 4,
+        marginLeft: 'auto',
+    },
+    
+    
+    controlSubtitle: {
+        fontSize: 12,
+        color: '#666',
+        marginTop: 2,
+        fontWeight: '400',
+    },
+    
+    
+    statusText: {
+        fontSize: 8,
+        fontWeight: '600',
+        textTransform: 'uppercase',
+        letterSpacing: 0.5,
+    },
+    
+    
+    onlineStatus: {
+        color: '#4CAF50',
+    },
+    
+   
+    offlineStatus: {
+        color: '#FF5722',
+    },
+    
+    
+    enhancedStatusBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 15,
+        marginTop: 8,
+    },
+    
+    
+    statusSeparator: {
+        color: 'rgba(255, 255, 255, 0.6)',
+        marginHorizontal: 4,
+        fontSize: 8,
+    },
 });

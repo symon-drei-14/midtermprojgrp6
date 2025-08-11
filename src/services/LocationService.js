@@ -68,6 +68,24 @@ class LocationService {
     });
   }
 
+  async updateDriverStatus(status) {
+    if (!this.userId) {
+      console.error('No user ID available for status update');
+      return;
+    }
+
+    try {
+      await database().ref(`/drivers/${this.userId}/status`).set({
+        status: status, 
+        last_status_update: database.ServerValue.TIMESTAMP
+      });
+      
+      console.log(`Driver status updated to: ${status}`);
+    } catch (error) {
+      console.error("Error updating driver status:", error);
+    }
+  }
+
   async updateLocation() {
     if (!this.isTracking) return;
 
@@ -87,7 +105,6 @@ class LocationService {
       
       console.log(`Location updated: ${latitude}, ${longitude}, heading: ${heading}`);
       
-      // Store to Firebase
       await this.storeLocationToFirebase(latitude, longitude, heading);
       
       const now = new Date();
@@ -111,7 +128,7 @@ class LocationService {
 
       setTimeout(() => {
         if (this.isTracking) {
-          this.notifyListeners({ status: 'Tracking' });
+          this.notifyListeners({ status: 'Online' }); 
         }
       }, 2000);
 
@@ -150,7 +167,7 @@ class LocationService {
       
       setTimeout(() => {
         if (this.isTracking) {
-          this.notifyListeners({ status: 'Tracking' });
+          this.notifyListeners({ status: 'Online' });
         }
       }, 2000);
     }
@@ -189,6 +206,8 @@ class LocationService {
 
     console.log(`Starting location tracking with interval: ${updateInterval} seconds...`);
 
+    this.updateDriverStatus('online');
+
     this.updateLocation();
 
     const intervalInMs = updateInterval * 1000;
@@ -197,7 +216,7 @@ class LocationService {
       this.updateLocation();
     }, intervalInMs);
 
-    this.notifyListeners({ status: 'Tracking', isTracking: true });
+    this.notifyListeners({ status: 'Online', isTracking: true }); 
   }
 
   stopTracking() {
@@ -209,7 +228,10 @@ class LocationService {
     }
     
     this.isTracking = false;
-    this.notifyListeners({ status: 'Stopped', isTracking: false });
+    
+    this.updateDriverStatus('offline');
+    
+    this.notifyListeners({ status: 'Offline', isTracking: false }); 
   }
 
   updateSettings(updateInterval, sensorEnabled) {
@@ -226,8 +248,22 @@ class LocationService {
       isTracking: this.isTracking,
       updateInterval: this.updateInterval,
       sensorEnabled: this.sensorEnabled,
-      userId: this.userId
+      userId: this.userId,
+      driverStatus: this.isTracking ? 'online' : 'offline' 
     };
+  }
+
+  async getCurrentDriverStatus() {
+    if (!this.userId) return 'offline';
+    
+    try {
+      const snapshot = await database().ref(`/drivers/${this.userId}/status`).once('value');
+      const statusData = snapshot.val();
+      return statusData?.status || 'offline';
+    } catch (error) { 
+      console.error('Error getting driver status:', error);
+      return 'offline';
+    }
   }
 }
 

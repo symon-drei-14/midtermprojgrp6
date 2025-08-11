@@ -26,6 +26,7 @@ export const registerUser = async (email, password, name = "") => {
             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
         });
 
+        
         await database()
             .ref(`/drivers/${userId}/profile`)
             .set({
@@ -33,6 +34,14 @@ export const registerUser = async (email, password, name = "") => {
                 name: name || email.split('@')[0],
                 status: 'active',
                 createdAt: database.ServerValue.TIMESTAMP
+            });
+
+        
+        await database()
+            .ref(`/drivers/${userId}/status`)
+            .set({
+                status: 'offline',
+                last_status_update: database.ServerValue.TIMESTAMP
             });
 
         return { success: true, message: 'User registered successfully!', userId };
@@ -62,6 +71,14 @@ export const loginUser = async (email, password) => {
         await userDoc.ref.update({
             lastLogin: firebase.firestore.FieldValue.serverTimestamp(),
         });
+
+        
+        await database()
+            .ref(`/drivers/${userId}/status`)
+            .set({
+                status: 'offline',
+                last_status_update: database.ServerValue.TIMESTAMP
+            });
 
         return { 
             success: true, 
@@ -93,6 +110,68 @@ export const storeLocation = (driverId, driverName = null) => {
     );
 };
 
+
+export const logoutUser = async (driverId) => {
+    try {
+        if (driverId) {
+            await database()
+                .ref(`/drivers/${driverId}/status`)
+                .set({
+                    status: 'offline',
+                    last_status_update: database.ServerValue.TIMESTAMP
+                });
+        }
+        return { success: true };
+    } catch (error) {
+        console.error('Error updating status on logout:', error);
+        return { success: false, message: error.message };
+    }
+};
+
+
+export const getOnlineDrivers = async () => {
+    try {
+        const snapshot = await database()
+            .ref('/drivers')
+            .orderByChild('status/status')
+            .equalTo('online')
+            .once('value');
+        
+        const drivers = [];
+        snapshot.forEach((child) => {
+            const driverData = child.val();
+            drivers.push({
+                userId: child.key,
+                ...driverData
+            });
+        });
+        
+        return { success: true, drivers };
+    } catch (error) {
+        console.error('Error getting online drivers:', error);
+        return { success: false, message: error.message };
+    }
+};
+
+
+export const getDriverStatus = async (driverId) => {
+    try {
+        const snapshot = await database()
+            .ref(`/drivers/${driverId}/status`)
+            .once('value');
+        
+        const statusData = snapshot.val();
+        return { 
+            success: true, 
+            status: statusData?.status || 'offline',
+            lastUpdate: statusData?.last_status_update 
+        };
+    } catch (error) {
+        console.error('Error getting driver status:', error);
+        return { success: false, message: error.message };
+    }
+};
+
 export const endTrip = async (driverId, truckId) => {
     try {
         await database()
@@ -107,6 +186,14 @@ export const endTrip = async (driverId, truckId) => {
             .update({
                 status: 'completed',
                 end_time: database.ServerValue.TIMESTAMP
+            });
+
+        
+        await database()
+            .ref(`/drivers/${driverId}/status`)
+            .set({
+                status: 'offline',
+                last_status_update: database.ServerValue.TIMESTAMP
             });
             
         return { success: true };

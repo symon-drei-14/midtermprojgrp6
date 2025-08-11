@@ -20,6 +20,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { navbar } from "../styles/Navbar";
 import { dashboardstyles } from "../styles/dashboardcss";
 import homeIcon from "../assets/Home.png";
+import { PermissionsAndroid, Linking } from 'react-native';
 import userIcon from "../assets/schedule.png";
 import profileicon from "../assets/profile2.png";
 import LocationService from "../services/LocationService";
@@ -36,13 +37,14 @@ function Dashboard({ route, navigation }) {
     const [lastUpdated, setLastUpdated] = useState(null);
     const appState = useRef(AppState.currentState);
     const [updateInterval, setUpdateInterval] = useState(10); 
-    const [locationUpdateStatus, setLocationUpdateStatus] = useState('Idle');
+    const [locationUpdateStatus, setLocationUpdateStatus] = useState('Offline'); 
     const [heading, setHeading] = useState(0);
     const [isBalanceVisible, setIsBalanceVisible] = useState(true);
+    const [driverStatus, setDriverStatus] = useState('offline'); 
     const state = useNavigationState((state) => state);
     const currentRoute = state.routes[state.index].name;
 
-    // New state for trip and balance data
+    
     const [currentTrip, setCurrentTrip] = useState(null);
     const [balanceData, setBalanceData] = useState({
         remainingBalance: 0
@@ -57,8 +59,8 @@ function Dashboard({ route, navigation }) {
     const tripId = route.params?.tripId || `trip_${Date.now()}`;
     const truckId = route.params?.truckId || `truck_${Date.now()}`;
 
-    // const API_BASE_URL = 'http://192.168.0.100/capstone-1-eb';
-    const API_BASE_URL = 'http://192.168.1.6/capstone-1-eb';
+    const API_BASE_URL = 'http://192.168.100.17/Capstone-1-eb';
+    //const API_BASE_URL = 'http://192.168.1.6/capstone-1-eb';
 
     // Get driver info from AsyncStorage
     const getDriverInfo = async () => {
@@ -110,7 +112,7 @@ function Dashboard({ route, navigation }) {
         }
     };
 
-    // Fetch balance/expense data
+   
     const fetchBalanceData = async (tripId) => {
         try {
             const response = await fetch(`${API_BASE_URL}/include/handlers/expense_handler.php`, {
@@ -158,7 +160,25 @@ function Dashboard({ route, navigation }) {
         }
     };
 
-    // Format currency helper
+    
+    const listenToDriverStatus = useCallback(() => {
+        if (userId !== 'guest_user') {
+            const statusRef = database().ref(`/drivers/${userId}/status`);
+            statusRef.on('value', snapshot => {
+                const statusData = snapshot.val();
+                if (statusData) {
+                    setDriverStatus(statusData.status || 'offline');
+                    console.log('Driver status updated:', statusData.status);
+                }
+            });
+
+            return () => {
+                statusRef.off();
+            };
+        }
+    }, [userId]);
+
+    
     const formatCurrency = (amount) => {
         return parseFloat(amount || 0).toLocaleString('en-PH', {
             minimumFractionDigits: 2,
@@ -166,20 +186,25 @@ function Dashboard({ route, navigation }) {
         });
     };
 
-    // Toggle balance visibility
+    
     const toggleBalanceVisibility = () => {
         setIsBalanceVisible(!isBalanceVisible);
     };
 
-    // Handle report navigation
+   
     const handleReportPress = () => {
         nav.navigate("Reports", { userId, tripId, truckId });
     };
 
-    // Location service listener callback
+    
     const handleLocationUpdate = useCallback((data) => {
         if (data.status) {
             setLocationUpdateStatus(data.status);
+            if (data.status === 'Online' || data.status === 'Updated') {
+                setDriverStatus('online');
+            } else if (data.status === 'Offline') {
+                setDriverStatus('offline');
+            }
         }
         if (data.location) {
             setCurrentLocation(data.location);
@@ -202,13 +227,13 @@ function Dashboard({ route, navigation }) {
     }, []);
 
     const [currentTime, setCurrentTime] = useState(new Date());
-        useEffect(() => {
+    useEffect(() => {
         const timer = setInterval(() => {
             setCurrentTime(new Date());
         }, 60000); // Update every minute
 
         return () => clearInterval(timer);
-        }, []);
+    }, []);
 
     useEffect(() => {
         LocationService.addListener(handleLocationUpdate);
@@ -217,18 +242,27 @@ function Dashboard({ route, navigation }) {
         setLocationEnabled(status.isTracking);
         setSensorEnabled(status.sensorEnabled);
         setUpdateInterval(status.updateInterval);
+        setDriverStatus(status.driverStatus || 'offline'); 
 
         if (status.isTracking) {
-            setLocationUpdateStatus('Tracking');
+            setLocationUpdateStatus('Online'); 
+            setDriverStatus('online');
+        } else {
+            setLocationUpdateStatus('Offline');
+            setDriverStatus('offline');
         }
 
         // Initialize trip and balance data
         initializeTripData();
 
+        // Listen to driver status changes
+        const unsubscribeStatus = listenToDriverStatus();
+
         return () => {
             LocationService.removeListener(handleLocationUpdate);
+            if (unsubscribeStatus) unsubscribeStatus();
         };
-    }, [handleLocationUpdate]);
+    }, [handleLocationUpdate, listenToDriverStatus]);
 
     useEffect(() => {
         if (userId !== 'guest_user') {
@@ -267,7 +301,7 @@ function Dashboard({ route, navigation }) {
                 console.log('App has come to the foreground');
                 const status = LocationService.getTrackingStatus();
                 setLocationEnabled(status.isTracking);
-                // Refresh trip and balance data when app comes to foreground
+                setDriverStatus(status.driverStatus || 'offline');
                 initializeTripData();
             }
             appState.current = nextAppState;
@@ -301,6 +335,7 @@ function Dashboard({ route, navigation }) {
                         onPress: () => {
                             LocationService.startTracking(userId, updateInterval, sensorEnabled);
                             setLocationEnabled(true);
+                            setDriverStatus('online');
                         }
                     }
                 ]
@@ -308,6 +343,7 @@ function Dashboard({ route, navigation }) {
         } else {
             LocationService.stopTracking();
             setLocationEnabled(false);
+            setDriverStatus('offline'); 
         }
     };
 
@@ -318,45 +354,79 @@ function Dashboard({ route, navigation }) {
         }
     };
 
+    
+    const getStatusColor = (status) => {
+        switch (status) {
+            case 'online':
+            case 'Online':
+                return '#4CAF50';
+            case 'offline':
+            case 'Offline':
+                return '#FF5722';
+            case 'Updated':
+            case 'Updating':
+                return '#FFC107';
+            default:
+                return '#FFC107';
+        }
+    };
+
+    const getStatusText = (status) => {
+        switch (status?.toLowerCase()) {
+            case 'online':
+                return 'Online';
+            case 'offline':
+                return 'Offline';
+            case 'updated':
+            case 'updating':
+                return 'Updating';
+            default:
+                return status || 'Offline';
+        }
+    };
+
     return (
         <View style={dashboardstyles.mainContainer}>
             {/* Header Section */}
-           <View style={dashboardstyles.headerSection}>
-  <View style={dashboardstyles.headerGradient}>
-    {/* Add this profile container at the top */}
-    <View style={dashboardstyles.profileContainer}>
-      <TouchableOpacity 
-        onPress={() => nav.navigate("Profile", { userId, email })}
-        style={dashboardstyles.profilePlaceholder}
-      >
-        <Text style={dashboardstyles.profileEmoji}>👻</Text>
-      </TouchableOpacity>
+            <View style={dashboardstyles.headerSection}>
+                <View style={dashboardstyles.headerGradient}>
+                    <View style={dashboardstyles.profileContainer}>
+                        <TouchableOpacity 
+                            onPress={() => nav.navigate("Profile", { userId, email })}
+                            style={dashboardstyles.profilePlaceholder}
+                        >
+                            <Text style={dashboardstyles.profileEmoji}>👻</Text>
+                        </TouchableOpacity>
+                    </View>
+                    
+                    <Text style={dashboardstyles.welcomeText}>Welcome back,</Text>
+                    <Text style={dashboardstyles.driverName}>{driverName}</Text>
 
-     
-    </View>
-    
-    <Text style={dashboardstyles.welcomeText}>Welcome back,</Text>
-    <Text style={dashboardstyles.driverName}>{driverName}</Text>
-    <View style={dashboardstyles.statusBadge}>
-      <View style={[dashboardstyles.statusDot, { backgroundColor: locationEnabled ? '#4CAF50' : '#FF5722' }]} />
-      <Text style={dashboardstyles.statusBadgeText}>
-        {locationUpdateStatus}
-      </Text>
-    </View>
-      <View style={dashboardstyles.dateTimeContainer}>
-        <Text style={dashboardstyles.dateTimeText}>
-        {currentTime.toLocaleDateString('en-US', { 
-            weekday: 'short', 
-            month: 'short', 
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: true
-        })}
-        </Text>
-      </View>
-  </View>
-</View>
+                    <View style={dashboardstyles.statusBadge}>
+                        <View style={[
+                            dashboardstyles.statusDot, 
+                            { backgroundColor: getStatusColor(locationUpdateStatus) }
+                        ]} />
+                        <Text style={dashboardstyles.statusBadgeText}>
+                            {getStatusText(locationUpdateStatus)}
+                        </Text>
+                    </View>
+                    
+                    <View style={dashboardstyles.dateTimeContainer}>
+                        <Text style={dashboardstyles.dateTimeText}>
+                            {currentTime.toLocaleDateString('en-US', { 
+                                weekday: 'short', 
+                                month: 'short', 
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                hour12: true
+                            })}
+                        </Text>
+                    </View>
+                </View>
+            </View>
+
             <ScrollView 
                 style={dashboardstyles.scrollContainer}
                 contentContainerStyle={dashboardstyles.scrollContent}
@@ -386,14 +456,13 @@ function Dashboard({ route, navigation }) {
                     <View style={dashboardstyles.balanceActions}>
                         <TouchableOpacity 
                             style={dashboardstyles.reportButton}
-                            onPress={() => nav.navigate('Expenses', { tripId: currentTrip.trip_id })}
+                            onPress={() => nav.navigate('Expenses', { tripId: currentTrip?.trip_id })}
                         >
                             <Text style={dashboardstyles.reportButtonText}>Report</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
 
-                {/* Location Cards - Current Trip */}
                 <View style={dashboardstyles.locationSection}>
                     <View style={dashboardstyles.locationCard}>
                         <View style={dashboardstyles.cardHeader}>
@@ -401,6 +470,10 @@ function Dashboard({ route, navigation }) {
                                 <Text style={dashboardstyles.locationIconText}>🚛</Text>
                             </View>
                             <Text style={dashboardstyles.cardTitle}>Current Trip</Text>
+                            <View style={[
+                                dashboardstyles.miniStatusDot, 
+                                { backgroundColor: getStatusColor(locationUpdateStatus) }
+                            ]} />
                         </View>
                         <Text style={dashboardstyles.addressText}>
                             {currentTrip ? (
@@ -411,7 +484,7 @@ function Dashboard({ route, navigation }) {
                         </Text>
                         {currentTrip && (
                             <Text style={dashboardstyles.lastUpdatedText}>
-                                Status: {currentTrip.status || 'Unknown'}
+                                Status: {currentTrip.status || 'Unknown'} • Tracking: {getStatusText(locationUpdateStatus)}
                             </Text>
                         )}
                     </View>
@@ -425,6 +498,9 @@ function Dashboard({ route, navigation }) {
                         <View style={dashboardstyles.controlHeader}>
                             <View style={dashboardstyles.controlInfo}>
                                 <Text style={dashboardstyles.controlTitle}>Location Updates</Text>
+                                <Text style={dashboardstyles.controlSubtitle}>
+                                    {getStatusText(locationUpdateStatus)}
+                                </Text>
                             </View>
                             <Switch 
                                 value={locationEnabled} 
