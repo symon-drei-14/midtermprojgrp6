@@ -75,16 +75,12 @@ class LocationService {
     }
 
     try {
-      await database().ref(`/drivers/${this.userId}/status`).set({
-        status: status, 
-        last_status_update: database.ServerValue.TIMESTAMP
-      });
-      
+      await database().ref(`/drivers/${this.userId}/status`).set(status);
       console.log(`Driver status updated to: ${status}`);
     } catch (error) {
       console.error("Error updating driver status:", error);
     }
-  }
+}
 
   async updateLocation() {
     if (!this.isTracking) return;
@@ -228,7 +224,7 @@ class LocationService {
     }
     
     this.isTracking = false;
-    
+
     this.updateDriverStatus('offline');
     
     this.notifyListeners({ status: 'Offline', isTracking: false }); 
@@ -258,13 +254,12 @@ class LocationService {
     
     try {
       const snapshot = await database().ref(`/drivers/${this.userId}/status`).once('value');
-      const statusData = snapshot.val();
-      return statusData?.status || 'offline';
+      return snapshot.val() || 'offline';
     } catch (error) { 
       console.error('Error getting driver status:', error);
       return 'offline';
     }
-  }
+}
 }
 
 export default new LocationService();

@@ -1,8 +1,8 @@
-import { firebase } from '@react-native-firebase/firestore';
+import firestore from '@react-native-firebase/firestore';
 import database from '@react-native-firebase/database';
 import Geolocation from '@react-native-community/geolocation';
 
-const db = firebase.firestore();
+const db = firestore();
 
 export const registerUser = async (email, password, name = "") => {
     try {
@@ -13,7 +13,7 @@ export const registerUser = async (email, password, name = "") => {
             .collection('Drivers_table')
             .where('email', '==', email)
             .get();
-            
+
         if (!emailQuery.empty) {
             throw new Error('Email already exists.');
         }
@@ -21,28 +21,22 @@ export const registerUser = async (email, password, name = "") => {
         await userRef.set({
             userId,
             email,
-            password, 
+            password,
             name,
-            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            createdAt: firestore.FieldValue.serverTimestamp(),
         });
 
-        
         await database()
             .ref(`/drivers/${userId}/profile`)
             .set({
                 email,
-                name: name || email.split('@')[0],
-                status: 'active',
+                name,
                 createdAt: database.ServerValue.TIMESTAMP
             });
 
-        
         await database()
             .ref(`/drivers/${userId}/status`)
-            .set({
-                status: 'offline',
-                last_status_update: database.ServerValue.TIMESTAMP
-            });
+            .set('offline');
 
         return { success: true, message: 'User registered successfully!', userId };
     } catch (error) {
@@ -52,38 +46,31 @@ export const registerUser = async (email, password, name = "") => {
 
 export const loginUser = async (email, password) => {
     try {
-        const userQuery = await db.collection('Drivers_table')
+        const snapshot = await db
+            .collection('Drivers_table')
             .where('email', '==', email)
+            .where('password', '==', password)
             .get();
 
-        if (userQuery.empty) {
-            throw new Error('Invalid email.');
+        if (snapshot.empty) {
+            throw new Error('Invalid email or password.');
         }
 
-        const userDoc = userQuery.docs[0];
-        const userData = userDoc.data();
+        const userDoc = snapshot.docs[0];
         const userId = userDoc.id;
-        
-        if (userData.password !== password) {
-            throw new Error('Invalid password.');
-        }
 
-        await userDoc.ref.update({
-            lastLogin: firebase.firestore.FieldValue.serverTimestamp(),
+        await db.collection('Drivers_table').doc(userId).update({
+            lastLogin: firestore.FieldValue.serverTimestamp(),
         });
 
-        
         await database()
             .ref(`/drivers/${userId}/status`)
-            .set({
-                status: 'offline',
-                last_status_update: database.ServerValue.TIMESTAMP
-            });
+            .set('offline');
 
         return { 
             success: true, 
             message: 'Login successful!', 
-            userData: { ...userData, userId } 
+            userId 
         };
     } catch (error) {
         return { success: false, message: error.message };
@@ -92,67 +79,60 @@ export const loginUser = async (email, password) => {
 
 export const storeLocation = (driverId, driverName = null) => {
     Geolocation.getCurrentPosition(
-        (position) => {
-            const { latitude, longitude } = position.coords;
-            database()
-                .ref(`/drivers/${driverId}/current_location`)
-                .set({ 
-                    latitude, 
-                    longitude,
-                    driver_name: driverName, 
-                    timestamp: database.ServerValue.TIMESTAMP 
-                })
-                .then(() => console.log('Location stored successfully'))
-                .catch((error) => console.error('Error saving location:', error));
+        async (position) => {
+            try {
+                await database()
+                    .ref(`/drivers/${driverId}/location`)
+                    .set({
+                        driverName: driverName || "",
+                        latitude: position.coords.latitude,
+                        longitude: position.coords.longitude,
+                        last_updated: database.ServerValue.TIMESTAMP
+                    });
+            } catch (error) {
+                console.error('Error storing location:', error);
+            }
         },
-        (error) => console.error('Location Error:', error),
+        (error) => {
+            console.error('Geolocation error:', error);
+        },
         { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
     );
 };
 
-
-export const logoutUser = async (driverId) => {
+export const endTrip = async (driverId, truckId) => {
     try {
-        if (driverId) {
-            await database()
-                .ref(`/drivers/${driverId}/status`)
-                .set({
-                    status: 'offline',
-                    last_status_update: database.ServerValue.TIMESTAMP
-                });
-        }
+        await database()
+            .ref(`/truck_assignments/${driverId}_${truckId}`)
+            .update({
+                status: 'completed',
+                end_time: database.ServerValue.TIMESTAMP
+            });
+
+        await database()
+            .ref(`/drivers/${driverId}/status`)
+            .set('offline');
+
         return { success: true };
     } catch (error) {
-        console.error('Error updating status on logout:', error);
+        console.error('Error ending truck assignment:', error);
         return { success: false, message: error.message };
     }
 };
 
-
-export const getOnlineDrivers = async () => {
+export const updateDriverStatus = async (driverId, status) => {
     try {
-        const snapshot = await database()
-            .ref('/drivers')
-            .orderByChild('status/status')
-            .equalTo('online')
-            .once('value');
+        await database()
+            .ref(`/drivers/${driverId}/status`)
+            .set(status);
         
-        const drivers = [];
-        snapshot.forEach((child) => {
-            const driverData = child.val();
-            drivers.push({
-                userId: child.key,
-                ...driverData
-            });
-        });
-        
-        return { success: true, drivers };
+        console.log(`Driver status updated to: ${status}`);
+        return { success: true };
     } catch (error) {
-        console.error('Error getting online drivers:', error);
+        console.error('Error updating driver status:', error);
         return { success: false, message: error.message };
     }
 };
-
 
 export const getDriverStatus = async (driverId) => {
     try {
@@ -160,46 +140,10 @@ export const getDriverStatus = async (driverId) => {
             .ref(`/drivers/${driverId}/status`)
             .once('value');
         
-        const statusData = snapshot.val();
-        return { 
-            success: true, 
-            status: statusData?.status || 'offline',
-            lastUpdate: statusData?.last_status_update 
-        };
+        return snapshot.val() || 'offline';
     } catch (error) {
         console.error('Error getting driver status:', error);
-        return { success: false, message: error.message };
-    }
-};
-
-export const endTrip = async (driverId, truckId) => {
-    try {
-        await database()
-            .ref(`/trucks/${truckId}`)
-            .update({
-                end_time: database.ServerValue.TIMESTAMP,
-                status: 'completed'
-            });
-
-        await database()
-            .ref(`/drivers/${driverId}/assigned_truck`)
-            .update({
-                status: 'completed',
-                end_time: database.ServerValue.TIMESTAMP
-            });
-
-        
-        await database()
-            .ref(`/drivers/${driverId}/status`)
-            .set({
-                status: 'offline',
-                last_status_update: database.ServerValue.TIMESTAMP
-            });
-            
-        return { success: true };
-    } catch (error) {
-        console.error('Error ending truck assignment:', error);
-        return { success: false, message: error.message };
+        return 'offline';
     }
 };
 
