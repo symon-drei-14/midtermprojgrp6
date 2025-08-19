@@ -34,8 +34,8 @@ const TripScreen = () => {
   const [driverInfo, setDriverInfo] = useState(null);
   const state = useNavigationState((state) => state);
   const currentRoute = state.routes[state.index].name;
-  // const API_BASE_URL = 'http://192.168.100.17/capstone-1-eb';
-  const API_BASE_URL = 'http://192.168.1.5/capstone-1-eb';
+  const API_BASE_URL = 'http://192.168.100.17/capstone-1-eb';
+  //const API_BASE_URL = 'http://192.168.1.5/capstone-1-eb';
 
   const getDriverInfo = async () => {
     try {
@@ -82,8 +82,7 @@ const TripScreen = () => {
       const allTrips = data.trips || [];
       const activeTrip = allTrips.find(trip => trip.status === 'En Route');
       const pending = allTrips.filter(trip => trip.status === 'Pending');
-      
-      // Fetch checklist status for each pending trip
+
       const tripsWithChecklistStatus = await Promise.all(pending.map(async trip => {
         const checklistResponse = await fetch(`${API_BASE_URL}/include/handlers/trip_handler.php`, {
           method: 'POST',
@@ -212,7 +211,6 @@ const submitChecklist = async () => {
   }
 };
 
-// Add this function to fetch checklist data
 const fetchChecklistData = async (tripId) => {
   try {
     const response = await fetch(`${API_BASE_URL}/include/handlers/trip_handler.php`, {

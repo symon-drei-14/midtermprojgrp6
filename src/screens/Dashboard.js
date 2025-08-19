@@ -59,10 +59,9 @@ function Dashboard({ route, navigation }) {
     const tripId = route.params?.tripId || `trip_${Date.now()}`;
     const truckId = route.params?.truckId || `truck_${Date.now()}`;
 
-    // const API_BASE_URL = 'http://192.168.100.17/Capstone-1-eb';
-    const API_BASE_URL = 'http://192.168.1.5/capstone-1-eb';
+    const API_BASE_URL = 'http://192.168.100.17/Capstone-1-eb';
+    //const API_BASE_URL = 'http://192.168.1.5/capstone-1-eb';
 
-    // Get driver info from AsyncStorage
     const getDriverInfo = async () => {
         try {
             const sessionData = await AsyncStorage.getItem('userSession');
@@ -83,7 +82,6 @@ function Dashboard({ route, navigation }) {
         return null;
     };
 
-    // Fetch current trip data
     const fetchCurrentTrip = async (driver) => {
         try {
             const response = await fetch(`${API_BASE_URL}/include/handlers/trip_handler.php`, {
@@ -149,7 +147,6 @@ function Dashboard({ route, navigation }) {
         }
     };
 
-    // Initialize trip and balance data
     const initializeTripData = async () => {
         const driver = await getDriverInfo();
         if (driver) {
@@ -230,7 +227,7 @@ function Dashboard({ route, navigation }) {
     useEffect(() => {
         const timer = setInterval(() => {
             setCurrentTime(new Date());
-        }, 60000); // Update every minute
+        }, 60000);
 
         return () => clearInterval(timer);
     }, []);
@@ -252,10 +249,8 @@ function Dashboard({ route, navigation }) {
             setDriverStatus('offline');
         }
 
-        // Initialize trip and balance data
         initializeTripData();
 
-        // Listen to driver status changes
         const unsubscribeStatus = listenToDriverStatus();
 
         return () => {
