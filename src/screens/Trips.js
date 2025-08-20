@@ -11,7 +11,8 @@ import {
   Alert,
   ActivityIndicator,
   Switch,        
-  TextInput,  
+  TextInput, 
+  RefreshControl, 
 } from "react-native";
 
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
@@ -34,8 +35,9 @@ const TripScreen = () => {
   const [driverInfo, setDriverInfo] = useState(null);
   const state = useNavigationState((state) => state);
   const currentRoute = state.routes[state.index].name;
-  const API_BASE_URL = 'http://192.168.100.17/capstone-1-eb';
-  //const API_BASE_URL = 'http://192.168.1.5/capstone-1-eb';
+  const [refreshing, setRefreshing] = useState(false);
+  // const API_BASE_URL = 'http://192.168.100.17/capstone-1-eb';
+  const API_BASE_URL = 'http://192.168.1.6/capstone-1-eb';
 
   const getDriverInfo = async () => {
     try {
@@ -109,6 +111,17 @@ const TripScreen = () => {
     setLoading(false);
   }
 };
+
+const onRefresh = useCallback(async () => {
+  setRefreshing(true);
+  try {
+    await fetchTrips()
+  } catch (error) {
+    console.error('Error refreshing:', error);
+  } finally {
+    setRefreshing(false);
+  }
+}, []);
 
   const updateTripStatus = async (newStatus, tripId) => {
     if (!currentTrip) return;
@@ -281,6 +294,14 @@ const fetchChecklistData = async (tripId) => {
         style={tripstyle.scrollContainer}
         contentContainerStyle={tripstyle.scrollContent}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+    <RefreshControl
+      refreshing={refreshing}
+      onRefresh={onRefresh}
+      colors={['#2196F3']} // Android
+      tintColor="#2196F3" // iOS
+    />
+  }
       >
         {/* Current Trip Section */}
         <View style={tripstyle.sectionContainer}>
