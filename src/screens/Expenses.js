@@ -55,7 +55,7 @@ export default function Expenses({ navigation, route }) {
     loadExpenseTypes();
   };
 
-  const API_BASE_URL = 'http://192.168.100.17/capstone-1-eb';
+  const API_BASE_URL = 'http://192.168.1.7/capstone-1-eb';
 
   const quickAmounts = [100, 500, 1000, 5000];
 

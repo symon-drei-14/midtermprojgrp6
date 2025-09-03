@@ -36,8 +36,9 @@ const TripScreen = () => {
   const state = useNavigationState((state) => state);
   const currentRoute = state.routes[state.index].name;
   const [refreshing, setRefreshing] = useState(false);
-  const API_BASE_URL = 'http://192.168.100.17/capstone-1-eb';
+  // const API_BASE_URL = 'http://192.168.100.17/capstone-1-eb';
   //const API_BASE_URL = 'http://192.168.1.6/capstone-1-eb';
+  const API_BASE_URL = 'http://192.168.1.7/capstone-1-eb';
 
   const getDriverInfo = async () => {
     try {
@@ -189,6 +190,25 @@ const [checklistData, setChecklistData] = useState({
   alcoholTest: '',
   hoursSleep: ''
 });
+
+const isChecklistAvailable = (tripDate) => {
+  const deliveryDate = new Date(tripDate);
+  const now = new Date();
+  const twoHoursBefore = new Date(deliveryDate.getTime() - 2 * 60 * 60 * 1000);
+  return now >= twoHoursBefore;
+};
+
+const resetChecklistData = () => {
+  setChecklistData({
+    noFatigue: false,
+    noDrugs: false,
+    noDistractions: false,
+    noIllness: false,
+    fitToWork: false,
+    alcoholTest: '',
+    hoursSleep: ''
+  });
+};
 
 const submitChecklist = async () => {
   try {
@@ -432,22 +452,43 @@ const fetchChecklistData = async (tripId) => {
                   </View>
 
                    <TouchableOpacity 
-  style={[
+ style={[
     tripstyle.checklistButton, 
-    item.hasChecklist && tripstyle.checklistSubmittedButton
+    item.hasChecklist && tripstyle.checklistSubmittedButton,
+    !isChecklistAvailable(item.date) && tripstyle.checklistDisabledButton
   ]} 
   onPress={() => {
-    if (item.hasChecklist) return;
+    if (item.hasChecklist || !isChecklistAvailable(item.date)) return;
+    
+    // Validate if checklist can be submitted (same day or 2 hours before)
+    const tripDate = new Date(item.date);
+    const now = new Date();
+    const twoHoursBefore = new Date(tripDate.getTime() - 2 * 60 * 60 * 1000);
+    
+    if (now < twoHoursBefore) {
+      Alert.alert(
+        'Checklist Not Available', 
+        'You can only complete the checklist on the day of delivery or up to 2 hours before.'
+      );
+      return;
+    }
+    
     setCurrentTripId(item.trip_id);
-    fetchChecklistData(item.trip_id);
+    resetChecklistData(); // Reset instead of fetching existing data
     setChecklistModalVisible(true);
   }}
 >
   <Text style={[
     tripstyle.checklistButtonText,
-    item.hasChecklist && tripstyle.checklistSubmittedText
+    item.hasChecklist && tripstyle.checklistSubmittedText,
+    !isChecklistAvailable(item.date) && tripstyle.checklistDisabledText
   ]}>
-    {item.hasChecklist ? 'Checklist Submitted' : 'Complete Checklist'}
+    {item.hasChecklist 
+      ? 'Checklist Submitted' 
+      : !isChecklistAvailable(item.date)
+        ? 'Checklist Not Available Yet'
+        : 'Complete Checklist'
+    }
   </Text>
 </TouchableOpacity>
                 </View>

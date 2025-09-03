@@ -642,5 +642,12 @@ checklistSubmittedButton: {
 },
 checklistSubmittedText: {
   color: 'white',
-}
+},
+
+checklistDisabledButton: {
+  backgroundColor: '#ccc',
+},
+checklistDisabledText: {
+  color: '#666',
+},
 });
