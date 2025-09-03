@@ -1,50 +1,49 @@
-import { StyleSheet } from "react-native";
+// styles/Navbar.js
+import { StyleSheet, Platform } from "react-native";
 
 export const navbar = StyleSheet.create({
   bottomNav: {
     position: "absolute",
     bottom: 0,
-    width: "100%",
-    backgroundColor: "#fff",
-    paddingVertical: 8,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    elevation: 8,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
+    left: 0,
+    right: 0,
+    backgroundColor: "rgba(255, 255, 255, 0.95)",
+    borderTopWidth: 1,
+    borderTopColor: "rgba(226, 232, 240, 0.5)",
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: Platform.OS === "ios" ? 24 : 16,
     flexDirection: "row",
     justifyContent: "space-around",
-    alignItems: "center",
   },
   navButton: {
+    flexDirection: "column",
     alignItems: "center",
-    justifyContent: "center",
-    flex: 1,
-    paddingVertical: 5,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    borderRadius: 16,
+    minWidth: 60,
+  },
+  navButtonActive: {
+    backgroundColor: "#DBEAFE",
+    transform: [{ scale: 1.05 }],
   },
   navIcon: {
-    resizeMode: "contain",
-    height: 28,
-    width: 28,
-    marginBottom: 3,
+    fontSize: 24,
+    marginBottom: 4,
+  },
+  navIconImg: {
+    width: 24,
+    height: 24,
+    marginBottom: 4,
   },
   navLabel: {
     fontSize: 12,
-    color: "#888",
+    color: "#6B7280",
+    fontWeight: "500",
   },
-  activeNavLabel: {
-    fontSize: 12,
-    color: "#4CAF50",
+  navLabelActive: {
+    color: "#3B82F6",
     fontWeight: "600",
-  },
-  activeIndicator: {
-    position: "absolute",
-    top: 0,
-    height: 3,
-    width: "40%",
-    backgroundColor: "#4CAF50",
-    borderRadius: 2,
   },
 });

@@ -11,7 +11,9 @@ import {
   TouchableWithoutFeedback,
   ScrollView,
   ActivityIndicator,
-  Alert
+  Alert,
+  StatusBar,
+  Animated
 } from "react-native";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -26,6 +28,7 @@ export default function Expenses({ navigation, route }) {
   const [expenses, setExpenses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [loadingExpenseTypes, setLoadingExpenseTypes] = useState(false);
   const nav = useNavigation();
   const [modalVisible, setModalVisible] = useState(false);
   const [expenseName, setExpenseName] = useState("Gas");
@@ -40,19 +43,21 @@ export default function Expenses({ navigation, route }) {
   const [totalBudget, setTotalBudget] = useState(0);
   const [totalExpenses, setTotalExpenses] = useState(0);
   const [remainingBalance, setRemainingBalance] = useState(0);
+  const [isEnRoute, setIsEnRoute] = useState(false);
+  const [expenseCategories, setExpenseCategories] = useState(["Gas", "Toll Gate", "Maintenance", "Food", "Parking", "Other"]);
+  const [refreshing, setRefreshing] = useState(false);
   const state = useNavigationState((state) => state);
   const currentRoute = state.routes[state.index].name;
   const tripId = route?.params?.tripId;
 
   const handleOpenModal = () => {
     setModalVisible(true);
+    loadExpenseTypes();
   };
 
-  // const API_BASE_URL = 'http://192.168.100.17/capstone-1-eb';
-  const API_BASE_URL = 'http://192.168.1.6/capstone-1-eb';
+  const API_BASE_URL = 'http://192.168.100.17/capstone-1-eb';
 
   const quickAmounts = [100, 500, 1000, 5000];
-  const expenseCategories = ["Gas", "Toll Gate", "Maintenance", "Food", "Parking", "Other"];
 
   useFocusEffect(
     useCallback(() => {
@@ -83,6 +88,37 @@ export default function Expenses({ navigation, route }) {
     return null;
   };
 
+  const loadExpenseTypes = async () => {
+    try {
+      setLoadingExpenseTypes(true);
+      
+      const response = await fetch(`${API_BASE_URL}/include/handlers/expense_handler.php`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          action: 'get_expense_types'
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.expense_types) {
+          const typeNames = data.expense_types
+            .map(type => type.name)
+            .filter(name => name !== 'Other');
+          typeNames.push('Other');
+          setExpenseCategories(typeNames);
+        }
+      }
+    } catch (error) {
+      console.error('Load expense types error:', error.message);
+    } finally {
+      setLoadingExpenseTypes(false);
+    }
+  };
+
   const initializeData = async () => {
     try {
       setLoading(true);
@@ -100,18 +136,24 @@ export default function Expenses({ navigation, route }) {
         if (trip) {
           await fetchExpensesByTripId(trip.trip_id);
         } else {
-          setExpenses([]);
-          setTotalExpenses(0);
-          setTotalBudget(0);
-          setRemainingBalance(0);
+          resetExpenseData();
         }
       }
     } catch (error) {
       console.error('Initialization error:', error.message);
       Alert.alert('Error', 'Failed to load data');
+      resetExpenseData();
     } finally {
       setLoading(false);
     }
+  };
+
+  const resetExpenseData = () => {
+    setExpenses([]);
+    setTotalExpenses(0);
+    setTotalBudget(0);
+    setRemainingBalance(0);
+    setIsEnRoute(false);
   };
 
   const fetchCurrentTrip = async (driver) => {
@@ -151,6 +193,8 @@ export default function Expenses({ navigation, route }) {
         trip_id: targetTripId
       };
       
+      console.log('Fetching expenses for trip:', targetTripId);
+      
       const response = await fetch(`${API_BASE_URL}/include/handlers/expense_handler.php`, {
         method: 'POST',
         headers: {
@@ -164,43 +208,55 @@ export default function Expenses({ navigation, route }) {
       }
 
       const responseText = await response.text();
+      console.log('Raw response:', responseText);
 
       let data;
       try {
         data = JSON.parse(responseText);
       } catch (parseError) {
+        console.error('Parse error:', parseError);
         throw new Error('Invalid JSON response from server');
       }
+      
+      console.log('Parsed response:', data);
       
       if (data.success) {
         const expensesList = data.expenses || [];
         const budget = parseFloat(data.total_budget) || 0;
         const expenses = parseFloat(data.total_expenses) || 0;
-        const balance = parseFloat(data.remaining_balance) || 0;
+        const balance = data.remaining_balance !== null ? parseFloat(data.remaining_balance) : 0;
+        const enRoute = data.is_en_route || false;
 
         setExpenses(expensesList);
         setTotalBudget(budget);
         setTotalExpenses(expenses);
         setRemainingBalance(balance);
+        setIsEnRoute(enRoute);
+        
+        console.log('Updated state:', {
+          expenseCount: expensesList.length,
+          budget,
+          expenses,
+          balance,
+          enRoute
+        });
         
       } else {
-        setExpenses([]);
-        setTotalBudget(0);
-        setTotalExpenses(0);
-        setRemainingBalance(0);
-        
+        console.log('API returned error:', data.message);
+        resetExpenseData();
         Alert.alert('Error', data.message || 'Failed to load expenses data');
       }
     } catch (error) {
       console.error('Fetch error:', error.message);
-      
-      setExpenses([]);
-      setTotalBudget(0);
-      setTotalExpenses(0);
-      setRemainingBalance(0);
-      
+      resetExpenseData();
       Alert.alert('Error', 'Failed to load expenses. Please check your connection and try again.');
     }
+  };
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await initializeData();
+    setRefreshing(false);
   };
 
   const handleCategorySelect = (category) => {
@@ -219,15 +275,17 @@ export default function Expenses({ navigation, route }) {
 
   const validateCustomCategory = (text) => {
     setCustomCategory(text);
-    if (text.length === 0) {
+    if (text.trim().length === 0) {
       setCustomCategoryError("Category is required.");
+    } else if (text.trim().length > 50) {
+      setCustomCategoryError("Category name too long (max 50 characters).");
     } else {
       setCustomCategoryError("");
     }
   };
 
   const handleBlurCustomCategory = () => {
-    if (customCategory.length === 0) {
+    if (customCategory.trim().length === 0) {
       setCustomCategoryError("Category is required.");
     }
   };
@@ -239,7 +297,7 @@ export default function Expenses({ navigation, route }) {
       setExpenseAmountError("Amount is required.");
     } else if (isNaN(parseFloat(text))) {
       setExpenseAmountError("Please enter a valid number.");
-    } else if (parseFloat(text) > remainingBalance && remainingBalance > 0) {
+    } else if (parseFloat(text) > remainingBalance && remainingBalance > 0 && isEnRoute) {
       setExpenseAmountError(`Expense cannot exceed remaining balance of ₱${formatCurrency(remainingBalance)}.`);
     } else if (parseFloat(text) <= 0) {
       setExpenseAmountError("Amount must be greater than 0.");
@@ -253,7 +311,7 @@ export default function Expenses({ navigation, route }) {
       setExpenseAmountError("Amount is required.");
     } else if (isNaN(parseFloat(expenseAmount))) {
       setExpenseAmountError("Please enter a valid number.");
-    } else if (parseFloat(expenseAmount) > remainingBalance && remainingBalance > 0) {
+    } else if (parseFloat(expenseAmount) > remainingBalance && remainingBalance > 0 && isEnRoute) {
       setExpenseAmountError(`Expense cannot exceed remaining balance of ₱${formatCurrency(remainingBalance)}.`);
     } else if (parseFloat(expenseAmount) <= 0) {
       setExpenseAmountError("Amount must be greater than 0.");
@@ -280,6 +338,9 @@ export default function Expenses({ navigation, route }) {
     if (showCustomInput && customCategory.trim().length === 0) {
       setCustomCategoryError("Category is required.");
       hasError = true; 
+    } else if (showCustomInput && customCategory.trim().length > 50) {
+      setCustomCategoryError("Category name too long (max 50 characters).");
+      hasError = true;
     } else {
       setCustomCategoryError(""); 
     }
@@ -294,16 +355,11 @@ export default function Expenses({ navigation, route }) {
     }
 
     let targetTripId = null;
-    let targetTruckId = null;
     
     if (tripId && !isNaN(parseInt(tripId)) && parseInt(tripId) > 0) {
       targetTripId = parseInt(tripId);
     } else if (currentTrip && currentTrip.trip_id && !isNaN(parseInt(currentTrip.trip_id)) && parseInt(currentTrip.trip_id) > 0) {
       targetTripId = parseInt(currentTrip.trip_id);
-    }
-    
-    if (currentTrip && currentTrip.truck_id && !isNaN(parseInt(currentTrip.truck_id)) && parseInt(currentTrip.truck_id) > 0) {
-      targetTruckId = parseInt(currentTrip.truck_id);
     }
     
     if (!targetTripId || targetTripId <= 0) {
@@ -322,9 +378,7 @@ export default function Expenses({ navigation, route }) {
         amount: expenseAmountNum
       };
       
-      if (targetTruckId && targetTruckId > 0) {
-        expenseData.truck_id = targetTruckId;
-      }
+      console.log('Submitting expense data:', expenseData);
       
       const response = await fetch(`${API_BASE_URL}/include/handlers/expense_handler.php`, {
         method: 'POST',
@@ -335,29 +389,26 @@ export default function Expenses({ navigation, route }) {
       });
 
       const responseText = await response.text();
+      console.log('Add expense response:', responseText);
 
       let data;
       try {
         data = JSON.parse(responseText);
       } catch (parseError) {
+        console.error('Parse error on add expense:', parseError);
         throw new Error('Invalid response from server');
       }
       
       if (data.success) {
         Alert.alert('Success', 'Expense added successfully');
         
-        // Reset form
-        setExpenseAmount("");
-        setCustomCategory("");
-        setShowCustomInput(false);
-        setExpenseName("Gas");
-        setExpenseAmountError("");
-        setCustomCategoryError("");
-        setModalVisible(false);
+        resetForm();
         
-        // Refresh expenses list
         await fetchExpensesByTripId(targetTripId);
+        
+        await loadExpenseTypes();
       } else {
+        console.error('Add expense failed:', data.message);
         Alert.alert('Error', data.message || 'Failed to add expense');
       }
     } catch (error) {
@@ -366,6 +417,16 @@ export default function Expenses({ navigation, route }) {
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const resetForm = () => {
+    setExpenseAmount("");
+    setCustomCategory("");
+    setShowCustomInput(false);
+    setExpenseName("Gas");
+    setExpenseAmountError("");
+    setCustomCategoryError("");
+    setModalVisible(false);
   };
 
   const closeDropdown = () => {
@@ -381,255 +442,386 @@ export default function Expenses({ navigation, route }) {
     });
   };
 
+  const getCategoryIcon = (category) => {
+    const icons = {
+      'Gas': '⛽',
+      'Toll Gate': '🚪',
+      'Maintenance': '🔧',
+      'Food': '🍽️',
+      'Parking': '🅿️',
+      'Other': '📝'
+    };
+    return icons[category] || '💰';
+  };
+
+  const getSpendingPercentage = () => {
+    if (totalBudget === 0) return 0;
+    return Math.min((totalExpenses / totalBudget) * 100, 100);
+  };
+
+  const getRemainingPercentage = () => {
+    if (totalBudget === 0) return 0;
+    return Math.max(100 - getSpendingPercentage(), 0);
+  };
+
+  const renderExpenseItem = ({ item, index }) => (
+    <View style={[expensestyle.expenseItem, { 
+      transform: [{ translateY: index * 2 }], 
+      opacity: 1 - (index * 0.02)
+    }]}>
+      <View style={expensestyle.expenseIconContainer}>
+        <Text style={expensestyle.expenseIcon}>
+          {getCategoryIcon(item.expense_type || item.expense_type_name)}
+        </Text>
+      </View>
+      <View style={expensestyle.expenseDetails}>
+        <Text style={expensestyle.expenseText}>
+          {item.expense_type || item.expense_type_name || 'Unknown Expense'}
+        </Text>
+        <Text style={expensestyle.expenseDate}>
+          {item.formatted_date || new Date(item.created_at).toLocaleDateString()}
+        </Text>
+        {item.destination && (
+          <Text style={expensestyle.tripInfo}>
+            🚗 {item.destination}
+          </Text>
+        )}
+      </View>
+      <View style={expensestyle.amountContainer}>
+        <Text style={expensestyle.expenseAmount}>₱{formatCurrency(item.amount)}</Text>
+      </View>
+    </View>
+  );
+
   if (loading) {
     return (
-      <View style={[expensestyle.container, { justifyContent: 'center', alignItems: 'center' }]}>
-        <ActivityIndicator size="large" color="#58984d" />
-        <Text style={{ marginTop: 10 }}>Loading expenses...</Text>
+      <View style={expensestyle.loadingContainer}>
+        <ActivityIndicator size="large" color="#667eea" />
+        <Text style={expensestyle.loadingText}>Loading expenses...</Text>
       </View>
     );
   }
 
-return (
-  <View style={expensestyle.container}>
-    <View style={expensestyle.contentContainer}>
-      <View style={expensestyle.header}></View>
-
-      <View style={expensestyle.balanceCard}>
-        <Text style={expensestyle.balanceTitle}>Total Budget</Text>
-        <Text style={expensestyle.balanceAmount}>₱ {formatCurrency(totalBudget)}</Text>
-        
-        <Text style={expensestyle.balanceTitle}>Total Expenses</Text>
-        <Text style={[expensestyle.balanceAmount, {fontSize: 18, color: '#ea5050'}]}>
-          ₱ {formatCurrency(totalExpenses)}
-        </Text>
-        
-        <Text style={expensestyle.balanceTitle}>Remaining Balance</Text>
-        <Text style={[expensestyle.balanceAmount, {color: remainingBalance >= 0 ? '#58984d' : '#ea5050'}]}>
-          ₱ {formatCurrency(remainingBalance)}
-        </Text>
-        
-        {remainingBalance < 0 && (
-          <Text style={{color: '#ea5050', fontSize: 12, fontStyle: 'italic', textAlign: 'center', marginTop: 5}}>
-            ⚠️ Over budget by ₱{formatCurrency(Math.abs(remainingBalance))}
-          </Text>
-        )}
-      </View>
-
-      <Text style={expensestyle.sectionTitle}>Expense History</Text>
+  return (
+    <View style={expensestyle.container}>
+      <StatusBar barStyle="light-content" backgroundColor="#667eea" />
       
-      {/* Fixed expense list container */}
-      <View style={expensestyle.expenseListContainer}>
-        {expenses.length > 0 ? (
-          <FlatList
-            data={expenses}
-            keyExtractor={(item) => item.expense_id.toString()}
-            renderItem={({ item }) => (
-              <View style={expensestyle.expenseItem}>
-                <View style={expensestyle.expenseDetails}>
-                  <Text style={expensestyle.expenseText}>{item.expense_type}</Text>
-                  <Text style={expensestyle.expenseDate}>{item.formatted_date}</Text>
-                  {item.destination && (
-                    <Text style={[expensestyle.expenseDate, {fontSize: 12, color: '#666'}]}>
-                      Trip: {item.destination}
-                    </Text>
-                  )}
-                </View>
-                <Text style={expensestyle.expenseAmount}>₱ {formatCurrency(item.amount)}</Text>
-              </View>
-            )}
-            showsVerticalScrollIndicator={true}
-            contentContainerStyle={{paddingBottom: 20}}
-          />
-        ) : (
-          <View style={expensestyle.expenseItem}>
-            <Text style={expensestyle.expenseText}>No expenses recorded yet</Text>
-          </View>
-        )}
+      <View style={expensestyle.header}>
+        <View style={expensestyle.headerContent}>
+        </View>
       </View>
 
-      <TouchableOpacity 
-        style={expensestyle.expensebutton} 
-        onPress={handleOpenModal}
+      <ScrollView 
+        style={expensestyle.scrollView}
+        showsVerticalScrollIndicator={false}
+        refreshing={refreshing}
+        onRefresh={handleRefresh}
       >
-        <Text style={expensestyle.buttonText3}>+</Text>
-      </TouchableOpacity>
-    </View>
-
-    <Modal visible={modalVisible} animationType="slide" transparent={true}>
-      <TouchableWithoutFeedback onPress={closeDropdown}>
-        <View style={expensestyle.modalContainer}>
-          <View style={expensestyle.modalContent}>
-            <Text style={expensestyle.sectionTitle}>Report Expense</Text>
-            
-            <View style={{backgroundColor: '#f5f5f5', padding: 10, borderRadius: 5, marginBottom: 15}}>
-              <Text style={{fontSize: 14, color: '#666', textAlign: 'center'}}>
-                Available Balance: ₱{formatCurrency(remainingBalance)}
-              </Text>
+        <View style={expensestyle.newBalanceSection}>
+          <View style={expensestyle.totalBudgetCard}>
+            <View style={expensestyle.budgetHeader}>
+              <View style={expensestyle.budgetIcon}>
+                 <Image 
+                   source={require("../assets/wallet2.png")}
+                   style={expensestyle.walletIcon}
+                   resizeMode="contain"
+                 />
+              </View>
+              <Text style={expensestyle.totalBudgetLabel}>Total Budget</Text>
             </View>
+            <Text style={expensestyle.totalBudgetAmount}>₱{formatCurrency(totalBudget)}</Text>
             
-            <TextInput
-              style={[
-                expensestyle.input,
-                expenseAmountError ? {borderColor: 'red'} : null
-              ]}
-              placeholder="Enter Amount"
-              keyboardType="numeric"
-              value={expenseAmount}
-              onChangeText={validateExpenseAmount}
-              onBlur={handleBlurExpenseAmount}
-            />
-            {expenseAmountError ? <Text style={{color: 'red', fontSize: 12}}>{expenseAmountError}</Text> : null}
-
-            <View style={{ height: 20 }} />
-            
-            <Text style={expensestyle.dropdownLabel}>Expense Category</Text>
-            
-            <View style={expensestyle.dropdownContainer}>
-              <TouchableOpacity 
-                style={[
-                  expensestyle.dropdownField,
-                  dropdownVisible ? {borderBottomLeftRadius: 0, borderBottomRightRadius: 0} : null
-                ]} 
-                onPress={() => setDropdownVisible(!dropdownVisible)}
-              >
-                <Text style={[
-                  expensestyle.dropdownText, 
-                  expenseName === "" ? {color: '#999'} : {color: '#333'}
-                ]}>
-                  {expenseName || "Select Category"}
-                </Text>
-                <Text style={expensestyle.dropdownArrow}>{dropdownVisible ? '▲' : '▼'}</Text>
-              </TouchableOpacity>
-              
-              {dropdownVisible && (
-                <View style={expensestyle.dropdownList}>
-                  <ScrollView 
-                    nestedScrollEnabled={true} 
-                    style={{maxHeight: 200}}
-                    showsVerticalScrollIndicator={true}
-                    scrollEventThrottle={16}
-                  >
-                    {expenseCategories.map((category) => (
-                      <TouchableOpacity
-                        key={category}
-                        style={[
-                          expensestyle.dropdownItem,
-                          expenseName === category ? expensestyle.dropdownItemSelected : null
-                        ]}
-                        onPress={() => handleCategorySelect(category)}
-                      >
-                        <Text style={[
-                          expensestyle.dropdownItemText,
-                          expenseName === category ? expensestyle.dropdownItemTextSelected : null
-                        ]}>
-                          {category}
-                        </Text>
-                      </TouchableOpacity>
-                    ))}
-                  </ScrollView>
+            <View style={expensestyle.budgetBreakdown}>
+              {currentTrip?.cash_advance > 0 && (
+                <View style={expensestyle.budgetBreakdownItem}>
+                  <Text style={expensestyle.budgetBreakdownLabel}>Cash Advance:</Text>
+                  <Text style={expensestyle.budgetBreakdownValue}>₱{formatCurrency(currentTrip.cash_advance)}</Text>
+                </View>
+              )}
+              {currentTrip?.additional_cash_advance > 0 && (
+                <View style={expensestyle.budgetBreakdownItem}>
+                  <Text style={expensestyle.budgetBreakdownLabel}>Additional:</Text>
+                  <Text style={expensestyle.budgetBreakdownValue}>₱{formatCurrency(currentTrip.additional_cash_advance)}</Text>
                 </View>
               )}
             </View>
+          </View>
 
-            {showCustomInput && (
-              <View style={{marginTop: 15}}>
-                <TextInput
-                  style={[
-                    expensestyle.input,
-                    customCategoryError ? {borderColor: 'red'} : null
-                  ]}
-                  placeholder="Enter Custom Category"
-                  value={customCategory}
-                  onChangeText={validateCustomCategory}
-                  onBlur={handleBlurCustomCategory}
-                />
-                {customCategoryError ? <Text style={{color: 'red', fontSize: 12}}>{customCategoryError}</Text> : null}
+          <View style={expensestyle.statsCardsRow}>
+            <View style={expensestyle.spentCard}>
+              <View style={expensestyle.cardHeader}>
+                <View style={expensestyle.spentIndicator}></View>
+                <Text style={expensestyle.cardLabel}>SPENT</Text>
               </View>
-            )}
-
-            <View style={{ height: 20 }} />
-            
-            <Text style={expensestyle.dropdownLabel}>Quick Amounts</Text>
-            <View style={{flexDirection: 'row', flexWrap: 'wrap', marginBottom: 20}}>
-              {quickAmounts.map((amount) => (
-                <TouchableOpacity
-                  key={amount}
-                  style={{
-                    backgroundColor: amount <= remainingBalance ? '#e8f5e8' : '#f0f0f0',
-                    padding: 8,
-                    margin: 4,
-                    borderRadius: 5,
-                    minWidth: 60,
-                    alignItems: 'center',
-                    opacity: amount <= remainingBalance ? 1 : 0.5
-                  }}
-                  onPress={() => {
-                    if (amount <= remainingBalance) {
-                      setExpenseAmount(amount.toString());
-                      setExpenseAmountError("");
-                    }
-                  }}
-                  disabled={amount > remainingBalance}
-                >
-                  <Text style={{color: amount <= remainingBalance ? '#333' : '#999'}}>
-                    ₱{amount}
-                  </Text>
-                </TouchableOpacity>
-              ))}
+              <Text style={expensestyle.spentAmount}>₱{formatCurrency(totalExpenses)}</Text>
+              <Text style={expensestyle.spentPercentage}>{getSpendingPercentage().toFixed(1)}% of budget</Text>
             </View>
 
-            <Button 
-              title={submitting ? "Submitting..." : "Submit"} 
-              color="#58984d" 
-              onPress={addExpense} 
-              disabled={submitting}
-            />
-            <View style={{ height: 10 }} />
-            <Button 
-              title="Cancel" 
-              color="#ea5050" 
-              onPress={() => {
-                setModalVisible(false);
-                setExpenseAmount("");
-                setCustomCategory("");
-                setShowCustomInput(false);
-                setExpenseName("Gas");
-                setExpenseAmountError("");
-                setCustomCategoryError("");
-              }} 
-              disabled={submitting}
-            />
+            <View style={expensestyle.remainingCard}>
+              <View style={expensestyle.cardHeader}>
+                <View style={expensestyle.remainingIndicator}></View>
+                <Text style={expensestyle.cardLabel}>REMAINING</Text>
+              </View>
+              <Text style={expensestyle.remainingAmount}>₱{formatCurrency(Math.abs(remainingBalance))}</Text>
+              <Text style={expensestyle.remainingPercentage}>
+                {remainingBalance >= 0 
+                  ? `${getRemainingPercentage().toFixed(1)}% available`
+                  : 'Over budget'
+                }
+              </Text>
+            </View>
           </View>
         </View>
-      </TouchableWithoutFeedback>
-    </Modal>
 
-    <View style={navbar.bottomNav}>
-      <TouchableOpacity style={navbar.navButton} onPress={() => nav.navigate("Dashboard")}>
-        {currentRoute === "Dashboard" && <View style={navbar.activeIndicator} />}
-        <Image source={homeIcon} style={navbar.navIcon} />
-        <Text style={currentRoute === "Dashboard" ? navbar.activeNavLabel : navbar.navLabel}>
-          Home
-        </Text>
+        <View style={expensestyle.expenseSection}>
+          <Text style={expensestyle.sectionTitle}>Recent Transactions</Text>
+          
+          {expenses.length > 0 ? (
+            <View style={expensestyle.expenseList}>
+              {expenses.map((item, index) => (
+                <View key={`${item.expense_id || index}`}>
+                  {renderExpenseItem({ item, index })}
+                </View>
+              ))}
+            </View>
+          ) : (
+            <View style={expensestyle.emptyState}>
+              <Text style={expensestyle.emptyStateIcon}>📊</Text>
+              <Text style={expensestyle.emptyStateText}>No expenses recorded yet</Text>
+              <Text style={expensestyle.emptyStateSubtext}>Tap the + button to add your first expense</Text>
+            </View>
+          )}
+        </View>
+      </ScrollView>
+
+      <TouchableOpacity 
+        style={expensestyle.fab} 
+        onPress={handleOpenModal}
+      >
+        <Text style={expensestyle.fabIcon}>+</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={navbar.navButton} onPress={() => nav.navigate("Trips")}>
-        {(currentRoute === "Trips" || currentRoute === "Expenses") && <View style={navbar.activeIndicator} />}
-        <Image source={userIcon} style={navbar.navIcon} />
-        <Text style={(currentRoute === "Trips" || currentRoute === "Expenses") ? navbar.activeNavLabel : navbar.navLabel}>
-          Trips
-        </Text>
-      </TouchableOpacity>
+      <Modal 
+        visible={modalVisible} 
+        animationType="slide" 
+        transparent={true}
+        presentationStyle="pageSheet"
+      >
+        <TouchableWithoutFeedback onPress={closeDropdown}>
+          <View style={expensestyle.modalOverlay}>
+            <View style={expensestyle.modalContainer}>
+              <View style={expensestyle.modalHeader}>
+                <Text style={expensestyle.modalTitle}>Add Expense</Text>
+                <TouchableOpacity onPress={resetForm} style={expensestyle.modalCloseButton}>
+                  <Text style={expensestyle.modalCloseIcon}>✕</Text>
+                </TouchableOpacity>
+              </View>
+              
+              <ScrollView style={expensestyle.modalContent} showsVerticalScrollIndicator={false}>
+                {isEnRoute && (
+                  <View style={expensestyle.balanceAlert}>
+                    <Text style={expensestyle.balanceAlertIcon}>💳</Text>
+                    <Text style={expensestyle.balanceAlertText}>
+                      Available: ₱{formatCurrency(remainingBalance)}
+                    </Text>
+                  </View>
+                )}
+                
+                <View style={expensestyle.inputGroup}>
+                  <Text style={expensestyle.inputLabel}>Amount</Text>
+                  <TextInput
+                    style={[expensestyle.input, expenseAmountError && expensestyle.inputError]}
+                    placeholder="₱ 0.00"
+                    keyboardType="numeric"
+                    value={expenseAmount}
+                    onChangeText={validateExpenseAmount}
+                    onBlur={handleBlurExpenseAmount}
+                  />
+                  {expenseAmountError && (
+                    <Text style={expensestyle.errorText}>{expenseAmountError}</Text>
+                  )}
+                </View>
 
-      <TouchableOpacity style={navbar.navButton} onPress={() => nav.navigate("Profile")}>
-        {currentRoute === "Profile" && <View style={navbar.activeIndicator} />}
-        <Image source={profileicon} style={navbar.navIcon} />
-        <Text style={currentRoute === "Profile" ? navbar.activeNavLabel : navbar.navLabel}>
-          Profile
-        </Text>
-      </TouchableOpacity>
+                <View style={expensestyle.quickAmountSection}>
+                  <Text style={expensestyle.quickAmountLabel}>Quick amounts</Text>
+                  <View style={expensestyle.quickAmountGrid}>
+                    {quickAmounts.map((amount) => {
+                      const isDisabled = isEnRoute && amount > remainingBalance && remainingBalance > 0;
+                      return (
+                        <TouchableOpacity
+                          key={amount}
+                          style={[expensestyle.quickAmountButton, 
+                            isDisabled && expensestyle.quickAmountButtonDisabled]}
+                          onPress={() => {
+                            if (!isDisabled) {
+                              setExpenseAmount(amount.toString());
+                              setExpenseAmountError("");
+                            }
+                          }}
+                          disabled={isDisabled}
+                        >
+                          <Text style={[expensestyle.quickAmountText,
+                            isDisabled && expensestyle.quickAmountTextDisabled]}>
+                            ₱{amount}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                </View>
+                
+                <View style={expensestyle.inputGroup}>
+                  <Text style={expensestyle.inputLabel}>Category</Text>
+                  <View style={expensestyle.dropdownContainer}>
+                    <TouchableOpacity 
+                      style={[expensestyle.dropdown, dropdownVisible && expensestyle.dropdownOpen]} 
+                      onPress={() => setDropdownVisible(!dropdownVisible)}
+                      disabled={loadingExpenseTypes}
+                    >
+                      <Text style={expensestyle.dropdownText}>
+                        {loadingExpenseTypes ? "Loading..." : `${getCategoryIcon(expenseName)} ${expenseName}`}
+                      </Text>
+                      <Text style={[expensestyle.dropdownArrow, 
+                        dropdownVisible && expensestyle.dropdownArrowRotated]}>
+                        ▼
+                      </Text>
+                    </TouchableOpacity>
+                    
+                    {dropdownVisible && (
+                      <View style={expensestyle.dropdownList}>
+                        <ScrollView 
+                          nestedScrollEnabled={true} 
+                          style={expensestyle.dropdownScrollView}
+                          showsVerticalScrollIndicator={false}
+                        >
+                          {expenseCategories.map((category) => (
+                            <TouchableOpacity
+                              key={category}
+                              style={[expensestyle.dropdownItem,
+                                expenseName === category && expensestyle.dropdownItemSelected]}
+                              onPress={() => handleCategorySelect(category)}
+                            >
+                              <Text style={expensestyle.dropdownItemIcon}>
+                                {getCategoryIcon(category)}
+                              </Text>
+                              <Text style={[expensestyle.dropdownItemText,
+                                expenseName === category && expensestyle.dropdownItemTextSelected]}>
+                                {category}
+                              </Text>
+                            </TouchableOpacity>
+                          ))}
+                        </ScrollView>
+                      </View>
+                    )}
+                  </View>
+                </View>
+
+                {showCustomInput && (
+                  <View style={expensestyle.inputGroup}>
+                    <Text style={expensestyle.inputLabel}>Custom Category</Text>
+                    <TextInput
+                      style={[expensestyle.input, customCategoryError && expensestyle.inputError]}
+                      placeholder="Enter category name"
+                      value={customCategory}
+                      onChangeText={validateCustomCategory}
+                      onBlur={handleBlurCustomCategory}
+                      maxLength={50}
+                    />
+                    {customCategoryError && (
+                      <Text style={expensestyle.errorText}>{customCategoryError}</Text>
+                    )}
+                  </View>
+                )}
+
+                <View style={expensestyle.buttonGroup}>
+                  <TouchableOpacity 
+                    style={[expensestyle.submitButton, submitting && expensestyle.buttonDisabled]} 
+                    onPress={addExpense} 
+                    disabled={submitting}
+                  >
+                    <Text style={expensestyle.submitButtonText}>
+                      {submitting ? 'Adding...' : 'Add Expense'}
+                    </Text>
+                  </TouchableOpacity>
+                  
+                  <TouchableOpacity 
+                    style={expensestyle.cancelButton} 
+                    onPress={resetForm} 
+                    disabled={submitting}
+                  >
+                    <Text style={expensestyle.cancelButtonText}>Cancel</Text>
+                  </TouchableOpacity>
+                </View>
+              </ScrollView>
+            </View>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
+
+      <View style={navbar.bottomNav}>
+          <TouchableOpacity 
+              style={[navbar.navButton, currentRoute === "Dashboard" && navbar.navButtonActive]}
+              onPress={() => nav.navigate("Dashboard")}
+          >
+              <Image 
+                  source={require("../assets/Home.png")} 
+                  style={[
+                      navbar.navIconImg, 
+                      { tintColor: currentRoute === "Dashboard" ? "red" : "grey" }
+                  ]}
+              />
+              <Text 
+                  style={[
+                      navbar.navLabel, 
+                      currentRoute === "Dashboard" && navbar.navLabelActive
+                  ]}
+              >
+                  Home
+              </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+              style={[navbar.navButton, currentRoute === "Trips" && navbar.navButtonActive]}
+              onPress={() => nav.navigate("Trips")}
+          >
+              <Image 
+                  source={require("../assets/trip.png")} 
+                  style={[
+                      navbar.navIconImg, 
+                      { tintColor: currentRoute === "Trips" ? "red" : "grey" }
+                  ]}
+              />
+              <Text 
+                  style={[
+                      navbar.navLabel, 
+                      currentRoute === "Trips" && navbar.navLabelActive
+                  ]}
+              >
+                  Trips
+              </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+              style={[navbar.navButton, currentRoute === "Profile" && navbar.navButtonActive]}
+              onPress={() => nav.navigate("Profile")}
+          >
+              <Image 
+                  source={require("../assets/user.png")} 
+                  style={[
+                      navbar.navIconImg, 
+                      { tintColor: currentRoute === "Profile" ? "red" : "grey" }
+                  ]}
+              />
+              <Text 
+                  style={[
+                      navbar.navLabel, 
+                      currentRoute === "Profile" && navbar.navLabelActive
+                  ]}
+              >
+                  Profile
+              </Text>
+          </TouchableOpacity>
+      </View>
     </View>
-  </View>
-);
+  );
 }

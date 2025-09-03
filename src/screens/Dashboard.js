@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
     View,
     Text,
-    TextInput,
     Image,
     Switch,
     TouchableOpacity,
@@ -11,7 +10,6 @@ import {
     AppState,
     Platform,
     Dimensions,
-    StyleSheet
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import database from '@react-native-firebase/database';
@@ -20,9 +18,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { navbar } from "../styles/Navbar";
 import { dashboardstyles } from "../styles/dashboardcss";
 import homeIcon from "../assets/Home.png";
-import { PermissionsAndroid, Linking } from 'react-native';
-import userIcon from "../assets/schedule.png";
-import profileicon from "../assets/profile2.png";
+import userIcon from "../assets/trip.png";
+import profileicon from "../assets/user.png";
 import LocationService from "../services/LocationService";
 import { useNavigationState } from "@react-navigation/native";
 
@@ -44,7 +41,6 @@ function Dashboard({ route, navigation }) {
     const state = useNavigationState((state) => state);
     const currentRoute = state.routes[state.index].name;
 
-    
     const [currentTrip, setCurrentTrip] = useState(null);
     const [balanceData, setBalanceData] = useState({
         remainingBalance: 0
@@ -59,8 +55,7 @@ function Dashboard({ route, navigation }) {
     const tripId = route.params?.tripId || `trip_${Date.now()}`;
     const truckId = route.params?.truckId || `truck_${Date.now()}`;
 
-    // const API_BASE_URL = 'http://192.168.100.17/Capstone-1-eb';
-    const API_BASE_URL = 'http://192.168.1.6/capstone-1-eb';
+    const API_BASE_URL = 'http://192.168.100.17/Capstone-1-eb';
 
     const getDriverInfo = async () => {
         try {
@@ -110,7 +105,6 @@ function Dashboard({ route, navigation }) {
         }
     };
 
-   
     const fetchBalanceData = async (tripId) => {
         try {
             const response = await fetch(`${API_BASE_URL}/include/handlers/expense_handler.php`, {
@@ -157,7 +151,6 @@ function Dashboard({ route, navigation }) {
         }
     };
 
-    
     const listenToDriverStatus = useCallback(() => {
         if (userId !== 'guest_user') {
             const statusRef = database().ref(`/drivers/${userId}/status`);
@@ -175,7 +168,6 @@ function Dashboard({ route, navigation }) {
         }
     }, [userId]);
 
-    
     const formatCurrency = (amount) => {
         return parseFloat(amount || 0).toLocaleString('en-PH', {
             minimumFractionDigits: 2,
@@ -183,17 +175,10 @@ function Dashboard({ route, navigation }) {
         });
     };
 
-    
     const toggleBalanceVisibility = () => {
         setIsBalanceVisible(!isBalanceVisible);
     };
 
-   
-    const handleReportPress = () => {
-        nav.navigate("Reports", { userId, tripId, truckId });
-    };
-
-    
     const handleLocationUpdate = useCallback((data) => {
         if (data.status) {
             setLocationUpdateStatus(data.status);
@@ -228,7 +213,6 @@ function Dashboard({ route, navigation }) {
         const timer = setInterval(() => {
             setCurrentTime(new Date());
         }, 60000);
-
         return () => clearInterval(timer);
     }, []);
 
@@ -250,7 +234,6 @@ function Dashboard({ route, navigation }) {
         }
 
         initializeTripData();
-
         const unsubscribeStatus = listenToDriverStatus();
 
         return () => {
@@ -342,77 +325,43 @@ function Dashboard({ route, navigation }) {
         }
     };
 
-    const handleSensorToggle = (value) => {
-        setSensorEnabled(value);
-        if (locationEnabled) {
-            LocationService.updateSettings(updateInterval, value);
-        }
-    };
-
-    
-    const getStatusColor = (status) => {
-        switch (status) {
-            case 'online':
-            case 'Online':
-                return '#4CAF50';
-            case 'offline':
-            case 'Offline':
-                return '#FF5722';
-            case 'Updated':
-            case 'Updating':
-                return '#FFC107';
-            default:
-                return '#FFC107';
-        }
-    };
-
-    const getStatusText = (status) => {
-        switch (status?.toLowerCase()) {
-            case 'online':
-                return 'Online';
-            case 'offline':
-                return 'Offline';
-            case 'updated':
-            case 'updating':
-                return 'Updating';
-            default:
-                return status || 'Offline';
-        }
-    };
-
     return (
-        <View style={dashboardstyles.mainContainer}>
-            {/* Header Section */}
-            <View style={dashboardstyles.headerSection}>
-                <View style={dashboardstyles.headerGradient}>
-                    <View style={dashboardstyles.profileContainer}>
+        <View style={dashboardstyles.container}>
+            <View style={dashboardstyles.header}>
+                <View style={dashboardstyles.headerTop}>
+                    <View style={dashboardstyles.profileSection}>
                         <TouchableOpacity 
                             onPress={() => nav.navigate("Profile", { userId, email })}
-                            style={dashboardstyles.profilePlaceholder}
+                            style={dashboardstyles.avatar}
                         >
-                            <Text style={dashboardstyles.profileEmoji}>👻</Text>
+                            <Text style={dashboardstyles.avatarText}>S</Text>
                         </TouchableOpacity>
+                        <View style={dashboardstyles.welcomeSection}>
+                            <Text style={dashboardstyles.welcomeText}>Welcome back,</Text>
+                            <Text style={dashboardstyles.userName}>{driverName}</Text>
+                        </View>
                     </View>
-                    
-                    <Text style={dashboardstyles.welcomeText}>Welcome back,</Text>
-                    <Text style={dashboardstyles.driverName}>{driverName}</Text>
+                </View>
 
-                    <View style={dashboardstyles.statusBadge}>
-                        <View style={[
-                            dashboardstyles.statusDot, 
-                            { backgroundColor: getStatusColor(locationUpdateStatus) }
-                        ]} />
-                        <Text style={dashboardstyles.statusBadgeText}>
-                            {getStatusText(locationUpdateStatus)}
+                <View style={dashboardstyles.headerBottom}>
+                    <View style={[dashboardstyles.statusBadge, 
+                        locationEnabled ? dashboardstyles.statusOnline : dashboardstyles.statusOffline
+                    ]}>
+                        <View style={[dashboardstyles.statusDot, {
+                            backgroundColor: locationEnabled ? '#10B981' : '#EF4444'
+                        }]} />
+                        <Text style={dashboardstyles.statusText}>
+                            {locationEnabled ? 'ONLINE' : 'OFFLINE'}
                         </Text>
                     </View>
                     
-                    <View style={dashboardstyles.dateTimeContainer}>
-                        <Text style={dashboardstyles.dateTimeText}>
+                    <View style={dashboardstyles.timeSection}>
+                        <Text style={dashboardstyles.todayText}>Today</Text>
+                        <Text style={dashboardstyles.timeText}>
                             {currentTime.toLocaleDateString('en-US', { 
-                                weekday: 'short', 
                                 month: 'short', 
-                                day: 'numeric',
+                                day: 'numeric'
+                            })}, {currentTime.toLocaleTimeString('en-US', { 
                                 hour: '2-digit',
                                 minute: '2-digit',
                                 hour12: true
@@ -423,113 +372,174 @@ function Dashboard({ route, navigation }) {
             </View>
 
             <ScrollView 
-                style={dashboardstyles.scrollContainer}
-                contentContainerStyle={dashboardstyles.scrollContent}
+                style={dashboardstyles.content}
                 showsVerticalScrollIndicator={false}
+                contentContainerStyle={dashboardstyles.contentContainer}
             >
-                <View style={dashboardstyles.balanceCard}>
-                    <View style={dashboardstyles.balanceHeader}>
-                        <View style={dashboardstyles.balanceTitleContainer}>
-                            <Text style={dashboardstyles.balanceTitle}>Available Balance</Text>
-                            <TouchableOpacity 
-                                onPress={toggleBalanceVisibility}
-                                style={dashboardstyles.eyeButton}
-                            >
-                            </TouchableOpacity>
+                <TouchableOpacity style={dashboardstyles.card} activeOpacity={0.98}>
+                    <View style={dashboardstyles.cardHeader}>
+                        <View style={dashboardstyles.cardTitleSection}>
+                            <View style={dashboardstyles.walletIconContainer}>
+                            <Image 
+                                source={require("../assets/wallet.png")}
+                                style={dashboardstyles.walletIcon}
+                                resizeMode="contain"
+                            />
+                            </View>
+                            <Text style={dashboardstyles.cardTitle}>Available Balance</Text>
                         </View>
+                        <TouchableOpacity style={dashboardstyles.chevronButton}>
+                            <Text style={dashboardstyles.chevronText}>›</Text>
+                        </TouchableOpacity>
                     </View>
-
-                    <View style={dashboardstyles.balanceAmountContainer}>
+                    
+                    <View style={dashboardstyles.balanceSection}>
                         <Text style={dashboardstyles.balanceAmount}>
                             {isBalanceVisible 
                                 ? `₱ ${formatCurrency(balanceData.remainingBalance)}` 
-                                : '₱ ••••••••'
+                                : '₱ 0.00'
                             }
                         </Text>
                     </View>
+                    
+                    <TouchableOpacity 
+                        style={dashboardstyles.generateButton}
+                        onPress={() => nav.navigate('Expenses', { tripId: currentTrip?.trip_id })}
+                    >
+                        <Text style={dashboardstyles.generateButtonText}>Generate Report</Text>
+                    </TouchableOpacity>
+                </TouchableOpacity>
 
-                    <View style={dashboardstyles.balanceActions}>
-                        <TouchableOpacity 
-                            style={dashboardstyles.reportButton}
-                            onPress={() => nav.navigate('Expenses', { tripId: currentTrip?.trip_id })}
-                        >
-                            <Text style={dashboardstyles.reportButtonText}>Report</Text>
-                        </TouchableOpacity>
-                    </View>
-                </View>
-
-                <View style={dashboardstyles.locationSection}>
-                    <View style={dashboardstyles.locationCard}>
-                        <View style={dashboardstyles.cardHeader}>
-                            <View style={dashboardstyles.locationIcon}>
-                                <Text style={dashboardstyles.locationIconText}>🚛</Text>
+                <TouchableOpacity style={dashboardstyles.card} activeOpacity={0.98}>
+                    <View style={dashboardstyles.cardHeader}>
+                        <View style={dashboardstyles.cardTitleSection}>
+                            <View style={dashboardstyles.navigationIconContainer}>
+                                <Image 
+                                source={require("../assets/trip.png")}
+                                style={dashboardstyles.walletIcon}
+                                resizeMode="contain"
+                            />
                             </View>
                             <Text style={dashboardstyles.cardTitle}>Current Trip</Text>
-                            <View style={[
-                                dashboardstyles.miniStatusDot, 
-                                { backgroundColor: getStatusColor(locationUpdateStatus) }
-                            ]} />
                         </View>
-                        <Text style={dashboardstyles.addressText}>
-                            {currentTrip ? (
-                                `${currentTrip.destination || 'No destination'}\n${currentTrip.client || 'No client'} - ${currentTrip.plate_no || 'No truck'}`
-                            ) : (
-                                'No active trip'
-                            )}
-                        </Text>
-                        {currentTrip && (
-                            <Text style={dashboardstyles.lastUpdatedText}>
-                                Status: {currentTrip.status || 'Unknown'} • Tracking: {getStatusText(locationUpdateStatus)}
+                        <TouchableOpacity style={dashboardstyles.chevronButton}>
+                            <Text style={dashboardstyles.chevronText}>›</Text>
+                        </TouchableOpacity>
+                    </View>
+                    
+                    <View style={dashboardstyles.tripInfo}>
+                        <View style={dashboardstyles.truckIconContainer}>
+                            <View style={dashboardstyles.truckIcon} />
+                        </View>
+                        <View style={dashboardstyles.tripDetails}>
+                            <Text style={dashboardstyles.tripDestination}>
+                                {currentTrip?.destination || 'Cebu Port'}
                             </Text>
+                            <Text style={dashboardstyles.tripSubtext}>
+                                {currentTrip?.client || 'Hapag-Lloyd'} - {currentTrip?.plate_no || 'ADA-3123'}
+                            </Text>
+                        </View>
+                        {currentTrip && (
+                            <View style={dashboardstyles.activeBadge}>
+                                <Text style={dashboardstyles.activeBadgeText}>Active</Text>
+                            </View>
                         )}
                     </View>
-                </View>
+                </TouchableOpacity>
 
-                {/* Controls Section */}
-                <View style={dashboardstyles.controlsSection}>
+                <View style={dashboardstyles.sectionHeader}>
                     <Text style={dashboardstyles.sectionTitle}>Tracking Settings</Text>
-                    
-                    <View style={dashboardstyles.controlCard}>
-                        <View style={dashboardstyles.controlHeader}>
-                            <View style={dashboardstyles.controlInfo}>
-                                <Text style={dashboardstyles.controlTitle}>Location Updates</Text>
-                                <Text style={dashboardstyles.controlSubtitle}>
-                                    {getStatusText(locationUpdateStatus)}
+                </View>
+                
+                <View style={dashboardstyles.card}>
+                    <View style={dashboardstyles.trackingRow}>
+                        <View style={dashboardstyles.trackingInfo}>
+                            <View style={dashboardstyles.locationIconContainer}>
+                                <Image 
+                                    source={require("../assets/location.png")}
+                                    style={dashboardstyles.walletIcon}
+                                    resizeMode="contain"
+                                />
+                            </View>
+                            <View style={dashboardstyles.trackingText}>
+                                <Text style={dashboardstyles.trackingLabel}>Location Updates</Text>
+                                <Text style={dashboardstyles.trackingStatus}>
+                                    Currently {locationEnabled ? 'online' : 'offline'}
                                 </Text>
                             </View>
-                            <Switch 
-                                value={locationEnabled} 
-                                onValueChange={handleLocationToggle}
-                                trackColor={{ false: "#E0E0E0", true: "#81C784" }}
-                                thumbColor={locationEnabled ? "#4CAF50" : "#BDBDBD"}
-                            />
                         </View>
+                        
+                        <Switch 
+                            value={locationEnabled} 
+                            onValueChange={handleLocationToggle}
+                            trackColor={{ false: "#E5E7EB", true: "#3B82F6" }}
+                            thumbColor={locationEnabled ? "#FFFFFF" : "#9CA3AF"}
+                            style={dashboardstyles.switch}
+                        />
                     </View>
                 </View>
             </ScrollView>
 
-            {/* Bottom Navigation */}
             <View style={navbar.bottomNav}>
-                <TouchableOpacity style={navbar.navButton} onPress={() => nav.navigate("Dashboard")}>
-                    {currentRoute === "Dashboard" && <View style={navbar.activeIndicator} />}
-                    <Image source={homeIcon} style={navbar.navIcon} />
-                    <Text style={currentRoute === "Dashboard" ? navbar.activeNavLabel : navbar.navLabel}>
+                <TouchableOpacity 
+                    style={[navbar.navButton, currentRoute === "Dashboard" && navbar.navButtonActive]}
+                    onPress={() => nav.navigate("Dashboard")}
+                >
+                    <Image 
+                        source={require("../assets/Home.png")} 
+                        style={[
+                            navbar.navIconImg, 
+                            { tintColor: currentRoute === "Dashboard" ? "red" : "grey" }
+                        ]}
+                    />
+                    <Text 
+                        style={[
+                            navbar.navLabel, 
+                            currentRoute === "Dashboard" && navbar.navLabelActive
+                        ]}
+                    >
                         Home
                     </Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity style={navbar.navButton} onPress={() => nav.navigate("Trips")}>
-                    {currentRoute === "Trips" && <View style={navbar.activeIndicator} />}
-                    <Image source={userIcon} style={navbar.navIcon} />
-                    <Text style={currentRoute === "Trips" ? navbar.activeNavLabel : navbar.navLabel}>
+                <TouchableOpacity 
+                    style={[navbar.navButton, currentRoute === "Trips" && navbar.navButtonActive]}
+                    onPress={() => nav.navigate("Trips")}
+                >
+                    <Image 
+                        source={require("../assets/trip.png")} 
+                        style={[
+                            navbar.navIconImg, 
+                            { tintColor: currentRoute === "Trips" ? "red" : "grey" }
+                        ]}
+                    />
+                    <Text 
+                        style={[
+                            navbar.navLabel, 
+                            currentRoute === "Trips" && navbar.navLabelActive
+                        ]}
+                    >
                         Trips
                     </Text>
                 </TouchableOpacity>
-            
-                <TouchableOpacity style={navbar.navButton} onPress={() => nav.navigate("Profile")}>
-                    {currentRoute === "Profile" && <View style={navbar.activeIndicator} />}
-                    <Image source={profileicon} style={navbar.navIcon} />
-                    <Text style={currentRoute === "Profile" ? navbar.activeNavLabel : navbar.navLabel}>
+
+                <TouchableOpacity 
+                    style={[navbar.navButton, currentRoute === "Profile" && navbar.navButtonActive]}
+                    onPress={() => nav.navigate("Profile")}
+                >
+                    <Image 
+                        source={require("../assets/user.png")} 
+                        style={[
+                            navbar.navIconImg, 
+                            { tintColor: currentRoute === "Profile" ? "red" : "grey" }
+                        ]}
+                    />
+                    <Text 
+                        style={[
+                            navbar.navLabel, 
+                            currentRoute === "Profile" && navbar.navLabelActive
+                        ]}
+                    >
                         Profile
                     </Text>
                 </TouchableOpacity>

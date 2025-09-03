@@ -1,293 +1,651 @@
-import { StyleSheet, Dimensions } from "react-native";
-
-const { width, height } = Dimensions.get('window');
+import { StyleSheet, Dimensions, Platform } from "react-native";
 
 export const dashboardstyles = StyleSheet.create({
-    mainContainer: {
+    container: {
         flex: 1,
-        backgroundColor: "#F5F7FA",
-    },
-    
-    headerSection: {
-        height: 180, 
-        position: 'relative',
-        overflow: 'hidden',
-        marginBottom: 20, 
-    },
-    
-     headerGradient: {
-        flex: 1,
-        backgroundColor: '#7a0f0fff', 
-        paddingHorizontal: 24,
-        paddingTop: 100, 
-        paddingBottom: 25,
-        justifyContent: 'flex-end', 
-        borderBottomLeftRadius: 32,
-        borderBottomRightRadius: 32,
-        shadowColor: '#0D47A1',
-        shadowOffset: { width: 0, height: 10 },
-        shadowOpacity: 0.3,
-        shadowRadius: 20,
-        elevation: 15,
-        width: '100%',
-        position: 'relative', 
-    },
-    headerTextContainer: {
-  marginTop: 10,
-},
-
-      welcomeText: {
-        fontSize: 16,
-        color: 'rgba(255, 255, 255, 0.9)',
-        fontWeight: '500', 
-        marginBottom: 4,
+        backgroundColor: '#F1F5F9',
     },
 
-     driverName: {
-        fontSize: 32, 
-        color: '#FFFFFF',
-        fontWeight: '800', 
-        marginBottom: 16,
-        textShadowColor: 'rgba(0, 0, 0, 0.2)',
-        textShadowOffset: { width: 0, height: 1 },
-        textShadowRadius: 2,
+    header: {
+        backgroundColor: '#7a0f0fff',
+        paddingTop: Platform.OS === 'ios' ? 60 : 40,
+        paddingHorizontal: 16,
+        paddingBottom: 24,
+        borderBottomLeftRadius: 24,
+        borderBottomRightRadius: 24,
     },
-     statusBadge: {
+    
+    headerTop: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 32,
+    },
+    
+    profileSection: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: 'rgba(255, 255, 255, 0.25)',
-        paddingHorizontal: 16,
-        paddingVertical: 8,
-        borderRadius: 24,
-        alignSelf: 'flex-start',
-        
     },
-   
+    
+    avatar: {
+        width: 56,
+        height: 56,
+        borderRadius: 28,
+        backgroundColor: 'rgba(255, 255, 255, 0.2)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 12,
+        borderWidth: 2,
+        borderColor: 'rgba(255, 255, 255, 0.2)',
+    },
+    
+    avatarText: {
+        color: 'white',
+        fontSize: 18,
+        fontWeight: 'bold',
+    },
+    
+    welcomeSection: {
+        flex: 1,
+    },
+    
+    welcomeText: {
+        color: 'rgba(255, 255, 255, 0.8)',
+        fontSize: 14,
+        marginBottom: 2,
+    },
+    
+    userName: {
+        color: 'white',
+        fontSize: 24,
+        fontWeight: 'bold',
+    },
+    
+    headerControls: {
+        flexDirection: 'row',
+        gap: 16,
+    },
+    
+    headerButton: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    
+    headerButtonText: {
+        fontSize: 20,
+    },
+    
+    headerBottom: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    
+    statusBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 12,
+    },
+    
+    statusOffline: {
+        backgroundColor: 'rgba(239, 68, 68, 0.2)',
+    },
+    
+    statusOnline: {
+        backgroundColor: 'rgba(16, 185, 129, 0.2)',
+    },
+    
     statusDot: {
-        width: 10,
-        height: 10,
-        borderRadius: 5,
+        width: 8,
+        height: 8,
+        borderRadius: 4,
         marginRight: 8,
     },
-
-    statusBadgeText: {
-        color: '#FFFFFF',
+    
+    statusText: {
+        color: 'rgba(255, 255, 255, 0.9)',
+        fontSize: 12,
+        fontWeight: '600',
+    },
+    
+    timeSection: {
+        alignItems: 'flex-end',
+    },
+    
+    todayText: {
+        color: 'rgba(255, 255, 255, 0.8)',
         fontSize: 14,
-        fontWeight: '700',
-        textTransform: 'uppercase',
-        letterSpacing: 0.5,
+        marginBottom: 2,
+    },
+    
+    timeText: {
+        color: 'white',
+        fontSize: 16,
+        fontWeight: '500',
+    },
+
+    content: {
+        flex: 1,
+        marginTop: -16,
+    },
+    
+    contentContainer: {
+        paddingHorizontal: 16,
+        paddingBottom: 100,
+        paddingTop: 20,
+    },
+
+    card: {
+        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+        borderRadius: 16,
+        padding: 20,
+        marginBottom: 20,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+        elevation: 4,
+    },
+    
+    cardHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 20,
+    },
+    
+    cardTitleSection: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        flex: 1,
+    },
+    
+    walletIconContainer: {
+        width: 40,
+        height: 40,
+        borderRadius: 12,
+        backgroundColor: '#DCFCE7',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 12,
+    },
+    
+    walletIcon: {
+        width: 24,
+        height: 24,
+    },
+    
+    navigationIconContainer: {
+        width: 40,
+        height: 40,
+        borderRadius: 12,
+        backgroundColor: '#DBEAFE',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 12,
+    },
+    
+    navigationIcon: {
+        fontSize: 20,
+    },
+    
+    cardTitle: {
+        fontSize: 18,
+        color: '#1F2937',
+        fontWeight: '500',
+    },
+    
+    chevronButton: {
+        padding: 8,
+        borderRadius: 8,
+    },
+    
+    chevronText: {
+        color: '#9CA3AF',
+        fontSize: 20,
+        fontWeight: '300',
+    },
+
+    balanceSection: {
+        marginBottom: 24,
+    },
+    
+    balanceAmount: {
+        fontSize: 36,
+        color: '#059669',
+        fontWeight: 'bold',
+        marginBottom: 4,
+    },
+    
+    lastUpdatedText: {
+        fontSize: 14,
+        color: '#6B7280',
+    },
+    
+    generateButton: {
+        backgroundColor: '#059669',
+        borderRadius: 12,
+        paddingVertical: 16,
+        justifyContent: 'center',
+        alignItems: 'center',
+        shadowColor: '#059669',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
+        elevation: 3,
+    },
+    
+    generateButtonText: {
+        color: 'white',
+        fontSize: 16,
+        fontWeight: '600',
+    },
+
+    tripInfo: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    
+    truckIconContainer: {
+        width: 48,
+        height: 40,
+        borderRadius: 8,
+        backgroundColor: '#DBEAFE',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 16,
+    },
+    
+    truckIcon: {
+        width: 28,
+        height: 20,
+        backgroundColor: '#3B82F6',
+        borderRadius: 2,
+    },
+    
+    tripDetails: {
+        flex: 1,
+    },
+    
+    tripDestination: {
+        fontSize: 16,
+        color: '#1F2937',
+        fontWeight: '500',
+        marginBottom: 4,
+    },
+    
+    tripSubtext: {
+        fontSize: 14,
+        color: '#6B7280',
+    },
+    
+    activeBadge: {
+        backgroundColor: '#DBEAFE',
+        borderColor: '#93C5FD',
+        borderWidth: 1,
+        paddingHorizontal: 12,
+        paddingVertical: 4,
+        borderRadius: 8,
+    },
+    
+    activeBadgeText: {
+        color: '#3B82F6',
+        fontSize: 12,
+        fontWeight: '600',
+    },
+
+    sectionHeader: {
+        marginBottom: 12,
+    },
+    
+    sectionTitle: {
+        fontSize: 18,
+        color: '#374151',
+        fontWeight: '500',
+        paddingLeft: 4,
+    },
+
+    trackingRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    
+    trackingInfo: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        flex: 1,
+    },
+    
+    locationIconContainer: {
+        width: 48,
+        height: 48,
+        borderRadius: 12,
+        backgroundColor: '#F3F4F6',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 16,
+    },
+    
+    locationIcon: {
+        fontSize: 24,
+    },
+    
+    trackingText: {
+        flex: 1,
+    },
+    
+    trackingLabel: {
+        fontSize: 16,
+        color: '#1F2937',
+        fontWeight: '500',
+        marginBottom: 2,
+    },
+    
+    trackingStatus: {
+        fontSize: 14,
+        color: '#6B7280',
+    },
+    
+    switch: {
+        transform: [{ scale: 1.1 }],
+    },
+
+    bottomNav: {
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+        borderTopWidth: 1,
+        borderTopColor: 'rgba(226, 232, 240, 0.5)',
+        paddingHorizontal: 16,
+        paddingTop: 8,
+        paddingBottom: Platform.OS === 'ios' ? 24 : 16,
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+    },
+    
+    navButton: {
+        flexDirection: 'column',
+        alignItems: 'center',
+        paddingHorizontal: 12,
+        paddingVertical: 12,
+        borderRadius: 16,
+        minWidth: 60,
+    },
+    
+    navButtonActive: {
+        backgroundColor: '#DBEAFE',
+        transform: [{ scale: 1.05 }],
+    },
+    
+    navIcon: {
+        fontSize: 24,
+        marginBottom: 4,
+    },
+    
+    navIconImg: {
+        width: 24,
+        height: 24,
+        marginBottom: 4,
+    },
+    
+    navLabel: {
+        fontSize: 12,
+        color: '#6B7280',
+        fontWeight: '500',
+    },
+    
+    navLabelActive: {
+        color: '#3B82F6',
+        fontWeight: '600',
+    },
+
+    mainContainer: {
+        flex: 1,
+        backgroundColor: "#F8F9FA",
+    },
+
+    headerSection: {
+        height: 220,
+        position: 'relative',
+        overflow: 'hidden',
+    },
+    
+    headerGradient: {
+        flex: 1,
+        backgroundColor: '#7a0f0fff',
+        paddingHorizontal: 20,
+        paddingTop: Platform.OS === 'ios' ? 50 : 40,
+        paddingBottom: 20,
+        justifyContent: 'space-between',
+        borderBottomLeftRadius: 24,
+        borderBottomRightRadius: 24,
+        shadowColor: '#3B5EF1',
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.3,
+        shadowRadius: 16,
+        elevation: 12,
     },
 
     profileContainer: {
-        position: 'absolute',
-        top: Platform.OS === 'android' ? 40 : 60,
-        right: 24,
-        zIndex: 10,
-        },
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 20,
+    },
 
     profilePlaceholder: {
-        width: 48,
-        height: 48,
-        borderRadius: 24,
-        backgroundColor: 'rgba(255, 255, 255, 0.3)',
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: 'rgba(255, 255, 255, 0.2)',
         justifyContent: 'center',
         alignItems: 'center',
-        borderWidth: 2,
-        borderColor: 'rgba(255, 255, 255, 0.5)',
-         right: 24,
-        },
+    },
 
     profileEmoji: {
-        fontSize: 24,
-        },
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: 'white',
+    },
 
-    // Scroll Container
+    settingsButton: {
+        width: 40,
+        height: 40,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+
+    settingsIcon: {
+        color: 'white',
+        fontSize: 20,
+    },
+
+    driverName: {
+        fontSize: 24,
+        color: '#FFFFFF',
+        fontWeight: 'bold',
+        marginBottom: 16,
+    },
+
+    statusBadgeText: {
+        color: '#FF5722',
+        fontSize: 12,
+        fontWeight: '600',
+        textTransform: 'uppercase',
+    },
+
+    dateTimeContainer: {
+        position: 'absolute',
+        bottom: 20,
+        right: 20,
+    },
+
+    dateTimeText: {
+        color: 'white',
+        fontSize: 14,
+        textAlign: 'right',
+        lineHeight: 20,
+    },
+
     scrollContainer: {
         flex: 1,
         marginTop: -20,
     },
 
     scrollContent: {
-        paddingHorizontal: 20,
+        paddingHorizontal: 16,
         paddingBottom: 100,
     },
 
-    // Enhanced Balance Card Styles
-      balanceCard: {
+    balanceCard: {
         backgroundColor: '#FFFFFF',
-        borderRadius: 20,
-        padding: 24,
-        marginBottom: 20,
-        shadowColor: '#2E7D32',
-        shadowOffset: { width: 0, height: 6 },
-        shadowOpacity: 0.1,
-        shadowRadius: 16,
-        elevation: 8,
-        borderWidth: 1,
-        borderColor: 'rgba(76, 175, 80, 0.15)',
-        marginTop: 10, 
-    },
-
-
-    balanceHeader: {
+        borderRadius: 16,
+        padding: 20,
         marginBottom: 16,
-    },
-
-    balanceTitleContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-    },
-
-    balanceTitle: {
-        fontSize: 16,
-        fontWeight: '600',
-        color: '#2E7D32',
-    },
-
-    eyeButton: {
-        padding: 4,
-        borderRadius: 8,
-        backgroundColor: 'rgba(255, 255, 255, 0.5)',
-    },
-
-    eyeIcon: {
-        fontSize: 16,
-    },
-
-    balanceAmountContainer: {
-        marginBottom: 20,
-    },
-
-      balanceAmount: {
-        fontSize: 36, 
-        fontWeight: '800', 
-        color: '#1B5E20',
-        letterSpacing: -0.8,
-        marginVertical: 8,
-    },
-
-    balanceActions: {
-        flexDirection: 'row',
-        justifyContent: 'flex-start',
-    },
-
-        reportButton: {
-        backgroundColor: '#2E7D32',
-        paddingHorizontal: 28,
-        paddingVertical: 14,
-        borderRadius: 14,
-        shadowColor: '#2E7D32',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
         shadowRadius: 8,
-        elevation: 6,
+        elevation: 4,
+    },
+
+    cardRow: {
         flexDirection: 'row',
         alignItems: 'center',
     },
 
-        reportButtonText: {
-        color: '#FFFFFF',
-        fontSize: 16,
-        fontWeight: '700',
-  
-    },
-
-    // Location Section
-    locationSection: {
-        marginBottom: 24,
-    },
-
-    locationCard: {
-        backgroundColor: '#FFFFFF',
-        borderRadius: 18,
-        padding: 22,
-        marginBottom: 16,
-        shadowColor: '#1565C0',
-        shadowOffset: { width: 0, height: 3 },
-        shadowOpacity: 0.1,
-        shadowRadius: 10,
-        elevation: 6,
-        borderWidth: 1,
-        borderColor: 'rgba(33, 150, 243, 0.1)',
-    },
-
-    cardHeader: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 16,
-    },
-
-   locationIcon: {
+    balanceIconContainer: {
         width: 44,
         height: 44,
         borderRadius: 22,
-        backgroundColor: '#E3F2FD',
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginRight: 14,
-    },
-
-    destinationIcon: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
         backgroundColor: '#E8F5E8',
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: 12,
     },
 
-   locationIconText: {
+    balanceIcon: {
         fontSize: 20,
     },
 
+    balanceHeader: {
+        flex: 1,
+    },
 
-    cardTitle: {
+    balanceTitle: {
+        fontSize: 14,
+        color: '#6B7280',
+        marginBottom: 4,
+    },
+
+    balanceAmountContainer: {
+        marginBottom: 4,
+    },
+
+    arrowButton: {
+        width: 24,
+        height: 24,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+
+    arrow: {
+        color: '#9CA3AF',
         fontSize: 18,
-        fontWeight: '700',
-        color: '#0D47A1',
+        fontWeight: '300',
     },
 
-    addressText: {
+    reportButton: {
+        backgroundColor: '#10B981',
+        borderRadius: 12,
+        paddingVertical: 14,
+        marginTop: 16,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+
+    reportButtonText: {
+        color: 'white',
         fontSize: 16,
-        color: '#424242',
-        lineHeight: 24,
-        marginBottom: 12,
+        fontWeight: '600',
     },
 
-
-    lastUpdatedText: {
-        fontSize: 12,
-        color: '#9E9E9E',
-        fontStyle: 'italic',
-    },
-
-    // Controls Section
-    controlsSection: {
+    locationSection: {
         marginBottom: 24,
     },
 
-    sectionTitle: {
-        fontSize: 20,
-        fontWeight: '700',
-        color: '#1A1A1A',
-        marginBottom: 16,
-        marginLeft: 4,
-    },
-
-      controlCard: {
+    locationCard: {
         backgroundColor: '#FFFFFF',
-        borderRadius: 18,
+        borderRadius: 16,
         padding: 20,
         marginBottom: 16,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.08,
-        shadowRadius: 12,
-        elevation: 5,
-        borderWidth: 1,
-        borderColor: 'rgba(0, 0, 0, 0.03)',
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+        elevation: 4,
+        position: 'relative',
+    },
+
+    locationIcon: {
+        width: 44,
+        height: 44,
+        borderRadius: 22,
+        backgroundColor: '#EFF6FF',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 12,
+    },
+
+    locationIconText: {
+        fontSize: 20,
+    },
+
+    addressText: {
+        fontSize: 14,
+        color: '#6B7280',
+        lineHeight: 20,
+    },
+
+    activeTag: {
+        position: 'absolute',
+        top: 16,
+        right: 16,
+        backgroundColor: '#3B82F6',
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 8,
+    },
+
+    activeTagText: {
+        color: 'white',
+        fontSize: 12,
+        fontWeight: '600',
+    },
+
+    controlsSection: {
+        marginBottom: 24,
+    },
+
+    controlCard: {
+        backgroundColor: '#FFFFFF',
+        borderRadius: 16,
+        padding: 20,
+        marginBottom: 16,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+        elevation: 4,
     },
 
     controlHeader: {
@@ -301,61 +659,59 @@ export const dashboardstyles = StyleSheet.create({
         marginRight: 16,
     },
 
-        controlTitle: {
-        fontSize: 17,
+    controlTitle: {
+        fontSize: 16,
         fontWeight: '600',
-        color: '#212121',
-        marginBottom: 2,
+        color: '#111827',
+        marginBottom: 4,
     },
 
     controlSubtitle: {
         fontSize: 14,
-        color: '#757575',
-        lineHeight: 20,
+        color: '#6B7280',
     },
 
-    // Navigation
-       navButton: {
-        padding: 12,
-        borderRadius: 12,
+    trackingIconContainer: {
+        width: 44,
+        height: 44,
+        borderRadius: 22,
+        backgroundColor: '#FEF3C7',
+        justifyContent: 'center',
         alignItems: 'center',
+        marginRight: 12,
     },
 
-      bottomNav2: {
-        flexDirection: "row",
-        justifyContent: "space-around",
-        backgroundColor: "#FFFFFF",
-        paddingVertical: 12,
-        borderTopWidth: 1,
-        borderTopColor: "rgba(0, 0, 0, 0.08)",
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: -2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 8,
-        elevation: 10,
+    trackingIcon: {
+        fontSize: 20,
     },
 
-
-    container: {
+    trackingContent: {
         flex: 1,
-        backgroundColor: "#F8FAFB",
     },
 
-    mapImage: {
-        width: "100%",
-        height: 400, 
-        position: "absolute",
-        top: 0,
-        zIndex: -1, 
+    miniStatusDot: {
+        width: 8,
+        height: 8,
+        borderRadius: 4,
+        marginLeft: 'auto',
     },
 
-    card: {
-        backgroundColor: "white",
-        marginHorizontal: 15,
-        padding: 15,
-        borderRadius: 15,
-        elevation: 5,
-        marginTop: 350, 
+    onlineStatus: {
+        color: '#10B981',
+    },
+
+    offlineStatus: {
+        color: '#EF4444',
+    },
+
+    eyeButton: {
+        padding: 8,
+        borderRadius: 8,
+    },
+
+    eyeIcon: {
+        fontSize: 16,
+        color: '#6B7280',
     },
 
     label: {
@@ -378,82 +734,80 @@ export const dashboardstyles = StyleSheet.create({
         marginTop: 5,
     },
 
-  
-dateTimeContainer: {
-  position: 'absolute',
-  bottom: 28,
-  right: 20,
-  color: 'rgba(255, 255, 255, 0.9)',
-  fontSize: 16,
-  fontWeight: '500',
-  backgroundColor: 'rgba(0, 0, 0, 0.1)',
-  paddingHorizontal: 10,
-  paddingVertical: 4,
-  borderRadius: 12,
-},
-dateTimeText: {
-  color: '#FFF',
-  fontSize: 14,
-  fontWeight: '500',
-  textAlign: 'right',
-},
-
-
-
-
-
+    bottomNav2: {
+        flexDirection: "row",
+        justifyContent: "space-around",
+        backgroundColor: "#FFFFFF",
+        paddingVertical: 12,
+        borderTopWidth: 1,
+        borderTopColor: "rgba(0, 0, 0, 0.08)",
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: -2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 8,
+        elevation: 10,
+    },
 });
 
-export const additionalDashboardStyles = StyleSheet.create({
-    
-    miniStatusDot: {
-        width: 8,
-        height: 8,
-        borderRadius: 4,
-        marginLeft: 'auto',
+export const modernStyles = StyleSheet.create({
+    gradientBackground: {
+        background: 'linear-gradient(135deg, #3B5EF1 0%, #8B5CF6 100%)',
+    },
+
+    cardElevation: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+        elevation: 4,
     },
     
-    
-    controlSubtitle: {
-        fontSize: 12,
-        color: '#666',
-        marginTop: 2,
-        fontWeight: '400',
+    cardElevationHigh: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.15,
+        shadowRadius: 16,
+        elevation: 8,
+    },
+
+    headingLarge: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        color: '#111827',
     },
     
-    
-    statusText: {
-        fontSize: 8,
+    headingMedium: {
+        fontSize: 18,
         fontWeight: '600',
-        textTransform: 'uppercase',
-        letterSpacing: 0.5,
+        color: '#111827',
     },
     
-    
-    onlineStatus: {
-        color: '#4CAF50',
+    bodyText: {
+        fontSize: 16,
+        color: '#374151',
+        lineHeight: 24,
     },
     
-   
-    offlineStatus: {
-        color: '#FF5722',
+    captionText: {
+        fontSize: 12,
+        color: '#9CA3AF',
+    },
+
+    statusOnlineVariant: {
+        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+        borderColor: '#10B981',
+        color: '#10B981',
     },
     
-    
-    enhancedStatusBadge: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: 'rgba(255, 255, 255, 0.1)',
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-        borderRadius: 15,
-        marginTop: 8,
+    statusOfflineVariant: {
+        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+        borderColor: '#EF4444',
+        color: '#EF4444',
     },
     
-    
-    statusSeparator: {
-        color: 'rgba(255, 255, 255, 0.6)',
-        marginHorizontal: 4,
-        fontSize: 8,
+    statusWarning: {
+        backgroundColor: 'rgba(245, 158, 11, 0.1)',
+        borderColor: '#F59E0B',
+        color: '#F59E0B',
     },
 });

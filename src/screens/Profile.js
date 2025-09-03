@@ -6,8 +6,8 @@ import { profilestyle } from "../styles/Profilecss";
 import { navbar } from "../styles/Navbar";
 import userIcon2 from "../assets/profile.png";
 import homeIcon from "../assets/Home.png";
-import userIcon from "../assets/schedule.png";
-import profileicon from "../assets/profile2.png";
+import userIcon from "../assets/trip.png";
+import profileicon from "../assets/user.png";
 import profilepic from "../assets/prof.png";
 import LocationService from "../services/LocationService"; // Import the location service
 import { useNavigationState } from "@react-navigation/native";
@@ -285,30 +285,69 @@ const Profile = ({ route }) => {
             </Modal>
 
             <View style={navbar.bottomNav}>
-    <TouchableOpacity style={navbar.navButton} onPress={() => nav.navigate("Dashboard")}>
-        {currentRoute === "Dashboard" && <View style={navbar.activeIndicator} />}
-        <Image source={homeIcon} style={navbar.navIcon} />
-        <Text style={currentRoute === "Dashboard" ? navbar.activeNavLabel : navbar.navLabel}>
-            Home
-        </Text>
-    </TouchableOpacity>
+                <TouchableOpacity 
+                    style={[navbar.navButton, currentRoute === "Dashboard" && navbar.navButtonActive]}
+                    onPress={() => nav.navigate("Dashboard")}
+                >
+                    <Image 
+                        source={require("../assets/Home.png")} 
+                        style={[
+                            navbar.navIconImg, 
+                            { tintColor: currentRoute === "Dashboard" ? "red" : "grey" }
+                        ]}
+                    />
+                    <Text 
+                        style={[
+                            navbar.navLabel, 
+                            currentRoute === "Dashboard" && navbar.navLabelActive
+                        ]}
+                    >
+                        Home
+                    </Text>
+                </TouchableOpacity>
 
-    <TouchableOpacity style={navbar.navButton} onPress={() => nav.navigate("Trips")}>
-        {currentRoute === "Trips" && <View style={navbar.activeIndicator} />}
-        <Image source={userIcon} style={navbar.navIcon} />
-        <Text style={currentRoute === "Trips" ? navbar.activeNavLabel : navbar.navLabel}>
-            Trips
-        </Text>
-    </TouchableOpacity>
+                <TouchableOpacity 
+                    style={[navbar.navButton, currentRoute === "Trips" && navbar.navButtonActive]}
+                    onPress={() => nav.navigate("Trips")}
+                >
+                    <Image 
+                        source={require("../assets/trip.png")} 
+                        style={[
+                            navbar.navIconImg, 
+                            { tintColor: currentRoute === "Trips" ? "red" : "grey" }
+                        ]}
+                    />
+                    <Text 
+                        style={[
+                            navbar.navLabel, 
+                            currentRoute === "Trips" && navbar.navLabelActive
+                        ]}
+                    >
+                        Trips
+                    </Text>
+                </TouchableOpacity>
 
-    <TouchableOpacity style={navbar.navButton} onPress={() => nav.navigate("Profile")}>
-        {currentRoute === "Profile" && <View style={navbar.activeIndicator} />}
-        <Image source={profileicon} style={navbar.navIcon} />
-        <Text style={currentRoute === "Profile" ? navbar.activeNavLabel : navbar.navLabel}>
-            Profile
-        </Text>
-    </TouchableOpacity>
-        </View>
+                <TouchableOpacity 
+                    style={[navbar.navButton, currentRoute === "Profile" && navbar.navButtonActive]}
+                    onPress={() => nav.navigate("Profile")}
+                >
+                    <Image 
+                        source={require("../assets/user.png")} 
+                        style={[
+                            navbar.navIconImg, 
+                            { tintColor: currentRoute === "Profile" ? "red" : "grey" }
+                        ]}
+                    />
+                    <Text 
+                        style={[
+                            navbar.navLabel, 
+                            currentRoute === "Profile" && navbar.navLabelActive
+                        ]}
+                    >
+                        Profile
+                    </Text>
+                </TouchableOpacity>
+            </View>
     </View>
     );
 };

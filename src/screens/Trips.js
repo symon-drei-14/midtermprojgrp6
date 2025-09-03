@@ -36,8 +36,8 @@ const TripScreen = () => {
   const state = useNavigationState((state) => state);
   const currentRoute = state.routes[state.index].name;
   const [refreshing, setRefreshing] = useState(false);
-  // const API_BASE_URL = 'http://192.168.100.17/capstone-1-eb';
-  const API_BASE_URL = 'http://192.168.1.6/capstone-1-eb';
+  const API_BASE_URL = 'http://192.168.100.17/capstone-1-eb';
+  //const API_BASE_URL = 'http://192.168.1.6/capstone-1-eb';
 
   const getDriverInfo = async () => {
     try {
@@ -298,12 +298,11 @@ const fetchChecklistData = async (tripId) => {
     <RefreshControl
       refreshing={refreshing}
       onRefresh={onRefresh}
-      colors={['#2196F3']} // Android
-      tintColor="#2196F3" // iOS
+      colors={['#2196F3']}
+      tintColor="#2196F3"
     />
   }
       >
-        {/* Current Trip Section */}
         <View style={tripstyle.sectionContainer}>
          
           
@@ -311,7 +310,6 @@ const fetchChecklistData = async (tripId) => {
           {currentTrip ? (
  <View style={tripstyle.activeCard}>
   <View style={tripstyle.cardHeader}>
-    {/* Destination Row */}
     <View style={tripstyle.destinationRow}>
       <Text style={tripstyle.destinationIcon}>📍Destination: </Text>
       <Text style={tripstyle.destinationText}>{currentTrip.destination}</Text>
@@ -349,7 +347,7 @@ const fetchChecklistData = async (tripId) => {
                 </View>
                 <View style={tripstyle.detailRow}>
                   <Text style={tripstyle.cashAdvanceLabel}>💰 Cash Advance</Text>
-                  <Text style={tripstyle.cashValue}>₱{currentTrip.cash_adv || '0'}</Text>
+                  <Text style={tripstyle.cashValue}>₱{currentTrip.total_cash_advance || currentTrip.cash_adv || '0'}</Text>
                 </View>
                 <View style={tripstyle.detailRow}>
                   <Text style={tripstyle.detailLabel}>🤝 Helper</Text>
@@ -429,7 +427,7 @@ const fetchChecklistData = async (tripId) => {
                     </View>
                     <View style={tripstyle.cashRow}>
                       <Text style={tripstyle.cashAdvanceLabel}>💰 Cash Advance: </Text>
-                      <Text style={tripstyle.cashAdvanceValue}>₱{item.cash_adv || '0'}</Text>
+                      <Text style={tripstyle.cashAdvanceValue}>₱{item.total_cash_advance || item.cash_adv || '0'}</Text>
                     </View>
                   </View>
 
@@ -562,7 +560,6 @@ const fetchChecklistData = async (tripId) => {
   </View>
 </Modal>
 
-      {/* Status Update Modal */}
       <Modal visible={modalVisible} transparent animationType="slide">
         <View style={tripstyle.modalOverlay}>
           <View style={tripstyle.modalContainer}>
@@ -607,32 +604,70 @@ const fetchChecklistData = async (tripId) => {
         </View>
       </Modal>
 
-      {/* Bottom Navigation */}
-      <View style={navbar.bottomNav}>
-          <TouchableOpacity style={navbar.navButton} onPress={() => nav.navigate("Dashboard")}>
-              {currentRoute === "Dashboard" && <View style={navbar.activeIndicator} />}
-              <Image source={homeIcon} style={navbar.navIcon} />
-              <Text style={currentRoute === "Dashboard" ? navbar.activeNavLabel : navbar.navLabel}>
-                  Home
-              </Text>
-          </TouchableOpacity>
+            <View style={navbar.bottomNav}>
+                <TouchableOpacity 
+                    style={[navbar.navButton, currentRoute === "Dashboard" && navbar.navButtonActive]}
+                    onPress={() => nav.navigate("Dashboard")}
+                >
+                    <Image 
+                        source={require("../assets/Home.png")} 
+                        style={[
+                            navbar.navIconImg, 
+                            { tintColor: currentRoute === "Dashboard" ? "red" : "grey" }
+                        ]}
+                    />
+                    <Text 
+                        style={[
+                            navbar.navLabel, 
+                            currentRoute === "Dashboard" && navbar.navLabelActive
+                        ]}
+                    >
+                        Home
+                    </Text>
+                </TouchableOpacity>
 
-          <TouchableOpacity style={navbar.navButton} onPress={() => nav.navigate("Trips")}>
-              {currentRoute === "Trips" && <View style={navbar.activeIndicator} />}
-              <Image source={userIcon} style={navbar.navIcon} />
-              <Text style={currentRoute === "Trips" ? navbar.activeNavLabel : navbar.navLabel}>
-                  Trips
-              </Text>
-          </TouchableOpacity>
+                <TouchableOpacity 
+                    style={[navbar.navButton, currentRoute === "Trips" && navbar.navButtonActive]}
+                    onPress={() => nav.navigate("Trips")}
+                >
+                    <Image 
+                        source={require("../assets/trip.png")} 
+                        style={[
+                            navbar.navIconImg, 
+                            { tintColor: currentRoute === "Trips" ? "red" : "grey" }
+                        ]}
+                    />
+                    <Text 
+                        style={[
+                            navbar.navLabel, 
+                            currentRoute === "Trips" && navbar.navLabelActive
+                        ]}
+                    >
+                        Trips
+                    </Text>
+                </TouchableOpacity>
 
-          <TouchableOpacity style={navbar.navButton} onPress={() => nav.navigate("Profile")}>
-              {currentRoute === "Profile" && <View style={navbar.activeIndicator} />}
-              <Image source={profileicon} style={navbar.navIcon} />
-              <Text style={currentRoute === "Profile" ? navbar.activeNavLabel : navbar.navLabel}>
-                  Profile
-              </Text>
-          </TouchableOpacity>
-      </View>
+                <TouchableOpacity 
+                    style={[navbar.navButton, currentRoute === "Profile" && navbar.navButtonActive]}
+                    onPress={() => nav.navigate("Profile")}
+                >
+                    <Image 
+                        source={require("../assets/user.png")} 
+                        style={[
+                            navbar.navIconImg, 
+                            { tintColor: currentRoute === "Profile" ? "red" : "grey" }
+                        ]}
+                    />
+                    <Text 
+                        style={[
+                            navbar.navLabel, 
+                            currentRoute === "Profile" && navbar.navLabelActive
+                        ]}
+                    >
+                        Profile
+                    </Text>
+                </TouchableOpacity>
+            </View>
     </View>
   );
 };
