@@ -38,7 +38,7 @@ const TripScreen = () => {
   const [refreshing, setRefreshing] = useState(false);
   // const API_BASE_URL = 'http://192.168.100.17/capstone-1-eb';
   //const API_BASE_URL = 'http://192.168.1.6/capstone-1-eb';
-  const API_BASE_URL = 'http://192.168.1.7/capstone-1-eb';
+  const API_BASE_URL = 'http://192.168.1.4/capstone-1-eb';
 
   const getDriverInfo = async () => {
     try {
@@ -194,8 +194,14 @@ const [checklistData, setChecklistData] = useState({
 const isChecklistAvailable = (tripDate) => {
   const deliveryDate = new Date(tripDate);
   const now = new Date();
+  
+  // Calculate 2 hours before the trip
   const twoHoursBefore = new Date(deliveryDate.getTime() - 2 * 60 * 60 * 1000);
-  return now >= twoHoursBefore;
+  
+  // Calculate 1 minute before the trip (cutoff time)
+  const oneMinuteBefore = new Date(deliveryDate.getTime() - 1 * 60 * 1000);
+  
+  return now >= twoHoursBefore && now <= oneMinuteBefore;
 };
 
 const resetChecklistData = () => {
@@ -451,8 +457,8 @@ const fetchChecklistData = async (tripId) => {
                     </View>
                   </View>
 
-                   <TouchableOpacity 
- style={[
+                 <TouchableOpacity 
+  style={[
     tripstyle.checklistButton, 
     item.hasChecklist && tripstyle.checklistSubmittedButton,
     !isChecklistAvailable(item.date) && tripstyle.checklistDisabledButton
@@ -460,21 +466,35 @@ const fetchChecklistData = async (tripId) => {
   onPress={() => {
     if (item.hasChecklist || !isChecklistAvailable(item.date)) return;
     
-    // Validate if checklist can be submitted (same day or 2 hours before)
+    // Additional validation for the exact time window
     const tripDate = new Date(item.date);
     const now = new Date();
     const twoHoursBefore = new Date(tripDate.getTime() - 2 * 60 * 60 * 1000);
+    const oneMinuteBefore = new Date(tripDate.getTime() - 1 * 60 * 1000);
     
     if (now < twoHoursBefore) {
+      const formattedTime = twoHoursBefore.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      });
       Alert.alert(
-        'Checklist Not Available', 
-        'You can only complete the checklist on the day of delivery or up to 2 hours before.'
+        'Checklist Not Available Yet', 
+        `Checklist will be available starting at ${formattedTime} (2 hours before the scheduled trip).`
+      );
+      return;
+    }
+    
+    if (now > oneMinuteBefore) {
+      Alert.alert(
+        'Checklist Submission Closed', 
+        'Checklist submission closed 1 minute before the scheduled trip time.'
       );
       return;
     }
     
     setCurrentTripId(item.trip_id);
-    resetChecklistData(); // Reset instead of fetching existing data
+    resetChecklistData();
     setChecklistModalVisible(true);
   }}
 >
@@ -486,7 +506,7 @@ const fetchChecklistData = async (tripId) => {
     {item.hasChecklist 
       ? 'Checklist Submitted' 
       : !isChecklistAvailable(item.date)
-        ? 'Checklist Not Available Yet'
+        ? 'Checklist Not Available'
         : 'Complete Checklist'
     }
   </Text>
