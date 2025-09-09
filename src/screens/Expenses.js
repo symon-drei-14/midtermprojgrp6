@@ -23,6 +23,7 @@ import { useNavigationState } from "@react-navigation/native";
 import homeIcon from "../assets/Home.png";
 import userIcon from "../assets/schedule.png";
 import profileicon from "../assets/profile2.png";
+import { tripstyle } from "../styles/Tripcss";
 
 export default function Expenses({ navigation, route }) {
   const [expenses, setExpenses] = useState([]);
@@ -55,7 +56,7 @@ export default function Expenses({ navigation, route }) {
     loadExpenseTypes();
   };
 
-  const API_BASE_URL = 'http://192.168.1.4/capstone-1-eb';
+  const API_BASE_URL = 'http://192.168.0.100/capstone-1-eb';
 
   const quickAmounts = [100, 500, 1000, 5000];
 
@@ -503,45 +504,58 @@ export default function Expenses({ navigation, route }) {
   }
 
   return (
-    <View style={expensestyle.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#667eea" />
-      
-      <View style={expensestyle.header}>
-        <View style={expensestyle.headerContent}>
-        </View>
-      </View>
+  <View style={expensestyle.container}>
+    <StatusBar barStyle="light-content" backgroundColor="#667eea" />
 
-      <ScrollView 
-        style={expensestyle.scrollView}
-        showsVerticalScrollIndicator={false}
-        refreshing={refreshing}
-        onRefresh={handleRefresh}
-      >
+    {/* Header */}
+    <View style={expensestyle.header}>
+      <View style={expensestyle.headerContent}></View>
+    </View>
+
+    {/* Scrollable content */}
+    <ScrollView
+      style={expensestyle.scrollView}
+      showsVerticalScrollIndicator={false}
+      refreshing={refreshing}
+      onRefresh={handleRefresh}
+    >
+      {/* Budget Section (only when trip is en route) */}
+      {isEnRoute ? (
         <View style={expensestyle.newBalanceSection}>
           <View style={expensestyle.totalBudgetCard}>
             <View style={expensestyle.budgetHeader}>
               <View style={expensestyle.budgetIcon}>
-                 <Image 
-                   source={require("../assets/wallet2.png")}
-                   style={expensestyle.walletIcon}
-                   resizeMode="contain"
-                 />
+                <Image
+                  source={require("../assets/wallet2.png")}
+                  style={expensestyle.walletIcon}
+                  resizeMode="contain"
+                />
               </View>
               <Text style={expensestyle.totalBudgetLabel}>Total Budget</Text>
             </View>
-            <Text style={expensestyle.totalBudgetAmount}>₱{formatCurrency(totalBudget)}</Text>
-            
+            <Text style={expensestyle.totalBudgetAmount}>
+              ₱{formatCurrency(totalBudget)}
+            </Text>
+
             <View style={expensestyle.budgetBreakdown}>
               {currentTrip?.cash_advance > 0 && (
                 <View style={expensestyle.budgetBreakdownItem}>
-                  <Text style={expensestyle.budgetBreakdownLabel}>Cash Advance:</Text>
-                  <Text style={expensestyle.budgetBreakdownValue}>₱{formatCurrency(currentTrip.cash_advance)}</Text>
+                  <Text style={expensestyle.budgetBreakdownLabel}>
+                    Cash Advance:
+                  </Text>
+                  <Text style={expensestyle.budgetBreakdownValue}>
+                    ₱{formatCurrency(currentTrip.cash_advance)}
+                  </Text>
                 </View>
               )}
               {currentTrip?.additional_cash_advance > 0 && (
                 <View style={expensestyle.budgetBreakdownItem}>
-                  <Text style={expensestyle.budgetBreakdownLabel}>Additional:</Text>
-                  <Text style={expensestyle.budgetBreakdownValue}>₱{formatCurrency(currentTrip.additional_cash_advance)}</Text>
+                  <Text style={expensestyle.budgetBreakdownLabel}>
+                    Additional:
+                  </Text>
+                  <Text style={expensestyle.budgetBreakdownValue}>
+                    ₱{formatCurrency(currentTrip.additional_cash_advance)}
+                  </Text>
                 </View>
               )}
             </View>
@@ -553,8 +567,12 @@ export default function Expenses({ navigation, route }) {
                 <View style={expensestyle.spentIndicator}></View>
                 <Text style={expensestyle.cardLabel}>SPENT</Text>
               </View>
-              <Text style={expensestyle.spentAmount}>₱{formatCurrency(totalExpenses)}</Text>
-              <Text style={expensestyle.spentPercentage}>{getSpendingPercentage().toFixed(1)}% of budget</Text>
+              <Text style={expensestyle.spentAmount}>
+                ₱{formatCurrency(totalExpenses)}
+              </Text>
+              <Text style={expensestyle.spentPercentage}>
+                {getSpendingPercentage().toFixed(1)}% of budget
+              </Text>
             </View>
 
             <View style={expensestyle.remainingCard}>
@@ -562,266 +580,341 @@ export default function Expenses({ navigation, route }) {
                 <View style={expensestyle.remainingIndicator}></View>
                 <Text style={expensestyle.cardLabel}>REMAINING</Text>
               </View>
-              <Text style={expensestyle.remainingAmount}>₱{formatCurrency(Math.abs(remainingBalance))}</Text>
+              <Text style={expensestyle.remainingAmount}>
+                ₱{formatCurrency(Math.abs(remainingBalance))}
+              </Text>
               <Text style={expensestyle.remainingPercentage}>
-                {remainingBalance >= 0 
+                {remainingBalance >= 0
                   ? `${getRemainingPercentage().toFixed(1)}% available`
-                  : 'Over budget'
-                }
+                  : "Over budget"}
               </Text>
             </View>
           </View>
         </View>
-
-        <View style={expensestyle.expenseSection}>
-          <Text style={expensestyle.sectionTitle}>Recent Transactions</Text>
-          
-          {expenses.length > 0 ? (
-            <View style={expensestyle.expenseList}>
-              {expenses.map((item, index) => (
-                <View key={`${item.expense_id || index}`}>
-                  {renderExpenseItem({ item, index })}
-                </View>
-              ))}
-            </View>
-          ) : (
-            <View style={expensestyle.emptyState}>
-              <Text style={expensestyle.emptyStateIcon}>📊</Text>
-              <Text style={expensestyle.emptyStateText}>No expenses recorded yet</Text>
-              <Text style={expensestyle.emptyStateSubtext}>Tap the + button to add your first expense</Text>
-            </View>
-          )}
+      ) : (
+        // Message when trip is not en route
+        <View style={expensestyle.statusMessage}>
+          <Text style={expensestyle.statusMessageIcon}>📋</Text>
+          <Text style={expensestyle.statusMessageText}>Trip Not Active</Text>
+          <Text style={expensestyle.statusMessageSubtext}>
+            Budget information is only available for trips that are en route
+          </Text>
         </View>
-      </ScrollView>
+      )}
 
-      <TouchableOpacity 
-        style={expensestyle.fab} 
-        onPress={handleOpenModal}
-      >
+      {/* Expenses Section */}
+      <View style={expensestyle.expenseSection}>
+        <Text style={expensestyle.sectionTitle}>Recent Transactions</Text>
+
+        {expenses.length > 0 ? (
+          <View style={expensestyle.expenseList}>
+            {expenses.map((item, index) => (
+              <View key={`${item.expense_id || index}`}>
+                {renderExpenseItem({ item, index })}
+              </View>
+            ))}
+          </View>
+        ) : (
+          <View style={expensestyle.emptyState}>
+            <Text style={expensestyle.emptyStateIcon}>📊</Text>
+            <Text style={expensestyle.emptyStateText}>
+              No expenses recorded yet
+            </Text>
+            <Text style={expensestyle.emptyStateSubtext}>
+              {isEnRoute
+                ? "Tap the + button to add your first expense"
+                : "Expenses will appear here when the trip becomes active"}
+            </Text>
+          </View>
+        )}
+      </View>
+    </ScrollView>
+
+    {/* FAB (only when trip is en route) */}
+    {isEnRoute && (
+      <TouchableOpacity style={expensestyle.fab} onPress={handleOpenModal}>
         <Text style={expensestyle.fabIcon}>+</Text>
       </TouchableOpacity>
+    )}
 
-      <Modal 
-        visible={modalVisible} 
-        animationType="slide" 
-        transparent={true}
-        presentationStyle="pageSheet"
-      >
-        <TouchableWithoutFeedback onPress={closeDropdown}>
-          <View style={expensestyle.modalOverlay}>
-            <View style={expensestyle.modalContainer}>
-              <View style={expensestyle.modalHeader}>
-                <Text style={expensestyle.modalTitle}>Add Expense</Text>
-                <TouchableOpacity onPress={resetForm} style={expensestyle.modalCloseButton}>
-                  <Text style={expensestyle.modalCloseIcon}>✕</Text>
-                </TouchableOpacity>
-              </View>
-              
-              <ScrollView style={expensestyle.modalContent} showsVerticalScrollIndicator={false}>
-                {isEnRoute && (
-                  <View style={expensestyle.balanceAlert}>
-                    <Text style={expensestyle.balanceAlertIcon}>💳</Text>
-                    <Text style={expensestyle.balanceAlertText}>
-                      Available: ₱{formatCurrency(remainingBalance)}
-                    </Text>
-                  </View>
+    {/* Modal */}
+    <Modal
+      visible={modalVisible}
+      animationType="slide"
+      transparent={true}
+      presentationStyle="pageSheet"
+    >
+      <TouchableWithoutFeedback onPress={closeDropdown}>
+        <View style={expensestyle.modalOverlay}>
+          <View style={expensestyle.modalContainer}>
+            <View style={expensestyle.modalHeader}>
+              <Text style={expensestyle.modalTitle}>Add Expense</Text>
+              <TouchableOpacity
+                onPress={resetForm}
+                style={expensestyle.modalCloseButton}
+              >
+                <Text style={expensestyle.modalCloseIcon}>✕</Text>
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView
+              style={expensestyle.modalContent}
+              showsVerticalScrollIndicator={false}
+            >
+              {/* Balance Alert (only when trip is en route) */}
+              {isEnRoute && (
+                <View style={expensestyle.balanceAlert}>
+                  <Text style={expensestyle.balanceAlertIcon}>💳</Text>
+                  <Text style={expensestyle.balanceAlertText}>
+                    Available: ₱{formatCurrency(remainingBalance)}
+                  </Text>
+                </View>
+              )}
+
+              {/* Amount Input */}
+              <View style={expensestyle.inputGroup}>
+                <Text style={expensestyle.inputLabel}>Amount</Text>
+                <TextInput
+                  style={[
+                    expensestyle.input,
+                    expenseAmountError && expensestyle.inputError,
+                  ]}
+                  placeholder="₱ 0.00"
+                  keyboardType="numeric"
+                  value={expenseAmount}
+                  onChangeText={validateExpenseAmount}
+                  onBlur={handleBlurExpenseAmount}
+                />
+                {expenseAmountError && (
+                  <Text style={expensestyle.errorText}>
+                    {expenseAmountError}
+                  </Text>
                 )}
-                
-                <View style={expensestyle.inputGroup}>
-                  <Text style={expensestyle.inputLabel}>Amount</Text>
-                  <TextInput
-                    style={[expensestyle.input, expenseAmountError && expensestyle.inputError]}
-                    placeholder="₱ 0.00"
-                    keyboardType="numeric"
-                    value={expenseAmount}
-                    onChangeText={validateExpenseAmount}
-                    onBlur={handleBlurExpenseAmount}
-                  />
-                  {expenseAmountError && (
-                    <Text style={expensestyle.errorText}>{expenseAmountError}</Text>
+              </View>
+
+              {/* Quick Amounts */}
+              <View style={expensestyle.quickAmountSection}>
+                <Text style={expensestyle.quickAmountLabel}>Quick amounts</Text>
+                <View style={expensestyle.quickAmountGrid}>
+                  {quickAmounts.map((amount) => {
+                    const isDisabled =
+                      isEnRoute && amount > remainingBalance && remainingBalance > 0;
+                    return (
+                      <TouchableOpacity
+                        key={amount}
+                        style={[
+                          expensestyle.quickAmountButton,
+                          isDisabled && expensestyle.quickAmountButtonDisabled,
+                        ]}
+                        onPress={() => {
+                          if (!isDisabled) {
+                            setExpenseAmount(amount.toString());
+                            setExpenseAmountError("");
+                          }
+                        }}
+                        disabled={isDisabled}
+                      >
+                        <Text
+                          style={[
+                            expensestyle.quickAmountText,
+                            isDisabled && expensestyle.quickAmountTextDisabled,
+                          ]}
+                        >
+                          ₱{amount}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+
+              {/* Category Dropdown */}
+              <View style={expensestyle.inputGroup}>
+                <Text style={expensestyle.inputLabel}>Category</Text>
+                <View style={expensestyle.dropdownContainer}>
+                  <TouchableOpacity
+                    style={[
+                      expensestyle.dropdown,
+                      dropdownVisible && expensestyle.dropdownOpen,
+                    ]}
+                    onPress={() => setDropdownVisible(!dropdownVisible)}
+                    disabled={loadingExpenseTypes}
+                  >
+                    <Text style={expensestyle.dropdownText}>
+                      {loadingExpenseTypes
+                        ? "Loading..."
+                        : `${getCategoryIcon(expenseName)} ${expenseName}`}
+                    </Text>
+                    <Text
+                      style={[
+                        expensestyle.dropdownArrow,
+                        dropdownVisible && expensestyle.dropdownArrowRotated,
+                      ]}
+                    >
+                      ▼
+                    </Text>
+                  </TouchableOpacity>
+
+                  {dropdownVisible && (
+                    <View style={expensestyle.dropdownList}>
+                      <ScrollView
+                        nestedScrollEnabled={true}
+                        style={expensestyle.dropdownScrollView}
+                        showsVerticalScrollIndicator={false}
+                      >
+                        {expenseCategories.map((category) => (
+                          <TouchableOpacity
+                            key={category}
+                            style={[
+                              expensestyle.dropdownItem,
+                              expenseName === category &&
+                                expensestyle.dropdownItemSelected,
+                            ]}
+                            onPress={() => handleCategorySelect(category)}
+                          >
+                            <Text style={expensestyle.dropdownItemIcon}>
+                              {getCategoryIcon(category)}
+                            </Text>
+                            <Text
+                              style={[
+                                expensestyle.dropdownItemText,
+                                expenseName === category &&
+                                  expensestyle.dropdownItemTextSelected,
+                              ]}
+                            >
+                              {category}
+                            </Text>
+                          </TouchableOpacity>
+                        ))}
+                      </ScrollView>
+                    </View>
                   )}
                 </View>
+              </View>
 
-                <View style={expensestyle.quickAmountSection}>
-                  <Text style={expensestyle.quickAmountLabel}>Quick amounts</Text>
-                  <View style={expensestyle.quickAmountGrid}>
-                    {quickAmounts.map((amount) => {
-                      const isDisabled = isEnRoute && amount > remainingBalance && remainingBalance > 0;
-                      return (
-                        <TouchableOpacity
-                          key={amount}
-                          style={[expensestyle.quickAmountButton, 
-                            isDisabled && expensestyle.quickAmountButtonDisabled]}
-                          onPress={() => {
-                            if (!isDisabled) {
-                              setExpenseAmount(amount.toString());
-                              setExpenseAmountError("");
-                            }
-                          }}
-                          disabled={isDisabled}
-                        >
-                          <Text style={[expensestyle.quickAmountText,
-                            isDisabled && expensestyle.quickAmountTextDisabled]}>
-                            ₱{amount}
-                          </Text>
-                        </TouchableOpacity>
-                      );
-                    })}
-                  </View>
-                </View>
-                
+              {/* Custom Category */}
+              {showCustomInput && (
                 <View style={expensestyle.inputGroup}>
-                  <Text style={expensestyle.inputLabel}>Category</Text>
-                  <View style={expensestyle.dropdownContainer}>
-                    <TouchableOpacity 
-                      style={[expensestyle.dropdown, dropdownVisible && expensestyle.dropdownOpen]} 
-                      onPress={() => setDropdownVisible(!dropdownVisible)}
-                      disabled={loadingExpenseTypes}
-                    >
-                      <Text style={expensestyle.dropdownText}>
-                        {loadingExpenseTypes ? "Loading..." : `${getCategoryIcon(expenseName)} ${expenseName}`}
-                      </Text>
-                      <Text style={[expensestyle.dropdownArrow, 
-                        dropdownVisible && expensestyle.dropdownArrowRotated]}>
-                        ▼
-                      </Text>
-                    </TouchableOpacity>
-                    
-                    {dropdownVisible && (
-                      <View style={expensestyle.dropdownList}>
-                        <ScrollView 
-                          nestedScrollEnabled={true} 
-                          style={expensestyle.dropdownScrollView}
-                          showsVerticalScrollIndicator={false}
-                        >
-                          {expenseCategories.map((category) => (
-                            <TouchableOpacity
-                              key={category}
-                              style={[expensestyle.dropdownItem,
-                                expenseName === category && expensestyle.dropdownItemSelected]}
-                              onPress={() => handleCategorySelect(category)}
-                            >
-                              <Text style={expensestyle.dropdownItemIcon}>
-                                {getCategoryIcon(category)}
-                              </Text>
-                              <Text style={[expensestyle.dropdownItemText,
-                                expenseName === category && expensestyle.dropdownItemTextSelected]}>
-                                {category}
-                              </Text>
-                            </TouchableOpacity>
-                          ))}
-                        </ScrollView>
-                      </View>
-                    )}
-                  </View>
-                </View>
-
-                {showCustomInput && (
-                  <View style={expensestyle.inputGroup}>
-                    <Text style={expensestyle.inputLabel}>Custom Category</Text>
-                    <TextInput
-                      style={[expensestyle.input, customCategoryError && expensestyle.inputError]}
-                      placeholder="Enter category name"
-                      value={customCategory}
-                      onChangeText={validateCustomCategory}
-                      onBlur={handleBlurCustomCategory}
-                      maxLength={50}
-                    />
-                    {customCategoryError && (
-                      <Text style={expensestyle.errorText}>{customCategoryError}</Text>
-                    )}
-                  </View>
-                )}
-
-                <View style={expensestyle.buttonGroup}>
-                  <TouchableOpacity 
-                    style={[expensestyle.submitButton, submitting && expensestyle.buttonDisabled]} 
-                    onPress={addExpense} 
-                    disabled={submitting}
-                  >
-                    <Text style={expensestyle.submitButtonText}>
-                      {submitting ? 'Adding...' : 'Add Expense'}
+                  <Text style={expensestyle.inputLabel}>Custom Category</Text>
+                  <TextInput
+                    style={[
+                      expensestyle.input,
+                      customCategoryError && expensestyle.inputError,
+                    ]}
+                    placeholder="Enter category name"
+                    value={customCategory}
+                    onChangeText={validateCustomCategory}
+                    onBlur={handleBlurCustomCategory}
+                    maxLength={50}
+                  />
+                  {customCategoryError && (
+                    <Text style={expensestyle.errorText}>
+                      {customCategoryError}
                     </Text>
-                  </TouchableOpacity>
-                  
-                  <TouchableOpacity 
-                    style={expensestyle.cancelButton} 
-                    onPress={resetForm} 
-                    disabled={submitting}
-                  >
-                    <Text style={expensestyle.cancelButtonText}>Cancel</Text>
-                  </TouchableOpacity>
+                  )}
                 </View>
-              </ScrollView>
-            </View>
+              )}
+
+              {/* Buttons */}
+              <View style={expensestyle.buttonGroup}>
+                <TouchableOpacity
+                  style={[
+                    expensestyle.submitButton,
+                    submitting && expensestyle.buttonDisabled,
+                  ]}
+                  onPress={addExpense}
+                  disabled={submitting}
+                >
+                  <Text style={expensestyle.submitButtonText}>
+                    {submitting ? "Adding..." : "Add Expense"}
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={expensestyle.cancelButton}
+                  onPress={resetForm}
+                  disabled={submitting}
+                >
+                  <Text style={expensestyle.cancelButtonText}>Cancel</Text>
+                </TouchableOpacity>
+              </View>
+            </ScrollView>
           </View>
-        </TouchableWithoutFeedback>
-      </Modal>
+        </View>
+      </TouchableWithoutFeedback>
+    </Modal>
 
-      <View style={navbar.bottomNav}>
-          <TouchableOpacity 
-              style={[navbar.navButton, currentRoute === "Dashboard" && navbar.navButtonActive]}
-              onPress={() => nav.navigate("Dashboard")}
+{/* Bottom Navigation */}
+      <View style={tripstyle.bottomNav}>
+        <TouchableOpacity 
+          style={[tripstyle.navButton, currentRoute === "Dashboard" && tripstyle.navButtonActive]}
+          onPress={() => nav.navigate("Dashboard")}
+        >
+          <View style={tripstyle.navIconContainer}>
+            <Image 
+              source={require("../assets/Home.png")} 
+              style={[
+                tripstyle.navIcon, 
+                { tintColor: currentRoute === "Dashboard" ? "#dc2626" : "#9ca3af" }
+              ]}
+            />
+          </View>
+          <Text 
+            style={[
+              tripstyle.navLabel, 
+              { color: currentRoute === "Dashboard" ? "#dc2626" : "#9ca3af" }
+            ]}
           >
-              <Image 
-                  source={require("../assets/Home.png")} 
-                  style={[
-                      navbar.navIconImg, 
-                      { tintColor: currentRoute === "Dashboard" ? "red" : "grey" }
-                  ]}
-              />
-              <Text 
-                  style={[
-                      navbar.navLabel, 
-                      currentRoute === "Dashboard" && navbar.navLabelActive
-                  ]}
-              >
-                  Home
-              </Text>
-          </TouchableOpacity>
+            Home
+          </Text>
+        </TouchableOpacity>
 
-          <TouchableOpacity 
-              style={[navbar.navButton, currentRoute === "Trips" && navbar.navButtonActive]}
-              onPress={() => nav.navigate("Trips")}
+        <TouchableOpacity 
+          style={[tripstyle.navButton, currentRoute === "Trips" && tripstyle.navButtonActive]}
+          onPress={() => nav.navigate("Trips")}
+        >
+          <View style={tripstyle.navIconContainer}>
+            <Image 
+              source={require("../assets/location2.png")} 
+              style={[
+                tripstyle.navIcon, 
+                { tintColor: currentRoute === "Trips" ? "#dc2626" : "#9ca3af" }
+              ]}
+            />
+          </View>
+          <Text 
+            style={[
+              tripstyle.navLabel, 
+              { color: currentRoute === "Trips" ? "#dc2626" : "#9ca3af" }
+            ]}
           >
-              <Image 
-                  source={require("../assets/trip.png")} 
-                  style={[
-                      navbar.navIconImg, 
-                      { tintColor: currentRoute === "Trips" ? "red" : "grey" }
-                  ]}
-              />
-              <Text 
-                  style={[
-                      navbar.navLabel, 
-                      currentRoute === "Trips" && navbar.navLabelActive
-                  ]}
-              >
-                  Trips
-              </Text>
-          </TouchableOpacity>
+            Trips
+          </Text>
+        </TouchableOpacity>
 
-          <TouchableOpacity 
-              style={[navbar.navButton, currentRoute === "Profile" && navbar.navButtonActive]}
-              onPress={() => nav.navigate("Profile")}
+        <TouchableOpacity 
+          style={[tripstyle.navButton, currentRoute === "Profile" && tripstyle.navButtonActive]}
+          onPress={() => nav.navigate("Profile")}
+        >
+          <View style={tripstyle.navIconContainer}>
+            <Image 
+              source={require("../assets/user.png")} 
+              style={[
+                tripstyle.navIcon, 
+                { tintColor: currentRoute === "Profile" ? "#dc2626" : "#9ca3af" }
+              ]}
+            />
+          </View>
+          <Text 
+            style={[
+              tripstyle.navLabel, 
+              { color: currentRoute === "Profile" ? "#dc2626" : "#9ca3af" }
+            ]}
           >
-              <Image 
-                  source={require("../assets/user.png")} 
-                  style={[
-                      navbar.navIconImg, 
-                      { tintColor: currentRoute === "Profile" ? "red" : "grey" }
-                  ]}
-              />
-              <Text 
-                  style={[
-                      navbar.navLabel, 
-                      currentRoute === "Profile" && navbar.navLabelActive
-                  ]}
-              >
-                  Profile
-              </Text>
-          </TouchableOpacity>
+            Profile
+          </Text>
+        </TouchableOpacity>
       </View>
-    </View>
+  </View>
   );
 }

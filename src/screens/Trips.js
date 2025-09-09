@@ -18,11 +18,18 @@ import {
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { tripstyle } from "../styles/Tripcss";
+import { TripDetail } from "../styles/Tripcss";
 import { navbar } from "../styles/Navbar";
 import { useNavigationState } from "@react-navigation/native";
-import homeIcon from "../assets/Home.png";
-import userIcon from "../assets/schedule.png";
-import profileicon from "../assets/profile2.png";
+import boxIcon from "../assets/box.png";
+import dateIcon from "../assets/calendar.png";
+import docIcon from "../assets/google-docs.png";
+import peopleIcon from "../assets/people.png";
+import groupIcon from "../assets/group.png";
+import dollarIcon from "../assets/dollar-symbol.png";
+import helperIcon from "../assets/helper.png";
+import signalIcon from "../assets/signal.png";
+import clockIcon from "../assets/clock.png";
 
 const TripScreen = () => {
   const nav = useNavigation();
@@ -36,10 +43,11 @@ const TripScreen = () => {
   const state = useNavigationState((state) => state);
   const currentRoute = state.routes[state.index].name;
   const [refreshing, setRefreshing] = useState(false);
-  // const API_BASE_URL = 'http://192.168.100.17/capstone-1-eb';
-  //const API_BASE_URL = 'http://192.168.1.6/capstone-1-eb';
-  const API_BASE_URL = 'http://192.168.1.4/capstone-1-eb';
-
+  const [tripDetailModalVisible, setTripDetailModalVisible] = useState(false);
+  const [selectedTrip, setSelectedTrip] = useState(null);
+  
+  const API_BASE_URL = 'http://192.168.0.100/capstone-1-eb';
+  
   const getDriverInfo = async () => {
     try {
       const sessionData = await AsyncStorage.getItem('userSession');
@@ -171,13 +179,21 @@ const formatDate = (dateString) => {
   const date = new Date(dateString);
   return date.toLocaleDateString('en-US', {
     year: 'numeric', 
-    month: 'long', 
+    month: 'short', 
     day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: true
   });
 };
+
+const formatTime = (dateString) => {
+  if (!dateString) return "N/A";
+  const date = new Date(dateString);
+  return date.toLocaleTimeString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  });
+};
+
 
 const [checklistModalVisible, setChecklistModalVisible] = useState(false);
 const [currentTripId, setCurrentTripId] = useState(null);
@@ -194,13 +210,13 @@ const [checklistData, setChecklistData] = useState({
 const isChecklistAvailable = (tripDate) => {
   const deliveryDate = new Date(tripDate);
   const now = new Date();
-  
+
   // Calculate 2 hours before the trip
   const twoHoursBefore = new Date(deliveryDate.getTime() - 2 * 60 * 60 * 1000);
-  
+
   // Calculate 1 minute before the trip (cutoff time)
   const oneMinuteBefore = new Date(deliveryDate.getTime() - 1 * 60 * 1000);
-  
+
   return now >= twoHoursBefore && now <= oneMinuteBefore;
 };
 
@@ -239,6 +255,7 @@ const submitChecklist = async () => {
     if (data.success) {
       Alert.alert('Success', 'Checklist submitted successfully!');
       setChecklistModalVisible(false);
+      fetchTrips(); // Refresh to update checklist status
     } else {
       Alert.alert('Error', data.message || 'Failed to submit checklist');
     }
@@ -250,33 +267,10 @@ const submitChecklist = async () => {
   }
 };
 
-const fetchChecklistData = async (tripId) => {
-  try {
-    const response = await fetch(`${API_BASE_URL}/include/handlers/trip_handler.php`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        action: 'get_checklist',
-        trip_id: tripId
-      }),
-    });
-
-    const data = await response.json();
-    if (data.success && data.checklist) {
-      setChecklistData({
-        noFatigue: Boolean(data.checklist.no_fatigue),
-        noDrugs: Boolean(data.checklist.no_drugs),
-        noDistractions: Boolean(data.checklist.no_distractions),
-        noIllness: Boolean(data.checklist.no_illness),
-        fitToWork: Boolean(data.checklist.fit_to_work),
-        alcoholTest: data.checklist.alcohol_test.toString(),
-        hoursSleep: data.checklist.hours_sleep.toString()
-      });
-    }
-  } catch (error) {
-    console.error('Error fetching checklist:', error);
-  }
-};
+  const handleTripCardPress = (trip) => {
+    setSelectedTrip(trip);
+    setTripDetailModalVisible(true);
+  };
 
   const getStatusColor = (tripStatus) => {
     switch(tripStatus) {
@@ -301,110 +295,107 @@ const fetchChecklistData = async (tripId) => {
 
   return (
     <View style={tripstyle.mainContainer}>
-      {/* Header Section */}
       <View style={tripstyle.headerSection}>
-      <Text style={tripstyle.headerTitle}>My Trips</Text>
-      <Text style={tripstyle.dateText}>
-        {new Date().toLocaleDateString('en-US', { 
-          weekday: 'short', 
-          month: 'short', 
-          day: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: true
-        })}
-    </Text>
-    </View>
+        <Text style={tripstyle.headerTitle}>My Trips</Text>
+        <Text style={tripstyle.dateText}>
+          {new Date().toLocaleDateString('en-US', { 
+            weekday: 'short', 
+            month: 'short', 
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true
+          })}
+        </Text>
+      </View>
 
       <ScrollView 
         style={tripstyle.scrollContainer}
         contentContainerStyle={tripstyle.scrollContent}
         showsVerticalScrollIndicator={false}
         refreshControl={
-    <RefreshControl
-      refreshing={refreshing}
-      onRefresh={onRefresh}
-      colors={['#2196F3']}
-      tintColor="#2196F3"
-    />
-  }
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={['#2196F3']}
+            tintColor="#2196F3"
+          />
+        }
       >
         <View style={tripstyle.sectionContainer}>
-         
-          
-
           {currentTrip ? (
- <View style={tripstyle.activeCard}>
-  <View style={tripstyle.cardHeader}>
-    <View style={tripstyle.destinationRow}>
-      <Text style={tripstyle.destinationIcon}>📍Destination: </Text>
-      <Text style={tripstyle.destinationText}>{currentTrip.destination}</Text>
-    </View>
-    
-    {currentTrip && (
-      <View style={tripstyle.statusRow}>
-        <View style={[tripstyle.statusBadge, { backgroundColor: getStatusColor(status) }]}>
-          <Text style={tripstyle.statusText}>{status}</Text>
-        </View>
-      </View>
-    )}
-  </View>
-
-              <View style={tripstyle.tripDetails}>
-                <View style={tripstyle.detailRow}>
-                  <Text style={tripstyle.detailLabel}>📅 Date</Text>
-                  <Text style={tripstyle.detailValue}>{formatDate(currentTrip.date)}</Text>
-                </View>
-                <View style={tripstyle.detailRow}>
-                  <Text style={tripstyle.detailLabel}>🚛 Truck</Text>
-                  <Text style={tripstyle.detailValue}>{currentTrip.plate_no}</Text>
-                </View>
-                <View style={tripstyle.detailRow}>
-                  <Text style={tripstyle.scheduledLabel}>📦 Container no.</Text>
-                  <Text style={tripstyle.detailValue}>{currentTrip.container_no}</Text>
-                </View>
-                <View style={tripstyle.detailRow}>
-                  <Text style={tripstyle.detailLabel}>🏢 Client</Text>
-                  <Text style={tripstyle.detailValue}>{currentTrip.client}</Text>
-                </View>
-                <View style={tripstyle.detailRow}>
-                  <Text style={tripstyle.detailLabel}>👤 Consignee</Text>
-                  <Text style={tripstyle.detailValue}>{currentTrip.consignee}</Text>
-                </View>
-                <View style={tripstyle.detailRow}>
-                  <Text style={tripstyle.cashAdvanceLabel}>💰 Cash Advance</Text>
-                  <Text style={tripstyle.cashValue}>₱{currentTrip.total_cash_advance || currentTrip.cash_adv || '0'}</Text>
-                </View>
-                <View style={tripstyle.detailRow}>
-                  <Text style={tripstyle.detailLabel}>🤝 Helper</Text>
-                  <Text style={tripstyle.detailValue}>{currentTrip.helper || 'N/A'}</Text>
-                </View>
-                <View style={tripstyle.detailRow}>
-                  <Text style={tripstyle.detailLabel}>📋 Dispatcher</Text>
-                  <Text style={tripstyle.detailValue}>{currentTrip.dispatcher}</Text>
-                </View>
-                <View style={tripstyle.detailRow}>
-                  <Text style={tripstyle.detailLabel}>📏 Size</Text>
-                  <Text style={tripstyle.detailValue}>{currentTrip.size}</Text>
+            <View style={[tripstyle.activeCard, { paddingBottom: 0 }]}>
+              <View style={tripstyle.cardHeader}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <View style={{ flex: 1 }}>
+                    <View style={tripstyle.destinationRow}>
+                      <View style={tripstyle.locationIconContainer}>
+                         <Image 
+                            source={require("../assets/location.png")}
+                            style={tripstyle.walletIcon}
+                            resizeMode="contain"
+                          />
+                        </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={tripstyle.destinationLabel}>Destination:</Text>
+                        <Text style={tripstyle.destinationText}>{currentTrip.destination}</Text>
+                      </View>
+                    </View>
+                  </View>
+                  <View style={[tripstyle.statusBadge, { borderColor: '#FF9800', borderWidth: 1, backgroundColor: '#FFF3E0' }]}>
+                    <Text style={[tripstyle.statusText, { color: '#d97706' }]}>IN ROUTE</Text>
+                  </View>
                 </View>
               </View>
 
-              <View style={tripstyle.actionButtons}>
-                <TouchableOpacity 
-                  style={tripstyle.primaryButton} 
-                  onPress={() => setModalVisible(true)}
-                  disabled={updating}
-                >
-                  <Text style={tripstyle.primaryButtonText}>
-                    {updating ? 'Updating...' : '🔃 Update Status'}
+              <View style={tripstyle.tripDetails}>
+                <View style={tripstyle.detailRow}>
+                  <Image source={dateIcon} style={tripstyle.detailIcon} />
+                  <Text style={tripstyle.detailLabel}>Date</Text>
+                  <Text style={tripstyle.detailValue}>
+                    {formatDate(currentTrip.date)}
                   </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={tripstyle.secondaryButton}
-                  onPress={() => nav.navigate('Expenses', { tripId: currentTrip.trip_id })}
-                >
-                  <Text style={tripstyle.secondaryButtonText}>📝 Report Expense</Text>
-                </TouchableOpacity>
+                </View>
+                <View style={tripstyle.detailRow}>
+                  <Image source={docIcon} style={tripstyle.detailIcon} />
+                  <Text style={tripstyle.detailLabel}>Plate No.</Text>
+                  <Text style={tripstyle.detailValue}>{currentTrip.plate_no}</Text>
+                </View>
+                <View style={tripstyle.detailRow}>
+                  <Image source={docIcon} style={tripstyle.detailIcon} />
+                  <Text style={tripstyle.detailLabel}>Container No.</Text>
+                  <Text style={tripstyle.detailValue}>{currentTrip.container_no}</Text>
+                </View>
+                <View style={tripstyle.detailRow}>
+                  <Image source={peopleIcon} style={tripstyle.detailIcon} />
+                  <Text style={tripstyle.detailLabel}>Client</Text>
+                  <Text style={tripstyle.detailValue}>{currentTrip.client}</Text>
+                </View>
+                <View style={tripstyle.detailRow}>
+                  <Image source={groupIcon} style={tripstyle.detailIcon} />
+                  <Text style={tripstyle.detailLabel}>Consignee</Text>
+                  <Text style={tripstyle.detailValue}>{currentTrip.consignee}</Text>
+                </View>
+                <View style={tripstyle.detailRow}>
+                  <Image source={dollarIcon} style={tripstyle.detailIcon} />
+                  <Text style={tripstyle.detailLabel}>Cash Advance</Text>
+                  <Text style={tripstyle.cashValue}>P{currentTrip.total_cash_advance || currentTrip.cash_adv || '5000.00'}</Text>
+                </View>
+                <View style={tripstyle.detailRow}>
+                  <Image source={helperIcon} style={tripstyle.detailIcon} />
+                  <Text style={tripstyle.detailLabel}>Helper</Text>
+                  <Text style={tripstyle.detailValue}>{currentTrip.helper || 'N/A'}</Text>
+                </View>
+                <View style={tripstyle.detailRow}>
+                  <Image source={signalIcon} style={tripstyle.detailIcon} />
+                  <Text style={tripstyle.detailLabel}>Dispatcher</Text>
+                  <Text style={tripstyle.detailValue}>{currentTrip.dispatcher}</Text>
+                </View>
+                <View style={tripstyle.detailRow}>
+                  <Image source={boxIcon} style={tripstyle.detailIcon} />
+                  <Text style={tripstyle.detailLabel}>Size</Text>
+                  <Text style={tripstyle.detailValue}>{currentTrip.size || '40'}</Text>
+                </View>
               </View>
             </View>
           ) : (
@@ -416,7 +407,24 @@ const fetchChecklistData = async (tripId) => {
           )}
         </View>
 
-        {/* Scheduled Trips Section */}
+        <View style={tripstyle.actionButtons}>
+                <TouchableOpacity 
+                  style={tripstyle.primaryButton} 
+                  onPress={() => setModalVisible(true)}
+                  disabled={updating}
+                >
+                  <Text style={tripstyle.primaryButtonText}>
+                    {updating ? 'Updating...' : 'Update Status'}
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={tripstyle.secondaryButton}
+                  onPress={() => nav.navigate('Expenses', { tripId: currentTrip.trip_id })}
+                >
+                  <Text style={tripstyle.secondaryButtonText}>Report Expense</Text>
+                </TouchableOpacity>
+        </View>
+
         <View style={tripstyle.sectionContainer}>
           <View style={tripstyle.sectionHeader}>
             <Text style={tripstyle.sectionTitle}>Scheduled Trips</Text>
@@ -424,99 +432,27 @@ const fetchChecklistData = async (tripId) => {
               <Text style={tripstyle.countText}>{scheduledTrips.length}</Text>
             </View>
           </View>
-
           {scheduledTrips.length > 0 ? (
-            <FlatList
-              data={scheduledTrips}
-              keyExtractor={(item) => item.trip_id.toString()}
-              renderItem={({ item }) => (
-                <View style={tripstyle.scheduledCard}>
-                  <View style={tripstyle.cardHeader}>
-                    <View style={tripstyle.destinationContainer}>
-                      <Text style={tripstyle.scheduledDestination}>📍{item.destination}</Text>
+            <View>
+              {scheduledTrips.map((trip, index) => (
+                <TouchableOpacity 
+                  key={trip.trip_id} 
+                  style={tripstyle.scheduledTripCard}
+                  onPress={() => handleTripCardPress(trip)}
+                >
+                  <View style={tripstyle.scheduledTripRow}>
+                    <View style={tripstyle.scheduledTripInfo}>
+                      <Text style={tripstyle.scheduledTripDestination}>{trip.destination}</Text>
+                      <Text style={tripstyle.scheduledTripDate}>{formatDate(trip.date)}</Text>
                     </View>
-                    <View style={tripstyle.pendingBadge}>
-                      <Text style={tripstyle.pendingText}>Pending</Text>
-                    </View>
+                      <View style={tripstyle.scheduledTripStatus}>
+                        <Text style={tripstyle.scheduledStatusText}>Scheduled</Text>
+                        <Text style={tripstyle.arrowText}>›</Text>
+                      </View>
                   </View>
-                  
-                  <View style={tripstyle.scheduledDetails}>
-                    <View style={tripstyle.detailRow}>
-                      <Text style={tripstyle.scheduledLabel}>📅 {formatDate(item.date)}</Text>
-                    </View>
-                    <View style={tripstyle.detailRow}>
-                      <Text style={tripstyle.scheduledLabel}>🚛 Truck: {item.plate_no}</Text>
-                      <Text style={tripstyle.scheduledLabel}>📦 Container no: {item.container_no}</Text>
-                    </View>
-                    <View style={tripstyle.detailRow}>
-                      <Text style={tripstyle.scheduledLabel}>🏢 Client: {item.client}</Text>
-                    </View>
-                    <View style={tripstyle.cashRow}>
-                      <Text style={tripstyle.cashAdvanceLabel}>💰 Cash Advance: </Text>
-                      <Text style={tripstyle.cashAdvanceValue}>₱{item.total_cash_advance || item.cash_adv || '0'}</Text>
-                    </View>
-                  </View>
-
-                 <TouchableOpacity 
-  style={[
-    tripstyle.checklistButton, 
-    item.hasChecklist && tripstyle.checklistSubmittedButton,
-    !isChecklistAvailable(item.date) && tripstyle.checklistDisabledButton
-  ]} 
-  onPress={() => {
-    if (item.hasChecklist || !isChecklistAvailable(item.date)) return;
-    
-    // Additional validation for the exact time window
-    const tripDate = new Date(item.date);
-    const now = new Date();
-    const twoHoursBefore = new Date(tripDate.getTime() - 2 * 60 * 60 * 1000);
-    const oneMinuteBefore = new Date(tripDate.getTime() - 1 * 60 * 1000);
-    
-    if (now < twoHoursBefore) {
-      const formattedTime = twoHoursBefore.toLocaleTimeString('en-US', {
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: true
-      });
-      Alert.alert(
-        'Checklist Not Available Yet', 
-        `Checklist will be available starting at ${formattedTime} (2 hours before the scheduled trip).`
-      );
-      return;
-    }
-    
-    if (now > oneMinuteBefore) {
-      Alert.alert(
-        'Checklist Submission Closed', 
-        'Checklist submission closed 1 minute before the scheduled trip time.'
-      );
-      return;
-    }
-    
-    setCurrentTripId(item.trip_id);
-    resetChecklistData();
-    setChecklistModalVisible(true);
-  }}
->
-  <Text style={[
-    tripstyle.checklistButtonText,
-    item.hasChecklist && tripstyle.checklistSubmittedText,
-    !isChecklistAvailable(item.date) && tripstyle.checklistDisabledText
-  ]}>
-    {item.hasChecklist 
-      ? 'Checklist Submitted' 
-      : !isChecklistAvailable(item.date)
-        ? 'Checklist Not Available'
-        : 'Complete Checklist'
-    }
-  </Text>
-</TouchableOpacity>
-                </View>
-              )}
-              keyboardShouldPersistTaps="handled"
-              scrollEnabled={false}
-              showsVerticalScrollIndicator={false}
-            />
+                </TouchableOpacity>
+              ))}
+            </View>
           ) : (
             <View style={tripstyle.emptyCard}>
               <Text style={tripstyle.emptyIcon}>📅</Text>
@@ -526,101 +462,267 @@ const fetchChecklistData = async (tripId) => {
           )}
         </View>
       </ScrollView>
+      <Modal 
+        visible={tripDetailModalVisible} 
+        transparent 
+        animationType="slide"
+        presentationStyle="pageSheet"
+      >
+        <View style={TripDetail.overlay}>
+          <View style={TripDetail.container}>
+            <View style={TripDetail.header}>
+              <TouchableOpacity 
+                style={TripDetail.closeButton}
+                onPress={() => setTripDetailModalVisible(false)}
+              >
+                <Text style={TripDetail.closeButtonText}>×</Text>
+              </TouchableOpacity>
+            </View>
 
+            <ScrollView 
+              style={{ flex: 1 }}
+              contentContainerStyle={TripDetail.scrollContent}
+              showsVerticalScrollIndicator={false}
+            >
+              {selectedTrip && (
+                <>
+                  <View style={TripDetail.destinationHeader}>
+                    <View style={TripDetail.destinationRow}>
+                      <Image 
+                        source={require("../assets/location.png")}
+                        style={TripDetail.locationIcon}
+                        resizeMode="contain"
+                      />
+                      <View style={{ flex: 1 }}>
+                        <Text style={TripDetail.destinationLabel}>Destination:</Text>
+                        <Text style={TripDetail.destinationText}>
+                          {selectedTrip.destination || "Manila Port"}
+                        </Text>
+                      </View>
+                      <View style={TripDetail.scheduledBadge}>
+                        <Text style={TripDetail.scheduledText}>Scheduled</Text>
+                      </View>
+                    </View>
+                  </View>
+                  <View style={TripDetail.timeGrid}>
+                    <View style={TripDetail.timeCard}>
+                      <Image source={dateIcon} style={TripDetail.timeIcon} />
+                      <Text style={TripDetail.timeLabel}>Date</Text>
+                      <Text style={TripDetail.timeValue}>
+                        {formatDate(selectedTrip.date) || "N/A"}
+                      </Text>
+                    </View>
+                    
+                    <View style={TripDetail.timeCard}>
+                      <Image source={clockIcon} style={TripDetail.timeIcon} />
+                      <Text style={TripDetail.timeLabel}>Departure</Text>
+                      <Text style={TripDetail.timeValue}>
+                        {formatTime(selectedTrip.date)}
+                      </Text>
+                    </View>
+                  </View>
+
+                  <View style={TripDetail.detailsList}>
+                    {[
+                      { 
+                        icon: docIcon, 
+                        label: "Container no.", 
+                        value: selectedTrip.container_no || "N/A" 
+                      },
+                      { 
+                        icon: peopleIcon, 
+                        label: "Client", 
+                        value: selectedTrip.client || "N/A" 
+                      },
+                      { 
+                        icon: groupIcon, 
+                        label: "Consignee", 
+                        value: selectedTrip.consignee || "N/A" 
+                      },
+                      { 
+                        icon: dollarIcon, 
+                        label: "Cash Advance", 
+                        value: `₱${selectedTrip.total_cash_advance || selectedTrip.cash_adv || "N/A"}`, 
+                        cash: true 
+                      },
+                      { 
+                        icon: helperIcon, 
+                        label: "Helper", 
+                        value: selectedTrip.helper || "N/A" 
+                      },
+                      { 
+                        icon: signalIcon, 
+                        label: "Dispatcher", 
+                        value: selectedTrip.dispatcher || "N/A" 
+                      },
+                      { 
+                        icon: boxIcon, 
+                        label: "Size", 
+                        value: selectedTrip.size || "N/A" 
+                      },
+                    ].map((item, idx) => (
+                      <View key={idx} style={TripDetail.detailItem}>
+                        <View style={TripDetail.detailLeft}>
+                          <Image source={item.icon} style={TripDetail.detailIcon} />
+                          <Text style={TripDetail.detailLabel}>{item.label}</Text>
+                        </View>
+                        <Text style={item.cash ? TripDetail.detailCashValue : TripDetail.detailValue}>
+                          {item.value}
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
+                </>
+              )}
+            </ScrollView>
+
+            <View style={TripDetail.bottomActions}>
+              <TouchableOpacity 
+                style={[
+                  TripDetail.startButton,
+                  selectedTrip?.hasChecklist && TripDetail.startButtonCompleted,
+                  !isChecklistAvailable(selectedTrip?.date) && TripDetail.startButtonDisabled
+                ]}
+                onPress={() => {
+                  if (selectedTrip?.hasChecklist || !isChecklistAvailable(selectedTrip?.date)) return;
+                  const tripDate = new Date(selectedTrip.date);
+                  const now = new Date();
+                  const twoHoursBefore = new Date(tripDate.getTime() - 2 * 60 * 60 * 1000);
+                  const oneMinuteBefore = new Date(tripDate.getTime() - 1 * 60 * 1000);
+
+                  if (now < twoHoursBefore) {
+                    const formattedTime = twoHoursBefore.toLocaleTimeString('en-US', {
+                      hour: '2-digit', minute: '2-digit', hour12: true
+                    });
+                    Alert.alert(
+                      'Checklist Not Available Yet',
+                      `Checklist will be available starting at ${formattedTime} (2 hours before the scheduled trip).`
+                    );
+                    return;
+                  }
+
+                  if (now > oneMinuteBefore) {
+                    Alert.alert(
+                      'Checklist Submission Closed',
+                      'Checklist submission closed 1 minute before the scheduled trip time.'
+                    );
+                    return;
+                  }
+
+                  setCurrentTripId(selectedTrip.trip_id);
+                  resetChecklistData();
+                  setTripDetailModalVisible(false);
+                  setChecklistModalVisible(true);
+                }}
+              >
+                <Text style={TripDetail.startButtonText}>
+                  {selectedTrip?.hasChecklist 
+                    ? 'Checklist Submitted' 
+                    : !isChecklistAvailable(selectedTrip?.date)
+                      ? 'Checklist Not Available'
+                      : 'Start Trip'
+                  }
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
       <Modal visible={checklistModalVisible} transparent animationType="slide">
-  <View style={tripstyle.modalOverlay}>
-    <View style={tripstyle.modalContainer}>
-      <View style={tripstyle.modalHeader}>
-        <Text style={tripstyle.modalTitle}>Good to Go Checklist</Text>
-        <Text style={tripstyle.modalSubtitle}>Please complete the checklist before starting the trip</Text>
-      </View>
-      
-      <ScrollView style={{ maxHeight: '70%' }}>
-        <View style={tripstyle.checklistItem}>
-          <Text style={tripstyle.checklistQuestion}>No body fatigue?</Text>
-          <Switch
-            value={checklistData.noFatigue}
-            onValueChange={(value) => setChecklistData({...checklistData, noFatigue: value})}
-          />
+        <View style={tripstyle.modalOverlay}>
+          <View style={tripstyle.modalContainer}>
+            <View style={tripstyle.modalHeader}>
+              <Text style={tripstyle.modalTitle}>Good to Go Checklist</Text>
+              <Text style={tripstyle.modalSubtitle}>Please complete the checklist before starting the trip</Text>
+            </View>
+            
+            <ScrollView style={{ maxHeight: '70%' }}>
+              <View style={tripstyle.checklistItem}>
+                <Text style={tripstyle.checklistQuestion}>No body fatigue?</Text>
+                <Switch
+                  value={checklistData.noFatigue}
+                  onValueChange={(value) => setChecklistData({...checklistData, noFatigue: value})}
+                />
+              </View>
+              
+              <View style={tripstyle.checklistItem}>
+                <Text style={tripstyle.checklistQuestion}>Did not take illegal drugs?</Text>
+                <Switch
+                  value={checklistData.noDrugs}
+                  onValueChange={(value) => setChecklistData({...checklistData, noDrugs: value})}
+                />
+              </View>
+              
+              <View style={tripstyle.checklistItem}>
+                <Text style={tripstyle.checklistQuestion}>No mental distractions?</Text>
+                <Switch
+                  value={checklistData.noDistractions}
+                  onValueChange={(value) => setChecklistData({...checklistData, noDistractions: value})}
+                />
+              </View>
+              
+              <View style={tripstyle.checklistItem}>
+                <Text style={tripstyle.checklistQuestion}>No body illness?</Text>
+                <Switch
+                  value={checklistData.noIllness}
+                  onValueChange={(value) => setChecklistData({...checklistData, noIllness: value})}
+                />
+              </View>
+              
+              <View style={tripstyle.checklistItem}>
+                <Text style={tripstyle.checklistQuestion}>Fit to work?</Text>
+                <Switch
+                  value={checklistData.fitToWork}
+                  onValueChange={(value) => setChecklistData({...checklistData, fitToWork: value})}
+                />
+              </View>
+              
+              <View style={tripstyle.checklistItem}>
+                <Text style={tripstyle.checklistQuestion}>Alcohol test reading (goal is 0):</Text>
+                <TextInput
+                  style={tripstyle.checklistInput}
+                  keyboardType="numeric"
+                  value={checklistData.alcoholTest}
+                  onChangeText={(text) => setChecklistData({...checklistData, alcoholTest: text})}
+                  placeholder="0.00"
+                />
+              </View>
+              
+              <View style={tripstyle.checklistItem}>
+                <Text style={tripstyle.checklistQuestion}>Number of hours sleep (goal is 6-9 hours):</Text>
+                <TextInput
+                  style={tripstyle.checklistInput}
+                  keyboardType="numeric"
+                  value={checklistData.hoursSleep}
+                  onChangeText={(text) => setChecklistData({...checklistData, hoursSleep: text})}
+                  placeholder="0.0"
+                />
+              </View>
+            </ScrollView>
+            
+            <View style={tripstyle.modalButtons}>
+              <TouchableOpacity 
+                style={[tripstyle.modalButton, tripstyle.completedButton]} 
+                onPress={submitChecklist}
+                disabled={updating}
+              >
+                <Text style={tripstyle.modalButtonText}>
+                  {updating ? 'Submitting...' : 'Submit Checklist'}
+                </Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={tripstyle.modalCancelButton} 
+                onPress={() => setChecklistModalVisible(false)}
+              >
+                <Text style={tripstyle.modalCancelText}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
         </View>
-        
-        <View style={tripstyle.checklistItem}>
-          <Text style={tripstyle.checklistQuestion}>Did not take illegal drugs?</Text>
-          <Switch
-            value={checklistData.noDrugs}
-            onValueChange={(value) => setChecklistData({...checklistData, noDrugs: value})}
-          />
-        </View>
-        
-        <View style={tripstyle.checklistItem}>
-          <Text style={tripstyle.checklistQuestion}>No mental distractions?</Text>
-          <Switch
-            value={checklistData.noDistractions}
-            onValueChange={(value) => setChecklistData({...checklistData, noDistractions: value})}
-          />
-        </View>
-        
-        <View style={tripstyle.checklistItem}>
-          <Text style={tripstyle.checklistQuestion}>No body illness?</Text>
-          <Switch
-            value={checklistData.noIllness}
-            onValueChange={(value) => setChecklistData({...checklistData, noIllness: value})}
-          />
-        </View>
-        
-        <View style={tripstyle.checklistItem}>
-          <Text style={tripstyle.checklistQuestion}>Fit to work?</Text>
-          <Switch
-            value={checklistData.fitToWork}
-            onValueChange={(value) => setChecklistData({...checklistData, fitToWork: value})}
-          />
-        </View>
-        
-        <View style={tripstyle.checklistItem}>
-          <Text style={tripstyle.checklistQuestion}>Alcohol test reading (goal is 0):</Text>
-          <TextInput
-            style={tripstyle.checklistInput}
-            keyboardType="numeric"
-            value={checklistData.alcoholTest}
-            onChangeText={(text) => setChecklistData({...checklistData, alcoholTest: text})}
-            placeholder="0.00"
-          />
-        </View>
-        
-        <View style={tripstyle.checklistItem}>
-          <Text style={tripstyle.checklistQuestion}>Number of hours sleep (goal is 6-9 hours):</Text>
-          <TextInput
-            style={tripstyle.checklistInput}
-            keyboardType="numeric"
-            value={checklistData.hoursSleep}
-            onChangeText={(text) => setChecklistData({...checklistData, hoursSleep: text})}
-            placeholder="0.0"
-          />
-        </View>
-      </ScrollView>
-      
-      <View style={tripstyle.modalButtons}>
-        <TouchableOpacity 
-          style={[tripstyle.modalButton, tripstyle.completedButton]} 
-          onPress={submitChecklist}
-          disabled={updating}
-        >
-          <Text style={tripstyle.modalButtonText}>
-            {updating ? 'Submitting...' : 'Submit Checklist'}
-          </Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={tripstyle.modalCancelButton} 
-          onPress={() => setChecklistModalVisible(false)}
-        >
-          <Text style={tripstyle.modalCancelText}>Cancel</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
-  </View>
-</Modal>
+      </Modal>
 
+      {/* Status Update Modal */}
       <Modal visible={modalVisible} transparent animationType="slide">
         <View style={tripstyle.modalOverlay}>
           <View style={tripstyle.modalContainer}>
@@ -665,70 +767,77 @@ const fetchChecklistData = async (tripId) => {
         </View>
       </Modal>
 
-            <View style={navbar.bottomNav}>
-                <TouchableOpacity 
-                    style={[navbar.navButton, currentRoute === "Dashboard" && navbar.navButtonActive]}
-                    onPress={() => nav.navigate("Dashboard")}
-                >
-                    <Image 
-                        source={require("../assets/Home.png")} 
-                        style={[
-                            navbar.navIconImg, 
-                            { tintColor: currentRoute === "Dashboard" ? "red" : "grey" }
-                        ]}
-                    />
-                    <Text 
-                        style={[
-                            navbar.navLabel, 
-                            currentRoute === "Dashboard" && navbar.navLabelActive
-                        ]}
-                    >
-                        Home
-                    </Text>
-                </TouchableOpacity>
+      {/* Bottom Navigation */}
+      <View style={tripstyle.bottomNav}>
+        <TouchableOpacity 
+          style={[tripstyle.navButton, currentRoute === "Dashboard" && tripstyle.navButtonActive]}
+          onPress={() => nav.navigate("Dashboard")}
+        >
+          <View style={tripstyle.navIconContainer}>
+            <Image 
+              source={require("../assets/Home.png")} 
+              style={[
+                tripstyle.navIcon, 
+                { tintColor: currentRoute === "Dashboard" ? "#dc2626" : "#9ca3af" }
+              ]}
+            />
+          </View>
+          <Text 
+            style={[
+              tripstyle.navLabel, 
+              { color: currentRoute === "Dashboard" ? "#dc2626" : "#9ca3af" }
+            ]}
+          >
+            Home
+          </Text>
+        </TouchableOpacity>
 
-                <TouchableOpacity 
-                    style={[navbar.navButton, currentRoute === "Trips" && navbar.navButtonActive]}
-                    onPress={() => nav.navigate("Trips")}
-                >
-                    <Image 
-                        source={require("../assets/trip.png")} 
-                        style={[
-                            navbar.navIconImg, 
-                            { tintColor: currentRoute === "Trips" ? "red" : "grey" }
-                        ]}
-                    />
-                    <Text 
-                        style={[
-                            navbar.navLabel, 
-                            currentRoute === "Trips" && navbar.navLabelActive
-                        ]}
-                    >
-                        Trips
-                    </Text>
-                </TouchableOpacity>
+        <TouchableOpacity 
+          style={[tripstyle.navButton, currentRoute === "Trips" && tripstyle.navButtonActive]}
+          onPress={() => nav.navigate("Trips")}
+        >
+          <View style={tripstyle.navIconContainer}>
+            <Image 
+              source={require("../assets/location2.png")} 
+              style={[
+                tripstyle.navIcon, 
+                { tintColor: currentRoute === "Trips" ? "#dc2626" : "#9ca3af" }
+              ]}
+            />
+          </View>
+          <Text 
+            style={[
+              tripstyle.navLabel, 
+              { color: currentRoute === "Trips" ? "#dc2626" : "#9ca3af" }
+            ]}
+          >
+            Trips
+          </Text>
+        </TouchableOpacity>
 
-                <TouchableOpacity 
-                    style={[navbar.navButton, currentRoute === "Profile" && navbar.navButtonActive]}
-                    onPress={() => nav.navigate("Profile")}
-                >
-                    <Image 
-                        source={require("../assets/user.png")} 
-                        style={[
-                            navbar.navIconImg, 
-                            { tintColor: currentRoute === "Profile" ? "red" : "grey" }
-                        ]}
-                    />
-                    <Text 
-                        style={[
-                            navbar.navLabel, 
-                            currentRoute === "Profile" && navbar.navLabelActive
-                        ]}
-                    >
-                        Profile
-                    </Text>
-                </TouchableOpacity>
-            </View>
+        <TouchableOpacity 
+          style={[tripstyle.navButton, currentRoute === "Profile" && tripstyle.navButtonActive]}
+          onPress={() => nav.navigate("Profile")}
+        >
+          <View style={tripstyle.navIconContainer}>
+            <Image 
+              source={require("../assets/user.png")} 
+              style={[
+                tripstyle.navIcon, 
+                { tintColor: currentRoute === "Profile" ? "#dc2626" : "#9ca3af" }
+              ]}
+            />
+          </View>
+          <Text 
+            style={[
+              tripstyle.navLabel, 
+              { color: currentRoute === "Profile" ? "#dc2626" : "#9ca3af" }
+            ]}
+          >
+            Profile
+          </Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };

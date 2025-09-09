@@ -25,8 +25,10 @@ export const navbar = StyleSheet.create({
     minWidth: 60,
   },
   navButtonActive: {
-    backgroundColor: "#DBEAFE",
-    transform: [{ scale: 1.05 }],
+    backgroundColor: "rgba(220, 38, 38, 0.1)",
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
   },
   navIcon: {
     fontSize: 24,

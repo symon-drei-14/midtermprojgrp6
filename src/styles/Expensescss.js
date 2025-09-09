@@ -48,6 +48,33 @@ export const expensestyle = StyleSheet.create({
     letterSpacing: 0.5,
   },
 
+  statusMessage: {
+  backgroundColor: '#f8f9ff',
+  margin: 20,
+  padding: 24,
+  borderRadius: 16,
+  alignItems: 'center',
+  borderWidth: 1,
+  borderColor: '#e1e5f2',
+},
+statusMessageIcon: {
+  fontSize: 32,
+  marginBottom: 12,
+},
+statusMessageText: {
+  fontSize: 18,
+  fontWeight: '600',
+  color: '#4a5568',
+  marginBottom: 8,
+  textAlign: 'center',
+},
+statusMessageSubtext: {
+  fontSize: 14,
+  color: '#718096',
+  textAlign: 'center',
+  lineHeight: 20,
+},
+
   refreshButton: {
     width: 44,
     height: 44,

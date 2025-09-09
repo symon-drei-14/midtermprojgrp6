@@ -3,13 +3,11 @@ import { StyleSheet, Dimensions } from "react-native";
 const { width, height } = Dimensions.get('window');
 
 export const tripstyle = StyleSheet.create({
-  // Main Container
   mainContainer: {
     flex: 1,
     backgroundColor: "#F8FAFB",
   },
 
-  // Loading States
   loadingContainer: {
     flex: 1,
     backgroundColor: "#F8FAFB",
@@ -28,42 +26,50 @@ export const tripstyle = StyleSheet.create({
     fontWeight: '500',
   },
 
-  // Header Section
+  detailIcon: {
+    width: 16,
+    height: 16,
+    marginRight: 6,
+    resizeMode: 'contain',
+  },
+
   headerSection: {
     backgroundColor: '#7a0f0fff',
     paddingHorizontal: 24,
-    paddingTop: 25,
+    paddingTop: 50,
     paddingBottom: 25,
     borderBottomLeftRadius: 35,
     borderBottomRightRadius: 35,
-    shadowColor: '#2196F3',
+    shadowColor: '#7a0f0fff',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.3,
     shadowRadius: 16,
     elevation: 12,
-     marginBottom: 10,
-      flexDirection: 'row',
-  justifyContent: 'space-between',
-  alignItems: 'center',
+    marginBottom: 10,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
 
   headerTitle: {
     fontSize: 28,
     color: '#FFFFFF',
     fontWeight: '700',
-    marginBottom: 4 ,
+    marginBottom: 4,
   },
 
-  headerSubtitle: {
-    fontSize: 16,
-    color: 'rgba(255, 255, 255, 0.8)',
-    fontWeight: '400',
+  dateText: {
+    color: 'rgba(255, 255, 255, 0.9)',
+    fontSize: 12,
+    fontWeight: '500',
+    backgroundColor: 'rgba(0, 0, 0, 0.1)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
   },
 
-  // Scroll Container
   scrollContainer: {
     flex: 1,
- 
   },
 
   scrollContent: {
@@ -71,9 +77,8 @@ export const tripstyle = StyleSheet.create({
     paddingBottom: 100,
   },
 
-  // Section Containers
   sectionContainer: {
-    marginBottom: 24,
+    marginBottom: 5,
   },
 
   sectionHeader: {
@@ -93,71 +98,76 @@ export const tripstyle = StyleSheet.create({
   statusBadge: {
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 20,
-    alignSelf: 'flex-start', 
+    borderRadius: 15,
+    alignSelf: 'flex-start',
   },
 
   statusText: {
-    color: '#FFFFFF',
     fontSize: 12,
     fontWeight: '600',
     textTransform: 'uppercase',
   },
 
   countBadge: {
-    backgroundColor: '#E3F2FD',
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    backgroundColor: '#e68c8c85',
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
   },
 
   countText: {
-    color: '#2196F3',
-    fontSize: 14,
+    color: '#750606ff',
+    fontSize: 12,
     fontWeight: '700',
   },
 
-  // Active Trip Card
   activeCard: {
-    backgroundColor: '#ffffffff',
-    borderRadius: 20,
-    padding: 24,
-    shadowColor: '#0000006e',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 15,
+    padding: 20,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.12,
+    shadowOpacity: 0.1,
     shadowRadius: 12,
     elevation: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(244, 0, 0, 0)',
+    marginBottom: 20,
   },
 
   cardHeader: {
     marginBottom: 20,
   },
 
- destinationRow: {
-  flexDirection: 'row',
-  alignItems: 'center',
-  marginBottom: 10, 
+  destinationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
 
-},
+  locationIconContainer: {
+    marginRight: 8,
+  },
 
-  destinationIcon: {
-    fontSize: 18,
-    marginRight: 2,
-    fontWeight:'500',
+  walletIcon: {
+    width: 16,
+    height: 16,
+    tintColor: '#dc2626',
+  },
+
+  destinationLabel: {
+    fontSize: 12,
+    color: '#666666',
+    fontWeight: '400',
+    marginBottom: 2,
   },
 
   destinationText: {
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: 16,
+    fontWeight: '600',
     color: '#1A1A1A',
-    flex: 1,
   },
 
-  // Trip Details
   tripDetails: {
     marginBottom: 24,
   },
@@ -176,14 +186,6 @@ export const tripstyle = StyleSheet.create({
     color: '#757575',
     fontWeight: '500',
     flex: 1,
-    includeFontPadding: false,
-    flexShrink: 1,
-    adjustsFontSizeToFit: true,
-    minimumFontScale: 0.8, 
-    numberOfLines: 1 ,     
-     flexWrap: 'nowrap',
-      flexShrink: 1,
-    
   },
 
   detailValue: {
@@ -195,27 +197,26 @@ export const tripstyle = StyleSheet.create({
   },
 
   cashValue: {
-    fontSize: 16,
-    color: '#4CAF50',
+    fontSize: 14,
+    color: '#000000ff',
     fontWeight: '700',
     flex: 2,
     textAlign: 'right',
   },
 
-  // Action Buttons
   actionButtons: {
     flexDirection: 'row',
     gap: 12,
   },
 
   primaryButton: {
-    backgroundColor: '#2196F3',
+    backgroundColor: '#2563eb',
     flex: 1,
-    paddingVertical: 16,
-    borderRadius: 12,
-    
+    paddingVertical: 12,
+    borderRadius: 8,
+    marginBottom: 16,
     alignItems: 'center',
-    shadowColor: '#0372cdd6',
+    shadowColor: '#2563eb',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
@@ -224,17 +225,18 @@ export const tripstyle = StyleSheet.create({
 
   primaryButtonText: {
     color: '#FFFFFF',
-    fontSize: 14 ,
+    fontSize: 14,
     fontWeight: '600',
   },
 
   secondaryButton: {
-    backgroundColor: '#eda02bff',
+    backgroundColor: '#f97316',
     flex: 1,
-    paddingVertical: 16,
-    borderRadius: 12,
+    paddingVertical: 12,
+    borderRadius: 8,
+    marginBottom: 16,
     alignItems: 'center',
-    shadowColor: '#ff9900ec',
+    shadowColor: '#f97316',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
@@ -247,79 +249,112 @@ export const tripstyle = StyleSheet.create({
     fontWeight: '600',
   },
 
-  // Scheduled Trip Cards
-  scheduledCard: {
+  scheduledTripCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 12,
+    borderRadius: 8,
+    padding: 16,
+    marginBottom: 8,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
     borderWidth: 1,
-    borderColor: 'rgba(0, 0, 0, 0.05)',
+    borderColor: '#f3f4f6',
   },
 
-  scheduledDestination: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#1A1A1A',
+  scheduledTripRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+
+  scheduledTripInfo: {
     flex: 1,
   },
 
-  pendingBadge: {
-    backgroundColor: '#E3F2FD',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-    alignSelf: 'flex-start', 
-    marginTop:10
-  },
-
-  pendingText: {
-    color: '#2196F3',
-    fontSize: 12,
+  scheduledTripDestination: {
+    fontSize: 16,
     fontWeight: '600',
-    textTransform: 'uppercase',
+    color: '#1A1A1A',
+    marginBottom: 4,
   },
 
-  scheduledDetails: {
-    marginTop: 12,
-  },
-
-  scheduledLabel: {
-    fontSize: 14,
+  scheduledTripDate: {
+    fontSize: 12,
     color: '#757575',
-    fontWeight: '500',
+    fontWeight: '400',
   },
 
-  cashRow: {
+  scheduledTripStatus: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 8,
-    paddingTop: 8,
-    flexWrap: 'nowrap',
   },
 
-  cashAdvanceLabel: {
-    fontSize: 14,
-    color: '#757575',
+  scheduledStatusText: {
+    fontSize: 12,
+    color: '#0c3da7ff',
+    backgroundColor: '#6da5ee65',
     fontWeight: '500',
-    flexWrap: 'nowrap',
-
+    marginRight: 8,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 10,
+    overflow: 'hidden', 
+    flexDirection: "row",
+    alignItems: "center",
   },
 
-  cashAdvanceValue: {
+  arrowIcon: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: "#e0e7ff",
+    alignItems: "center",
+    justifyContent: "center",
+    marginLeft: 4,
+  },
+  arrowText: {
+    fontSize: 14,
+    color: "#2563eb",
+    marginLeft: 4,
+  },
+
+  tripDetailModal: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 24,
+    width: '90%',
+    maxHeight: '80%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.3,
+    shadowRadius: 24,
+    elevation: 20,
+  },
+
+  tripDetailContent: {
+    maxHeight: '70%',
+  },
+
+  closeButton: {
+    position: 'absolute',
+    right: 0,
+    top: -5,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: '#f3f4f6',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  closeButtonText: {
     fontSize: 16,
-    color: '#4CAF50',
-    fontWeight: '700',
-    flexWrap: 'nowrap',
-      flexShrink: 0, 
+    color: '#6b7280',
+    fontWeight: '600',
   },
 
-  // Empty States
   emptyCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
@@ -353,7 +388,6 @@ export const tripstyle = StyleSheet.create({
     lineHeight: 20,
   },
 
-  // Modal Styles
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.6)',
@@ -413,7 +447,7 @@ export const tripstyle = StyleSheet.create({
   },
 
   enRouteButton: {
-    backgroundColor: '#f3a531ff',
+    backgroundColor: '#f97316',
   },
 
   completedButton: {
@@ -421,7 +455,7 @@ export const tripstyle = StyleSheet.create({
   },
 
   noShowButton: {
-    backgroundColor: '#a92117ff',
+    backgroundColor: '#dc2626',
   },
 
   modalButtonIcon: {
@@ -438,216 +472,436 @@ export const tripstyle = StyleSheet.create({
   modalCancelButton: {
     paddingVertical: 16,
     alignItems: 'center',
-    backgroundColor: '#c6c1c1ff',
+    backgroundColor: '#6b7280',
     borderRadius: 12,
   },
 
   modalCancelText: {
-    color: '#ffffffff',
+    color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
   },
 
-  // Navigation
-  navButton: {
-    padding: 8,
-    borderRadius: 12,
+  checklistButton: {
+    backgroundColor: '#4CAF50',
+    padding: 12,
+    borderRadius: 8,
+    marginTop: 16,
+    alignSelf: 'center',
   },
-
-  // Legacy Styles (for compatibility)
-  container: {
-    flex: 1,
-    backgroundColor: "#F8FAFB",
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    justifyContent: "center",
-    alignItems: "center",
+  
+  checklistButtonText: {
+    color: 'white',
+    fontWeight: '600',
+    textAlign: 'center',
   },
-
-  title: {
-    fontSize: 22,
-    fontWeight: "bold",
-    marginBottom: 20,
-  },
-
-  tripCard: {
-    backgroundColor: "white",
-    padding: 20,
-    borderRadius: 15,
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    elevation: 4,
-    marginBottom: 20,
-  },
-
-  tripContainer: {
-    width: '100%',
-    backgroundColor: '#fff',
-    padding: 15,
-    borderRadius: 10,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 4,
-    elevation: 3,
-  },
-
-  label: {
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-
-  value: {
-    fontSize: 16,
-    color: '#333',
-  },
-
-  tripTitle: {
-    fontSize: 22,
-    fontWeight: "bold",
-    marginBottom: 10,
-  },
-
-  detailText: {
-    fontSize: 14,
-    color: "#444",
-    marginBottom: 5,
-  },
-
-  infoText: {
-    fontSize: 14,
-    color: "#444",
-    marginVertical: 5,
-  },
-
-  button: {
-    backgroundColor: '#007BFF',
-    padding: 10,
-    borderRadius: 5,
+  
+  checklistItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 10,
+    paddingVertical: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
   },
-
-  buttonContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 15,
-  },
-
-  updateButton: {
-    backgroundColor: "#C8F4C4",
-    padding: 12,
-    borderRadius: 10,
+  
+  checklistQuestion: {
+    fontSize: 16,
     flex: 1,
-    marginRight: 5,
-    alignItems: "center",
+    marginRight: 10,
+  },
+  
+  checklistInput: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 5,
+    padding: 10,
+    width: 100,
+    textAlign: 'center',
   },
 
-  expenseButton: {
-    backgroundColor: "#FCE9C9",
-    padding: 12,
-    borderRadius: 10,
-    flex: 1,
-    marginLeft: 5,
-    alignItems: "center",
+  checklistSubmittedButton: {
+    backgroundColor: '#2563eb',
+  },
+  
+  checklistSubmittedText: {
+    color: 'white',
   },
 
-  buttonText: {
-    fontSize: 14,
-    fontWeight: "bold",
-    color: "#444",
+  checklistDisabledButton: {
+    backgroundColor: '#ccc',
   },
-
-  futureTripsTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 10,
-    marginTop: 10,
-    textAlign: "center",
-  },
-
-  futureTripCard: {
-    backgroundColor: "white",
-    padding: 15,
-    borderRadius: 10,
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    elevation: 5,
-    marginBottom: 10,
+  
+  checklistDisabledText: {
+    color: '#666',
   },
 
   bottomNav: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    backgroundColor: "#EEE",
-    paddingVertical: 15,
-    borderRadius: 20,
-    position: "absolute",
+    position: 'absolute',
     bottom: 0,
-    width: "100%",
+    left: 0,
+    right: 0,
+    backgroundColor: '#FFFFFF',
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderTopWidth: 1,
+    borderTopColor: '#f3f4f6',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 10,
+  },
+
+  navButton: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+  },
+
+
+  navButtonActive: {
+    backgroundColor: "rgba(220, 38, 38, 0.1)",
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+
+
+  navIconContainer: {
+    marginBottom: 4,
+  },
+
+  navIcon: {
+    width: 24,
+    height: 24,
+    resizeMode: 'contain',
   },
 
   navLabel: {
-    fontSize: 14,
-    color: "#444",
+    fontSize: 12,
+    fontWeight: '500',
   },
 
-  dateText: {
-  color: 'rgba(255, 255, 255, 0.9)',
-  fontSize: 16,
-  fontWeight: '500',
-  backgroundColor: 'rgba(0, 0, 0, 0.1)',
-  paddingHorizontal: 10,
-  paddingVertical: 4,
-  borderRadius: 12,
+  detailIcon: {
+  width: 16,
+  height: 16,
+  marginRight: 6,
+  resizeMode: "contain",
 },
 
-checklistButton: {
-  backgroundColor: '#4CAF50',
-  padding: 10,
-  borderRadius: 5,
-  marginTop: 10,
-  alignSelf: 'center'
-},
-checklistButtonText: {
-  color: 'white',
-  fontWeight: 'bold'
-},
-checklistItem: {
-  flexDirection: 'row',
-  justifyContent: 'space-between',
-  alignItems: 'center',
-  paddingVertical: 15,
-  borderBottomWidth: 1,
-  borderBottomColor: '#eee'
-},
-checklistQuestion: {
-  fontSize: 16,
-  flex: 1,
-  marginRight: 10
-},
-checklistInput: {
-  borderWidth: 1,
-  borderColor: '#ddd',
-  borderRadius: 5,
-  padding: 10,
-  width: 100,
-  textAlign: 'center'
-},
 
-checklistSubmittedButton: {
-  backgroundColor: '#2196F3',
-},
-checklistSubmittedText: {
-  color: 'white',
-},
+  scheduledCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 0, 0, 0.05)',
+  },
 
-checklistDisabledButton: {
-  backgroundColor: '#ccc',
-},
-checklistDisabledText: {
-  color: '#666',
-},
+  scheduledDestination: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#1A1A1A',
+    flex: 1,
+  },
+
+  pendingBadge: {
+    backgroundColor: '#E3F2FD',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    alignSelf: 'flex-start',
+    marginTop: 10,
+  },
+
+  pendingText: {
+    color: '#2196F3',
+    fontSize: 12,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+  },
+
+  scheduledDetails: {
+    marginTop: 12,
+  },
+
+  scheduledLabel: {
+    fontSize: 14,
+    color: '#757575',
+    fontWeight: '500',
+  },
+
+  cashRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 8,
+    paddingTop: 8,
+  },
+
+  cashAdvanceLabel: {
+    fontSize: 14,
+    color: '#757575',
+    fontWeight: '500',
+  },
+
+  cashAdvanceValue: {
+    fontSize: 16,
+    color: '#4CAF50',
+    fontWeight: '700',
+    flexShrink: 0,
+  },
+
+  destinationHeader: {
+    marginBottom: 20,
+    paddingBottom: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+
+  destinationInfo: {
+    flex: 1,
+    marginLeft: 8,
+  },
+
+  locationIcon: {
+    width: 18,
+    height: 18,
+    tintColor: '#dc2626',
+  },
+
+  scheduledBadge: {
+    backgroundColor: '#E3F2FD',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    alignSelf: 'flex-start',
+  },
+
+  scheduledBadgeText: {
+    color: '#2196F3',
+    fontSize: 11,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+  },
 });
+
+export const TripDetail = {
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    marginTop: 60,
+  },
+  header: {
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 8,
+    alignItems: 'flex-end',
+  },
+  closeButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#f5f5f5',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  closeButtonText: {
+    fontSize: 20,
+    color: '#666',
+    fontWeight: '300',
+  },
+  scrollContent: {
+    paddingHorizontal: 20,
+    paddingBottom: 200,
+  },
+  destinationHeader: {
+    marginBottom: 24,
+    paddingBottom: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  destinationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  locationIcon: {
+    width: 20,
+    height: 20,
+    tintColor: '#dc2626',
+    marginRight: 12,
+  },
+  destinationLabel: {
+    fontSize: 14,
+    color: '#757575',
+    marginBottom: 4,
+  },
+  destinationText: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#1a1a1a',
+  },
+  scheduledBadge: {
+    backgroundColor: '#E3F2FD',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+    marginLeft: 'auto',
+  },
+  scheduledText: {
+    fontSize: 12,
+    color: '#2196F3',
+    fontWeight: '600',
+  },
+  timeGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 32,
+    gap: 12,
+  },
+  timeCard: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 8,
+    backgroundColor: '#f8f9fa',
+    borderRadius: 12,
+  },
+  timeIcon: {
+    width: 20,
+    height: 20,
+    marginBottom: 8,
+    tintColor: '#666',
+  },
+  timeLabel: {
+    fontSize: 12,
+    color: '#757575',
+    marginBottom: 4,
+    textAlign: 'center',
+  },
+  timeValue: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#1a1a1a',
+    textAlign: 'center',
+  },
+  detailsList: {
+    gap: 0,
+  },
+  detailItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  detailLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  detailIcon: {
+    width: 20,
+    height: 20,
+    marginRight: 12,
+    tintColor: '#666',
+  },
+  detailLabel: {
+    fontSize: 16,
+    color: '#1a1a1a',
+    fontWeight: '400',
+  },
+  detailValue: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1a1a1a',
+    textAlign: 'right',
+  },
+  detailCashValue: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#000000ff',
+    textAlign: 'right',
+  },
+  bottomActions: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: '#fff',
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 20,
+    borderTopWidth: 1,
+    borderTopColor: '#f0f0f0',
+    elevation: 6,
+  },
+  startButton: {
+    backgroundColor: '#dc2626',
+    paddingVertical: 16,
+    borderRadius: 12,
+    marginBottom: 12,
+  },
+  startButtonCompleted: {
+    backgroundColor: '#4CAF50',
+  },
+  startButtonDisabled: {
+    backgroundColor: '#ccc',
+  },
+  startButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  secondaryButtonsRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  editButton: {
+    flex: 1,
+    backgroundColor: '#f5f5f5',
+    paddingVertical: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#ddd',
+  },
+  editButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    textAlign: 'center',
+    color: '#1a1a1a',
+  },
+  cancelButton: {
+    flex: 1,
+    backgroundColor: '#fff',
+    paddingVertical: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#dc2626',
+  },
+  cancelButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    textAlign: 'center',
+    color: '#dc2626',
+  },
+};
