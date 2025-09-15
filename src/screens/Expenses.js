@@ -17,6 +17,7 @@ import {
 } from "react-native";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { launchImageLibrary } from 'react-native-image-picker';
 import { navbar } from "../styles/Navbar";
 import { expensestyle } from "../styles/Expensescss";
 import { useNavigationState } from "@react-navigation/native";
@@ -48,6 +49,10 @@ export default function Expenses({ navigation, route }) {
   const [isEnRoute, setIsEnRoute] = useState(false);
   const [expenseCategories, setExpenseCategories] = useState(["Gas", "Toll Gate", "Maintenance", "Food", "Parking", "Other"]);
   const [refreshing, setRefreshing] = useState(false);
+
+  const [receiptImage, setReceiptImage] = useState(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  
   const state = useNavigationState((state) => state);
   const currentRoute = state.routes[state.index].name;
   const tripId = route?.params?.tripId;
@@ -68,6 +73,82 @@ export default function Expenses({ navigation, route }) {
       initializeData();
     }, [tripId])
   );
+
+  useEffect(() => {
+    (async () => {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission needed', 'Sorry, we need camera roll permissions to upload receipt images.');
+      }
+    })();
+  }, []);
+
+  const pickImage = async () => {
+    const options = {
+      mediaType: 'photo',
+      includeBase64: true,
+      maxWidth: 800,
+      maxHeight: 800,
+      quality: 0.8,
+    };
+
+    launchImageLibrary(options, (response) => {
+      if (response.didCancel) {
+        console.log('User cancelled image picker');
+      } else if (response.errorCode) {
+        console.error('ImagePicker Error: ', response.errorMessage);
+        Alert.alert('Error', 'Failed to select image. Please try again.');
+      } else if (response.assets && response.assets.length > 0) {
+        const asset = response.assets[0];
+        setReceiptImage({
+          uri: asset.uri,
+          base64: asset.base64,
+          type: asset.type || 'image/jpeg',
+          name: `receipt_${Date.now()}.jpg`
+        });
+      }
+    });
+  };
+
+
+  const removeImage = () => {
+    setReceiptImage(null);
+  };
+
+  const uploadImage = async (imageData) => {
+    try {
+      setUploadingImage(true);
+      
+      const formData = new FormData();
+      formData.append('action', 'upload_receipt');
+      formData.append('image', {
+        uri: imageData.uri,
+        type: imageData.type,
+        name: imageData.name,
+      });
+
+      const response = await fetch(`${API_BASE_URL}/include/handlers/upload_handler.php`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+        body: formData,
+      });
+
+      const data = await response.json();
+      
+      if (data.success) {
+        return data.image_path;
+      } else {
+        throw new Error(data.message || 'Upload failed');
+      }
+    } catch (error) {
+      console.error('Image upload error:', error);
+      throw error;
+    } finally {
+      setUploadingImage(false);
+    }
+  };
 
   const getDriverInfo = async () => {
     try {
@@ -372,12 +453,31 @@ export default function Expenses({ navigation, route }) {
     try {
       setSubmitting(true);
       
+      let imagePath = null;
+
+      if (receiptImage) {
+        try {
+          imagePath = await uploadImage(receiptImage);
+        } catch (error) {
+          console.error('Image upload failed:', error);
+          Alert.alert(
+            'Image Upload Failed', 
+            'The expense will be saved without the receipt image. Continue?',
+            [
+              { text: 'Cancel', style: 'cancel', onPress: () => { setSubmitting(false); return; } },
+              { text: 'Continue', onPress: () => {} }
+            ]
+          );
+        }
+      }
+      
       const expenseData = {
         action: 'add_expense',
         trip_id: targetTripId,
         driver_id: parseInt(driverInfo.driver_id),
         expense_type: showCustomInput ? customCategory.trim() : expenseName,
-        amount: expenseAmountNum
+        amount: expenseAmountNum,
+        receipt_image: imagePath
       };
       
       console.log('Submitting expense data:', expenseData);
@@ -428,6 +528,7 @@ export default function Expenses({ navigation, route }) {
     setExpenseName("Gas");
     setExpenseAmountError("");
     setCustomCategoryError("");
+    setReceiptImage(null);
     setModalVisible(false);
   };
 
@@ -477,9 +578,14 @@ export default function Expenses({ navigation, route }) {
         </Text>
       </View>
       <View style={expensestyle.expenseDetails}>
-        <Text style={expensestyle.expenseText}>
-          {item.expense_type || item.expense_type_name || 'Unknown Expense'}
-        </Text>
+        <View style={expensestyle.expenseHeader}>
+          <Text style={expensestyle.expenseText}>
+            {item.expense_type || item.expense_type_name || 'Unknown Expense'}
+          </Text>
+          {item.receipt_image && (
+            <Text style={expensestyle.receiptIndicator}>📎</Text>
+          )}
+        </View>
         <Text style={expensestyle.expenseDate}>
           {item.formatted_date || new Date(item.created_at).toLocaleDateString()}
         </Text>
@@ -503,20 +609,17 @@ export default function Expenses({ navigation, route }) {
   <View style={expensestyle.container}>
     <StatusBar barStyle="light-content" backgroundColor="#667eea" />
 
-    {/* Header */}
     <View style={expensestyle.header}>
       <Text style={expensestyle.headerTitle}>Expenses</Text>
       <View style={expensestyle.headerContent}></View>
     </View>
 
-    {/* Scrollable content */}
     <ScrollView
       style={expensestyle.scrollView}
       showsVerticalScrollIndicator={false}
       refreshing={refreshing}
       onRefresh={handleRefresh}
     >
-      {/* Budget Section (only when trip is en route) */}
       {isEnRoute ? (
         <View style={expensestyle.newBalanceSection}>
           <View style={expensestyle.totalBudgetCard}>
@@ -627,14 +730,12 @@ export default function Expenses({ navigation, route }) {
       </View>
     </ScrollView>
 
-    {/* FAB (only when trip is en route) */}
     {isEnRoute && (
       <TouchableOpacity style={expensestyle.fab} onPress={handleOpenModal}>
         <Text style={expensestyle.fabIcon}>+</Text>
       </TouchableOpacity>
     )}
 
-    {/* Modal */}
     <Modal
       visible={modalVisible}
       animationType="slide"
@@ -658,7 +759,6 @@ export default function Expenses({ navigation, route }) {
               style={expensestyle.modalContent}
               showsVerticalScrollIndicator={false}
             >
-              {/* Balance Alert (only when trip is en route) */}
               {isEnRoute && (
                 <View style={expensestyle.balanceAlert}>
                   <Text style={expensestyle.balanceAlertIcon}>💳</Text>
@@ -668,7 +768,6 @@ export default function Expenses({ navigation, route }) {
                 </View>
               )}
 
-              {/* Amount Input */}
               <View style={expensestyle.inputGroup}>
                 <Text style={expensestyle.inputLabel}>Amount</Text>
                 <TextInput
@@ -689,7 +788,6 @@ export default function Expenses({ navigation, route }) {
                 )}
               </View>
 
-              {/* Quick Amounts */}
               <View style={expensestyle.quickAmountSection}>
                 <Text style={expensestyle.quickAmountLabel}>Quick amounts</Text>
                 <View style={expensestyle.quickAmountGrid}>
@@ -725,7 +823,6 @@ export default function Expenses({ navigation, route }) {
                 </View>
               </View>
 
-              {/* Category Dropdown */}
               <View style={expensestyle.inputGroup}>
                 <Text style={expensestyle.inputLabel}>Category</Text>
                 <View style={expensestyle.dropdownContainer}>
@@ -789,7 +886,6 @@ export default function Expenses({ navigation, route }) {
                 </View>
               </View>
 
-              {/* Custom Category */}
               {showCustomInput && (
                 <View style={expensestyle.inputGroup}>
                   <Text style={expensestyle.inputLabel}>Custom Category</Text>
@@ -812,15 +908,56 @@ export default function Expenses({ navigation, route }) {
                 </View>
               )}
 
-              {/* Buttons */}
+              <View style={expensestyle.inputGroup}>
+                <Text style={expensestyle.inputLabel}>Receipt</Text>
+                
+                {!receiptImage ? (
+                  <TouchableOpacity
+                    style={expensestyle.imageUploadButton}
+                    onPress={pickImage}
+                    disabled={uploadingImage}
+                  >
+                    <View style={expensestyle.imageUploadContent}>
+                      <Text style={expensestyle.imageUploadIcon}>📷</Text>
+                      <Text style={expensestyle.imageUploadText}>
+                        {uploadingImage ? 'Processing...' : 'Add Receipt Photo'}
+                      </Text>
+                      <Text style={expensestyle.imageUploadSubtext}>
+                        Tap to select from gallery
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                ) : (
+                  <View style={expensestyle.imagePreviewContainer}>
+                    <Image 
+                      source={{ uri: receiptImage.uri }} 
+                      style={expensestyle.imagePreview}
+                      resizeMode="cover"
+                    />
+                    <TouchableOpacity
+                      style={expensestyle.removeImageButton}
+                      onPress={removeImage}
+                    >
+                      <Text style={expensestyle.removeImageIcon}>✕</Text>
+                    </TouchableOpacity>
+                    <View style={expensestyle.imageInfo}>
+                      <Text style={expensestyle.imageInfoText}>Receipt attached</Text>
+                      <TouchableOpacity onPress={pickImage}>
+                        <Text style={expensestyle.changeImageText}>Change photo</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                )}
+              </View>
+
               <View style={expensestyle.buttonGroup}>
                 <TouchableOpacity
                   style={[
                     expensestyle.submitButton,
-                    submitting && expensestyle.buttonDisabled,
+                    (submitting || uploadingImage) && expensestyle.buttonDisabled,
                   ]}
                   onPress={addExpense}
-                  disabled={submitting}
+                  disabled={submitting || uploadingImage}
                 >
                   <Text style={expensestyle.submitButtonText}>
                     {submitting ? "Adding..." : "Add Expense"}
@@ -830,7 +967,7 @@ export default function Expenses({ navigation, route }) {
                 <TouchableOpacity
                   style={expensestyle.cancelButton}
                   onPress={resetForm}
-                  disabled={submitting}
+                  disabled={submitting || uploadingImage}
                 >
                   <Text style={expensestyle.cancelButtonText}>Cancel</Text>
                 </TouchableOpacity>
@@ -841,7 +978,6 @@ export default function Expenses({ navigation, route }) {
       </TouchableWithoutFeedback>
     </Modal>
 
-{/* Bottom Navigation */}
       <View style={tripstyle.bottomNav}>
         <TouchableOpacity 
           style={[tripstyle.navButton, currentRoute === "Dashboard" && tripstyle.navButtonActive]}

@@ -245,11 +245,23 @@ statusMessageSubtext: {
     flex: 1,
   },
 
+  expenseHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 4,
+  },
+
   expenseText: {
     fontSize: 16,
     fontWeight: "600",
     color: "#1e293b",
-    marginBottom: 4,
+    flex: 1,
+  },
+
+  receiptIndicator: {
+    fontSize: 14,
+    color: "#7a0f0fff",
+    marginLeft: 8,
   },
 
   expenseDate: {
@@ -559,6 +571,90 @@ statusMessageSubtext: {
 
   dropdownItemTextSelected: {
     color: "#0ea5e9",
+    fontWeight: "600",
+  },
+
+  // Image Upload Styles
+  imageUploadButton: {
+    backgroundColor: "#f8fafc",
+    borderWidth: 2,
+    borderColor: "#e2e8f0",
+    borderStyle: "dashed",
+    borderRadius: 12,
+    padding: 24,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  imageUploadContent: {
+    alignItems: "center",
+  },
+
+  imageUploadIcon: {
+    fontSize: 32,
+    marginBottom: 8,
+  },
+
+  imageUploadText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#374151",
+    marginBottom: 4,
+  },
+
+  imageUploadSubtext: {
+    fontSize: 14,
+    color: "#6b7280",
+  },
+
+  imagePreviewContainer: {
+    position: "relative",
+    borderRadius: 12,
+    overflow: "hidden",
+    backgroundColor: "#f9fafb",
+  },
+
+  imagePreview: {
+    width: "100%",
+    height: 200,
+    borderRadius: 12,
+  },
+
+  removeImageButton: {
+    position: "absolute",
+    top: 8,
+    right: 8,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: "rgba(0, 0, 0, 0.7)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  removeImageIcon: {
+    fontSize: 14,
+    color: "#ffffff",
+    fontWeight: "bold",
+  },
+
+  imageInfo: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: 12,
+    backgroundColor: "#f1f5f9",
+  },
+
+  imageInfoText: {
+    fontSize: 14,
+    color: "#374151",
+    fontWeight: "500",
+  },
+
+  changeImageText: {
+    fontSize: 14,
+    color: "#7a0f0fff",
     fontWeight: "600",
   },
 
