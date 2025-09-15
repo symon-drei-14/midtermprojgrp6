@@ -221,26 +221,6 @@ const isChecklistAvailable = (tripDate) => {
   return now >= threeHoursBefore && now <= oneHourBefore;
 };
 
-// Update the alert messages in the Start Trip button press handler
-if (now < threeHoursBefore) {
-  const formattedTime = threeHoursBefore.toLocaleTimeString('en-US', {
-    hour: '2-digit', minute: '2-digit', hour12: true
-  });
-  Alert.alert(
-    'Checklist Not Available Yet',
-    `Checklist will be available starting at ${formattedTime} (3 hours before the scheduled trip).`
-  );
-  return;
-}
-
-if (now > oneHourBefore) {
-  Alert.alert(
-    'Checklist Submission Closed',
-    'Checklist submission closed 1 hour before the scheduled trip time.'
-  );
-  return;
-}
-
 const resetChecklistData = () => {
   setChecklistData({
     noFatigue: false,
@@ -596,37 +576,38 @@ const submitChecklist = async () => {
                   selectedTrip?.hasChecklist && TripDetail.startButtonCompleted,
                   !isChecklistAvailable(selectedTrip?.date) && TripDetail.startButtonDisabled
                 ]}
-                onPress={() => {
-                  if (selectedTrip?.hasChecklist || !isChecklistAvailable(selectedTrip?.date)) return;
-                  const tripDate = new Date(selectedTrip.date);
-                  const now = new Date();
-                  const twoHoursBefore = new Date(tripDate.getTime() - 2 * 60 * 60 * 1000);
-                  const oneMinuteBefore = new Date(tripDate.getTime() - 1 * 60 * 1000);
+              onPress={() => {
+  if (selectedTrip?.hasChecklist || !isChecklistAvailable(selectedTrip?.date)) return;
+  
+  const tripDate = new Date(selectedTrip.date);
+  const now = new Date();
+  const threeHoursBefore = new Date(tripDate.getTime() - 3 * 60 * 60 * 1000);
+  const oneHourBefore = new Date(tripDate.getTime() - 1 * 60 * 60 * 1000);
 
-                  if (now < twoHoursBefore) {
-                    const formattedTime = twoHoursBefore.toLocaleTimeString('en-US', {
-                      hour: '2-digit', minute: '2-digit', hour12: true
-                    });
-                    Alert.alert(
-                      'Checklist Not Available Yet',
-                      `Checklist will be available starting at ${formattedTime} (2 hours before the scheduled trip).`
-                    );
-                    return;
-                  }
+  if (now < threeHoursBefore) {
+    const formattedTime = threeHoursBefore.toLocaleTimeString('en-US', {
+      hour: '2-digit', minute: '2-digit', hour12: true
+    });
+    Alert.alert(
+      'Checklist Not Available Yet',
+      `Checklist will be available starting at ${formattedTime} (3 hours before the scheduled trip).`
+    );
+    return;
+  }
 
-                  if (now > oneMinuteBefore) {
-                    Alert.alert(
-                      'Checklist Submission Closed',
-                      'Checklist submission closed 1 minute before the scheduled trip time.'
-                    );
-                    return;
-                  }
+  if (now > oneHourBefore) {
+    Alert.alert(
+      'Checklist Submission Closed',
+      'Checklist submission closed 1 hour before the scheduled trip time.'
+    );
+    return;
+  }
 
-                  setCurrentTripId(selectedTrip.trip_id);
-                  resetChecklistData();
-                  setTripDetailModalVisible(false);
-                  setChecklistModalVisible(true);
-                }}
+  setCurrentTripId(selectedTrip.trip_id);
+  resetChecklistData();
+  setTripDetailModalVisible(false);
+  setChecklistModalVisible(true);
+}}
               >
                 <Text style={TripDetail.startButtonText}>
                   {selectedTrip?.hasChecklist 
