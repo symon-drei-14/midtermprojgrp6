@@ -83,72 +83,130 @@ export default function Expenses({ navigation, route }) {
     })();
   }, []);
 
-  const pickImage = async () => {
-    const options = {
-      mediaType: 'photo',
-      includeBase64: true,
-      maxWidth: 800,
-      maxHeight: 800,
-      quality: 0.8,
-    };
-
-    launchImageLibrary(options, (response) => {
-      if (response.didCancel) {
-        console.log('User cancelled image picker');
-      } else if (response.errorCode) {
-        console.error('ImagePicker Error: ', response.errorMessage);
-        Alert.alert('Error', 'Failed to select image. Please try again.');
-      } else if (response.assets && response.assets.length > 0) {
-        const asset = response.assets[0];
-        setReceiptImage({
-          uri: asset.uri,
-          base64: asset.base64,
-          type: asset.type || 'image/jpeg',
-          name: `receipt_${Date.now()}.jpg`
-        });
-      }
-    });
+const pickImage = async () => {
+  const options = {
+    mediaType: 'photo',
+    includeBase64: false,
+    maxWidth: 1200,
+    maxHeight: 1200,
+    quality: 0.8,
+    allowsEditing: false,
+    aspect: [4, 3],
+    exif: false,
   };
+
+  launchImageLibrary(options, (response) => {
+    if (response.didCancel) {
+      console.log('User cancelled image picker');
+    } else if (response.errorCode) {
+      console.error('ImagePicker Error: ', response.errorCode, response.errorMessage);
+      Alert.alert('Error', 'Failed to select image. Please try again.');
+    } else if (response.assets && response.assets.length > 0) {
+      const asset = response.assets[0];
+
+      if (asset.fileSize > 5 * 1024 * 1024) {
+        Alert.alert('File Too Large', 'Please select an image smaller than 5MB.');
+        return;
+      }
+
+      setReceiptImage({
+        uri: asset.uri,
+        type: asset.type || 'image/jpeg',
+        name: asset.fileName || `receipt_${Date.now()}.jpg`,
+        fileSize: asset.fileSize
+      });
+      
+      console.log('Image selected:', {
+        uri: asset.uri,
+        type: asset.type,
+        name: asset.fileName,
+        size: asset.fileSize
+      });
+    }
+  });
+};
 
 
   const removeImage = () => {
     setReceiptImage(null);
   };
 
-  const uploadImage = async (imageData) => {
-    try {
-      setUploadingImage(true);
-      
-      const formData = new FormData();
-      formData.append('action', 'upload_receipt');
-      formData.append('image', {
-        uri: imageData.uri,
-        type: imageData.type,
-        name: imageData.name,
-      });
+const uploadImage = async (imageData) => {
+  try {
+    setUploadingImage(true);
+    console.log('Starting upload with data:', {
+      uri: imageData.uri,
+      type: imageData.type,
+      name: imageData.name
+    });
 
-      const response = await fetch(`${API_BASE_URL}/include/handlers/upload_handler.php`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-        body: formData,
-      });
+    const formData = new FormData();
+    formData.append('action', 'upload_receipt');
 
-      const data = await response.json();
-      
-      if (data.success) {
-        return data.image_path;
-      } else {
-        throw new Error(data.message || 'Upload failed');
-      }
-    } catch (error) {
-      console.error('Image upload error:', error);
-      throw error;
-    } finally {
-      setUploadingImage(false);
+    const fileObject = {
+      uri: imageData.uri,
+      type: imageData.type || 'image/jpeg',
+      name: imageData.name || `receipt_${Date.now()}.jpg`,
+    };
+
+    formData.append('image', fileObject);
+
+    console.log('Sending request to:', `${API_BASE_URL}/include/handlers/upload_handler.php`);
+    console.log('FormData contents:', formData);
+
+    const response = await fetch(`${API_BASE_URL}/include/handlers/upload_handler.php`, {
+      method: 'POST',
+      body: formData,
+      headers: {
+        'Content-Type': 'multipart/form-data',
+        'Accept': 'application/json',
+      },
+      timeout: 30000,
+    });
+
+    console.log('Response status:', response.status);
+    console.log('Response headers:', response.headers);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('HTTP Error Response:', errorText);
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
-  };
+
+    const responseText = await response.text();
+    console.log('Raw response:', responseText);
+
+    let data;
+    try {
+      data = JSON.parse(responseText);
+    } catch (parseError) {
+      console.error('JSON parse error:', parseError);
+      console.error('Response text:', responseText);
+      throw new Error(`Invalid JSON response from server: ${responseText.substring(0, 200)}...`);
+    }
+    
+    if (data.success) {
+      console.log('Upload successful:', data);
+      return data.image_path;
+    } else {
+      console.error('Upload failed:', data.message);
+      throw new Error(data.message || 'Upload failed');
+    }
+    
+  } catch (error) {
+    console.error('Image upload error:', error);
+
+    if (error.name === 'TypeError' && error.message.includes('Network request failed')) {
+      throw new Error('Network error: Please check your internet connection and server availability.');
+    } else if (error.message.includes('timeout')) {
+      throw new Error('Upload timeout: The file might be too large or connection is slow.');
+    } else {
+      throw new Error(error.message || 'Failed to upload image. Please try again.');
+    }
+  } finally {
+    setUploadingImage(false);
+  }
+};
 
   const getDriverInfo = async () => {
     try {
@@ -401,125 +459,172 @@ export default function Expenses({ navigation, route }) {
     }
   };
   
-  const addExpense = async () => {
-    let hasError = false; 
-    const expenseAmountNum = parseFloat(expenseAmount);
+const addExpense = async () => {
+  let hasError = false;
+  const expenseAmountNum = parseFloat(expenseAmount);
 
-    if (expenseAmount.trim().length === 0) {
-      setExpenseAmountError("Amount is required.");
-      hasError = true; 
-    } else if (isNaN(expenseAmountNum)) {
-      setExpenseAmountError("Please enter a valid number.");
-      hasError = true;
-    } else if (expenseAmountNum <= 0) {
-      setExpenseAmountError("Amount must be greater than 0.");
-      hasError = true;
-    } else {
-      setExpenseAmountError(""); 
-    }
+  if (expenseAmount.trim().length === 0) {
+    setExpenseAmountError("Amount is required.");
+    hasError = true;
+  } else if (isNaN(expenseAmountNum)) {
+    setExpenseAmountError("Please enter a valid number.");
+    hasError = true;
+  } else if (expenseAmountNum <= 0) {
+    setExpenseAmountError("Amount must be greater than 0.");
+    hasError = true;
+  } else {
+    setExpenseAmountError("");
+  }
 
-    if (showCustomInput && customCategory.trim().length === 0) {
-      setCustomCategoryError("Category is required.");
-      hasError = true; 
-    } else if (showCustomInput && customCategory.trim().length > 50) {
-      setCustomCategoryError("Category name too long (max 50 characters).");
-      hasError = true;
-    } else {
-      setCustomCategoryError(""); 
-    }
+  if (showCustomInput && customCategory.trim().length === 0) {
+    setCustomCategoryError("Category is required.");
+    hasError = true;
+  } else if (showCustomInput && customCategory.trim().length > 50) {
+    setCustomCategoryError("Category name too long (max 50 characters).");
+    hasError = true;
+  } else {
+    setCustomCategoryError("");
+  }
 
-    if (hasError) {
-      return;
-    }
+  if (hasError) return;
 
-    if (!driverInfo) {
-      Alert.alert('Error', 'Driver information not found');
-      return;
-    }
+  if (!driverInfo) {
+    Alert.alert('Error', 'Driver information not found');
+    return;
+  }
 
-    let targetTripId = null;
+  let targetTripId = null;
+  
+  if (tripId && !isNaN(parseInt(tripId)) && parseInt(tripId) > 0) {
+    targetTripId = parseInt(tripId);
+  } else if (currentTrip && currentTrip.trip_id && !isNaN(parseInt(currentTrip.trip_id)) && parseInt(currentTrip.trip_id) > 0) {
+    targetTripId = parseInt(currentTrip.trip_id);
+  }
+  
+  if (!targetTripId || targetTripId <= 0) {
+    Alert.alert('Error', 'No valid active trip found. Please ensure you have an active trip.');
+    return;
+  }
+
+  try {
+    setSubmitting(true);
     
-    if (tripId && !isNaN(parseInt(tripId)) && parseInt(tripId) > 0) {
-      targetTripId = parseInt(tripId);
-    } else if (currentTrip && currentTrip.trip_id && !isNaN(parseInt(currentTrip.trip_id)) && parseInt(currentTrip.trip_id) > 0) {
-      targetTripId = parseInt(currentTrip.trip_id);
-    }
-    
-    if (!targetTripId || targetTripId <= 0) {
-      Alert.alert('Error', 'No valid active trip found. Please ensure you have an active trip.');
-      return;
-    }
+    let imagePath = null;
 
-    try {
-      setSubmitting(true);
-      
-      let imagePath = null;
+    if (receiptImage) {
+      try {
+        console.log('Uploading receipt image...');
+        imagePath = await uploadImage(receiptImage);
+        console.log('Image uploaded successfully:', imagePath);
+      } catch (uploadError) {
+        console.error('Image upload failed:', uploadError);
 
-      if (receiptImage) {
-        try {
-          imagePath = await uploadImage(receiptImage);
-        } catch (error) {
-          console.error('Image upload failed:', error);
+        const continueWithoutImage = await new Promise((resolve) => {
           Alert.alert(
             'Image Upload Failed', 
-            'The expense will be saved without the receipt image. Continue?',
+            `Failed to upload receipt image: ${uploadError.message}\n\nWould you like to save the expense without the image?`,
             [
-              { text: 'Cancel', style: 'cancel', onPress: () => { setSubmitting(false); return; } },
-              { text: 'Continue', onPress: () => {} }
+              { 
+                text: 'Cancel', 
+                style: 'cancel', 
+                onPress: () => resolve(false) 
+              },
+              { 
+                text: 'Continue', 
+                onPress: () => resolve(true) 
+              }
             ]
           );
+        });
+        
+        if (!continueWithoutImage) {
+          setSubmitting(false);
+          return;
         }
       }
-      
-      const expenseData = {
-        action: 'add_expense',
-        trip_id: targetTripId,
-        driver_id: parseInt(driverInfo.driver_id),
-        expense_type: showCustomInput ? customCategory.trim() : expenseName,
-        amount: expenseAmountNum,
-        receipt_image: imagePath
-      };
-      
-      console.log('Submitting expense data:', expenseData);
-      
-      const response = await fetch(`${API_BASE_URL}/include/handlers/expense_handler.php`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(expenseData)
-      });
-
-      const responseText = await response.text();
-      console.log('Add expense response:', responseText);
-
-      let data;
-      try {
-        data = JSON.parse(responseText);
-      } catch (parseError) {
-        console.error('Parse error on add expense:', parseError);
-        throw new Error('Invalid response from server');
-      }
-      
-      if (data.success) {
-        Alert.alert('Success', 'Expense added successfully');
-        
-        resetForm();
-        
-        await fetchExpensesByTripId(targetTripId);
-        
-        await loadExpenseTypes();
-      } else {
-        console.error('Add expense failed:', data.message);
-        Alert.alert('Error', data.message || 'Failed to add expense');
-      }
-    } catch (error) {
-      console.error('Add expense error:', error.message);
-      Alert.alert('Error', 'Failed to add expense. Please check your connection and try again.');
-    } finally {
-      setSubmitting(false);
     }
-  };
+
+    const expenseData = {
+      action: 'add_expense',
+      trip_id: targetTripId,
+      driver_id: parseInt(driverInfo.driver_id),
+      expense_type: showCustomInput ? customCategory.trim() : expenseName,
+      amount: expenseAmountNum,
+      receipt_image: imagePath
+    };
+    
+    console.log('Submitting expense data:', expenseData);
+    
+    const response = await fetch(`${API_BASE_URL}/include/handlers/expense_handler.php`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify(expenseData)
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    const responseText = await response.text();
+    console.log('Add expense response:', responseText);
+
+    let data;
+    try {
+      data = JSON.parse(responseText);
+    } catch (parseError) {
+      console.error('Parse error on add expense:', parseError);
+      throw new Error('Invalid response from server');
+    }
+    
+    if (data.success) {
+      Alert.alert('Success', 'Expense added successfully');
+
+      resetForm();
+      await fetchExpensesByTripId(targetTripId);
+      await loadExpenseTypes();
+      
+    } else {
+      console.error('Add expense failed:', data.message);
+      Alert.alert('Error', data.message || 'Failed to add expense');
+    }
+    
+  } catch (error) {
+    console.error('Add expense error:', error.message);
+    Alert.alert('Error', `Failed to add expense: ${error.message}`);
+  } finally {
+    setSubmitting(false);
+  }
+};
+
+const testServerConnection = async () => {
+  try {
+    console.log('Testing connection to:', `${API_BASE_URL}/include/handlers/upload_handler.php`);
+    
+    const response = await fetch(`${API_BASE_URL}/include/handlers/upload_handler.php`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        action: 'test',
+        timestamp: Date.now()
+      })
+    });
+    
+    console.log('Test response status:', response.status);
+    const text = await response.text();
+    console.log('Test response body:', text);
+    
+    Alert.alert('Connection Test', `Status: ${response.status}\nResponse: ${text.substring(0, 200)}`);
+    
+  } catch (error) {
+    console.error('Connection test failed:', error);
+    Alert.alert('Connection Failed', error.message);
+  }
+};
 
   const resetForm = () => {
     setExpenseAmount("");
