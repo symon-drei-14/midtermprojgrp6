@@ -392,4 +392,14 @@ cancelButton: {
     toggleText: {
         fontSize: 20,
     },
+
+    inputContainer: {
+    marginBottom: 15,
+},
+inputLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 5,
+    color: '#333',
+},
 });
