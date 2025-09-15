@@ -52,7 +52,7 @@ function Dashboard({ route }) {
     const tripId = route.params?.tripId || `trip_${Date.now()}`;
     const truckId = route.params?.truckId || `truck_${Date.now()}`;
 
-    const API_BASE_URL = 'http://192.168.100.17/capstone-1-eb';
+    const API_BASE_URL = 'http://192.168.1.4/capstone-1-eb';
 
     const getDriverInfo = async () => {
         try {
