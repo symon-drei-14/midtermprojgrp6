@@ -144,7 +144,10 @@ const App = () => {
         <NavigationContainer>
           <Stack.Navigator
             initialRouteName={isAuthenticated ? "Dashboard" : "Login"}
-            screenOptions={{ headerShown: false }}
+            screenOptions={{ 
+              headerShown: false,
+              animation: "none"
+            }}
           >
             {isAuthenticated ? (
               <>

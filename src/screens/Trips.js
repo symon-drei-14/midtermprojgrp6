@@ -30,6 +30,7 @@ import dollarIcon from "../assets/dollar-symbol.png";
 import helperIcon from "../assets/helper.png";
 import signalIcon from "../assets/signal.png";
 import clockIcon from "../assets/clock.png";
+import TripSkeleton from '../components/TripSkeleton';
 
 const TripScreen = () => {
   const nav = useNavigation();
@@ -46,7 +47,7 @@ const TripScreen = () => {
   const [tripDetailModalVisible, setTripDetailModalVisible] = useState(false);
   const [selectedTrip, setSelectedTrip] = useState(null);
   
-  const API_BASE_URL = 'http://192.168.0.100/capstone-1-eb';
+  const API_BASE_URL = 'http://192.168.100.17/capstone-1-eb';
   
   const getDriverInfo = async () => {
     try {
@@ -283,14 +284,7 @@ const submitChecklist = async () => {
   };
 
   if (loading) {
-    return (
-      <View style={tripstyle.loadingContainer}>
-        <View style={tripstyle.loadingContent}>
-          <ActivityIndicator size="large" color="#2196F3" />
-          <Text style={tripstyle.loadingText}>Loading trips...</Text>
-        </View>
-      </View>
-    );
+    return <TripSkeleton />;
   }
 
   return (
@@ -400,7 +394,6 @@ const submitChecklist = async () => {
             </View>
           ) : (
             <View style={tripstyle.emptyCard}>
-              <Text style={tripstyle.emptyIcon}>🚛</Text>
               <Text style={tripstyle.emptyTitle}>No Active Trip</Text>
               <Text style={tripstyle.emptySubtitle}>You don't have any active trips at the moment</Text>
             </View>
@@ -419,7 +412,7 @@ const submitChecklist = async () => {
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={tripstyle.secondaryButton}
-                  onPress={() => nav.navigate('Expenses', { tripId: currentTrip.trip_id })}
+                  onPress={() => nav.navigate('Expenses')}
                 >
                   <Text style={tripstyle.secondaryButtonText}>Report Expense</Text>
                 </TouchableOpacity>

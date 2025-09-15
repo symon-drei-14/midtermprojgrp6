@@ -24,6 +24,7 @@ import homeIcon from "../assets/Home.png";
 import userIcon from "../assets/schedule.png";
 import profileicon from "../assets/profile2.png";
 import { tripstyle } from "../styles/Tripcss";
+import ExpensesSkeleton from "../components/ExpensesSkeleton"; 
 
 export default function Expenses({ navigation, route }) {
   const [expenses, setExpenses] = useState([]);
@@ -56,7 +57,7 @@ export default function Expenses({ navigation, route }) {
     loadExpenseTypes();
   };
 
-  const API_BASE_URL = 'http://192.168.0.100/capstone-1-eb';
+  const API_BASE_URL = 'http://192.168.100.17/capstone-1-eb';
 
   const quickAmounts = [100, 500, 1000, 5000];
 
@@ -495,12 +496,7 @@ export default function Expenses({ navigation, route }) {
   );
 
   if (loading) {
-    return (
-      <View style={expensestyle.loadingContainer}>
-        <ActivityIndicator size="large" color="#667eea" />
-        <Text style={expensestyle.loadingText}>Loading expenses...</Text>
-      </View>
-    );
+    return <ExpensesSkeleton />;
   }
 
   return (
@@ -509,6 +505,7 @@ export default function Expenses({ navigation, route }) {
 
     {/* Header */}
     <View style={expensestyle.header}>
+      <Text style={expensestyle.headerTitle}>Expenses</Text>
       <View style={expensestyle.headerContent}></View>
     </View>
 
