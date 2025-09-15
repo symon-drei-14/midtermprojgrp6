@@ -47,7 +47,7 @@ const TripScreen = () => {
   const [tripDetailModalVisible, setTripDetailModalVisible] = useState(false);
   const [selectedTrip, setSelectedTrip] = useState(null);
   
-  const API_BASE_URL = 'http://192.168.100.17/capstone-1-eb';
+  const API_BASE_URL = 'http://192.168.1.4/capstone-1-eb';
   
   const getDriverInfo = async () => {
     try {
@@ -212,14 +212,34 @@ const isChecklistAvailable = (tripDate) => {
   const deliveryDate = new Date(tripDate);
   const now = new Date();
 
-  // Calculate 2 hours before the trip
-  const twoHoursBefore = new Date(deliveryDate.getTime() - 2 * 60 * 60 * 1000);
+  // Calculate 3 hours before the trip (start of window)
+  const threeHoursBefore = new Date(deliveryDate.getTime() - 3 * 60 * 60 * 1000);
 
-  // Calculate 1 minute before the trip (cutoff time)
-  const oneMinuteBefore = new Date(deliveryDate.getTime() - 1 * 60 * 1000);
+  // Calculate 1 hour before the trip (end of window)
+  const oneHourBefore = new Date(deliveryDate.getTime() - 1 * 60 * 60 * 1000);
 
-  return now >= twoHoursBefore && now <= oneMinuteBefore;
+  return now >= threeHoursBefore && now <= oneHourBefore;
 };
+
+// Update the alert messages in the Start Trip button press handler
+if (now < threeHoursBefore) {
+  const formattedTime = threeHoursBefore.toLocaleTimeString('en-US', {
+    hour: '2-digit', minute: '2-digit', hour12: true
+  });
+  Alert.alert(
+    'Checklist Not Available Yet',
+    `Checklist will be available starting at ${formattedTime} (3 hours before the scheduled trip).`
+  );
+  return;
+}
+
+if (now > oneHourBefore) {
+  Alert.alert(
+    'Checklist Submission Closed',
+    'Checklist submission closed 1 hour before the scheduled trip time.'
+  );
+  return;
+}
 
 const resetChecklistData = () => {
   setChecklistData({
