@@ -1,31 +1,21 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { View, Text, TextInput, TouchableOpacity, Image, Modal, Alert, ScrollView } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import { loginstyle } from "../styles/Styles";
 import { profilestyle } from "../styles/Profilecss";
-import { navbar } from "../styles/Navbar";
-import userIcon2 from "../assets/profile.png";
-import homeIcon from "../assets/Home.png";
-import userIcon from "../assets/trip.png";
-import profileicon from "../assets/user.png";
-import profilepic from "../assets/prof.png";
+import { tripstyle } from "../styles/Tripcss";
 import LocationService from "../services/LocationService";
 import { useNavigationState } from "@react-navigation/native";
-import { tripstyle } from "../styles/Tripcss";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const Profile = ({ route }) => {
     const nav = useNavigation();
-    const [password, setPassword] = useState(""); 
-    const [password2, setPassword2] = useState(""); 
-    const [savedPassword, setSavedPassword] = useState("password123");
-    const [savedPassword2, setSavedPassword2] = useState("password123");
+    const [password, setPassword] = useState("");
+    const [password2, setPassword2] = useState("");
     const [passwordError, setPasswordError] = useState("");
     const [confirmPasswordError, setConfirmPasswordError] = useState("");
     const [modalVisible, setModalVisible] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
-    const [showNewPassword, setShowNewPassword] = useState(false); 
-    const [showPassword2, setShowPassword2] = useState(false);
+    const [showNewPassword, setShowNewPassword] = useState(false);
     const [showNewPassword2, setShowNewPassword2] = useState(false);
     const [isLoggingOut, setIsLoggingOut] = useState(false);
     const state = useNavigationState((state) => state);
@@ -44,6 +34,7 @@ const Profile = ({ route }) => {
         email: "",
         contact_no: ""
     });
+    const [isChangingPassword, setIsChangingPassword] = useState(false);
 
     const API_BASE_URL = 'http://192.168.1.4/capstone-1-eb';
 
@@ -87,7 +78,7 @@ const Profile = ({ route }) => {
 
         // Add listener to location service
         LocationService.addListener(handleLocationUpdate);
-        
+       
         // Get initial tracking status
         const status = LocationService.getTrackingStatus();
         setIsLocationTracking(status.isTracking);
@@ -141,7 +132,7 @@ const Profile = ({ route }) => {
     const validatePassword = (text) => {
         setPassword(text);
         setPasswordError(text.trim() === "" ? "Password is required." : text.length < 8 ? "Password must be at least 8 characters." : "");
-        
+       
         if (password2) {
             validateConfirmPassword(password2, text);
         }
@@ -149,7 +140,7 @@ const Profile = ({ route }) => {
 
     const validateConfirmPassword = (confirmText, newPassword = password) => {
         setPassword2(confirmText);
-        
+       
         if (!confirmText.trim()) {
             setConfirmPasswordError("Confirm password is required.");
         } else if (confirmText !== newPassword) {
@@ -159,7 +150,7 @@ const Profile = ({ route }) => {
         }
     };
 
-    const handleSavePassword = () => {
+    const handleSavePassword = async () => {
         if (!password.trim()) {
             setPasswordError("Password is required.");
             return;
@@ -168,7 +159,7 @@ const Profile = ({ route }) => {
             setPasswordError("Password must be at least 8 characters.");
             return;
         }
-        
+       
         if (!password2.trim()) {
             setConfirmPasswordError("Confirm password is required.");
             return;
@@ -177,11 +168,44 @@ const Profile = ({ route }) => {
             setConfirmPasswordError("Passwords do not match.");
             return;
         }
-        
-        setSavedPassword(password);
-        setSavedPassword2(password);
-        setModalVisible(false);
-        Alert.alert("Success", "Password updated successfully!");
+
+        setIsChangingPassword(true);
+        try {
+            const sessionData = await AsyncStorage.getItem('userSession');
+            if (!sessionData) {
+                throw new Error("No session data found");
+            }
+
+            const session = JSON.parse(sessionData);
+            const driverId = session.userId;
+
+            const response = await fetch(`${API_BASE_URL}/include/handlers/update_mobile_driver.php`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    driver_id: driverId,
+                    password: password
+                }),
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                setModalVisible(false);
+                setPassword("");
+                setPassword2("");
+                Alert.alert("Success", "Password updated successfully!");
+            } else {
+                Alert.alert("Error", data.message || "Failed to update password.");
+            }
+        } catch (error) {
+            console.error('Error updating password:', error);
+            Alert.alert("Error", "Failed to update password. Please try again.");
+        } finally {
+            setIsChangingPassword(false);
+        }
     };
 
     const openEditModal = () => {
@@ -231,7 +255,7 @@ const Profile = ({ route }) => {
             if (data.success) {
                 // Update local state
                 setDriverInfo(tempDriverInfo);
-                
+               
                 // Update AsyncStorage session
                 const updatedSession = {
                     ...session,
@@ -240,7 +264,7 @@ const Profile = ({ route }) => {
                     contact_no: tempDriverInfo.contact_no
                 };
                 await AsyncStorage.setItem('userSession', JSON.stringify(updatedSession));
-                
+               
                 setEditModalVisible(false);
                 Alert.alert("Success", "Profile updated successfully!");
             } else {
@@ -289,7 +313,7 @@ const Profile = ({ route }) => {
                     <View style={profilestyle.infoItem}>
                         <Text style={profilestyle.icon}>📍</Text>
                         <Text style={profilestyle.infoText}>Location Tracking: </Text>
-                        <Text style={[profilestyle.infoText, { 
+                        <Text style={[profilestyle.infoText, {
                             color: isLocationTracking ? '#4CAF50' : '#a11b1bff',
                             fontWeight: 'bold'
                         }]}>
@@ -299,32 +323,27 @@ const Profile = ({ route }) => {
 
                     <View style={profilestyle.passwordItem}>
                         <Text style={profilestyle.icon}>🔒</Text>
-                        <Text style={profilestyle.infoText}>Password: {showPassword ? savedPassword2 : "••••••••"}</Text>
-                        <TouchableOpacity 
-                            onPress={() => setShowPassword(!showPassword)} 
-                            style={profilestyle.toggleButton}>
-                            <Text style={profilestyle.toggleText}>{showPassword ? "🙈" : "👁️"}</Text>
-                        </TouchableOpacity>
+                        <Text style={profilestyle.infoText}>Password: ••••••••</Text>
                     </View>
                 </View>
 
                 {/* Action Buttons */}
                 <View style={profilestyle.actionButtons}>
-                    <TouchableOpacity 
+                    <TouchableOpacity
                         onPress={() => {
                             setPassword("");
                             setPassword2("");
                             setPasswordError("");
                             setConfirmPasswordError("");
                             setModalVisible(true);
-                        }} 
+                        }}
                         style={profilestyle.primaryButton}>
                         <Text style={profilestyle.buttonIcon}>🔑</Text>
                         <Text style={profilestyle.primaryButtonText}>Change Password</Text>
                     </TouchableOpacity>
-                    
-                    <TouchableOpacity 
-                        onPress={handleLogout} 
+                   
+                    <TouchableOpacity
+                        onPress={handleLogout}
                         style={[profilestyle.secondaryButton, isLoggingOut && { opacity: 0.6 }]}
                         disabled={isLoggingOut}>
                         <Text style={profilestyle.buttonIcon}>🚪</Text>
@@ -349,7 +368,7 @@ const Profile = ({ route }) => {
                                 value={password}
                                 onChangeText={validatePassword}
                             />
-                            
+                           
                             <TouchableOpacity onPress={() => setShowNewPassword(!showNewPassword)} style={profilestyle.toggleButton}>
                                 <Text style={profilestyle.toggleText}>{showNewPassword ? "Hide" : "Show"}</Text>
                             </TouchableOpacity>
@@ -364,18 +383,26 @@ const Profile = ({ route }) => {
                                 value={password2}
                                 onChangeText={(text) => validateConfirmPassword(text)}
                             />
-                            
+                           
                             <TouchableOpacity onPress={() => setShowNewPassword2(!showNewPassword2)} style={profilestyle.toggleButton}>
                                 <Text style={profilestyle.toggleText}>{showNewPassword2 ? "Hide" : "Show"}</Text>
                             </TouchableOpacity>
                         </View>
                         {confirmPasswordError ? <Text style={profilestyle.errorText}>{confirmPasswordError}</Text> : null}
-                        
+                       
                         <View style={profilestyle.modalButtonContainer}>
-                            <TouchableOpacity onPress={handleSavePassword} style={profilestyle.saveButton}>
-                                <Text style={profilestyle.buttonText}>Save</Text>
+                            <TouchableOpacity 
+                                onPress={handleSavePassword} 
+                                style={[profilestyle.saveButton, isChangingPassword && { opacity: 0.6 }]}
+                                disabled={isChangingPassword}>
+                                <Text style={profilestyle.buttonText}>
+                                    {isChangingPassword ? "Saving..." : "Save"}
+                                </Text>
                             </TouchableOpacity>
-                            <TouchableOpacity onPress={() => setModalVisible(false)} style={profilestyle.cancelButton}>
+                            <TouchableOpacity 
+                                onPress={() => setModalVisible(false)} 
+                                style={profilestyle.cancelButton}
+                                disabled={isChangingPassword}>
                                 <Text style={profilestyle.buttonText}>Cancel</Text>
                             </TouchableOpacity>
                         </View>
@@ -420,10 +447,10 @@ const Profile = ({ route }) => {
                                 onChangeText={(text) => setTempDriverInfo({...tempDriverInfo, contact_no: text})}
                             />
                         </View>
-                        
+                       
                         <View style={profilestyle.modalButtonContainer}>
-                            <TouchableOpacity 
-                                onPress={handleSaveProfile} 
+                            <TouchableOpacity
+                                onPress={handleSaveProfile}
                                 style={[profilestyle.saveButton, isUpdating && { opacity: 0.6 }]}
                                 disabled={isUpdating}
                             >
@@ -431,8 +458,8 @@ const Profile = ({ route }) => {
                                     {isUpdating ? "Saving..." : "Save Changes"}
                                 </Text>
                             </TouchableOpacity>
-                            <TouchableOpacity 
-                                onPress={() => setEditModalVisible(false)} 
+                            <TouchableOpacity
+                                onPress={() => setEditModalVisible(false)}
                                 style={profilestyle.cancelButton}
                             >
                                 <Text style={profilestyle.buttonText}>Cancel</Text>
@@ -444,22 +471,22 @@ const Profile = ({ route }) => {
 
             {/* Bottom Navigation */}
             <View style={tripstyle.bottomNav}>
-                <TouchableOpacity 
+                <TouchableOpacity
                     style={[tripstyle.navButton, currentRoute === "Dashboard" && tripstyle.navButtonActive]}
                     onPress={() => nav.navigate("Dashboard")}
                 >
                     <View style={tripstyle.navIconContainer}>
-                        <Image 
-                            source={require("../assets/Home.png")} 
+                        <Image
+                            source={require("../assets/Home.png")}
                             style={[
-                                tripstyle.navIcon, 
+                                tripstyle.navIcon,
                                 { tintColor: currentRoute === "Dashboard" ? "#dc2626" : "#9ca3af" }
                             ]}
                         />
                     </View>
-                    <Text 
+                    <Text
                         style={[
-                            tripstyle.navLabel, 
+                            tripstyle.navLabel,
                             { color: currentRoute === "Dashboard" ? "#dc2626" : "#9ca3af" }
                         ]}
                     >
@@ -467,22 +494,22 @@ const Profile = ({ route }) => {
                     </Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity 
+                <TouchableOpacity
                     style={[tripstyle.navButton, currentRoute === "Trips" && tripstyle.navButtonActive]}
                     onPress={() => nav.navigate("Trips")}
                 >
                     <View style={tripstyle.navIconContainer}>
-                        <Image 
-                            source={require("../assets/location2.png")} 
+                        <Image
+                            source={require("../assets/location2.png")}
                             style={[
-                                tripstyle.navIcon, 
+                                tripstyle.navIcon,
                                 { tintColor: currentRoute === "Trips" ? "#dc2626" : "#9ca3af" }
                             ]}
                         />
                     </View>
-                    <Text 
+                    <Text
                         style={[
-                            tripstyle.navLabel, 
+                            tripstyle.navLabel,
                             { color: currentRoute === "Trips" ? "#dc2626" : "#9ca3af" }
                         ]}
                     >
@@ -490,22 +517,22 @@ const Profile = ({ route }) => {
                     </Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity 
+                <TouchableOpacity
                     style={[tripstyle.navButton, currentRoute === "Profile" && tripstyle.navButtonActive]}
                     onPress={() => nav.navigate("Profile")}
                 >
                     <View style={tripstyle.navIconContainer}>
-                        <Image 
-                            source={require("../assets/user.png")} 
+                        <Image
+                            source={require("../assets/user.png")}
                             style={[
-                                tripstyle.navIcon, 
+                                tripstyle.navIcon,
                                 { tintColor: currentRoute === "Profile" ? "#dc2626" : "#9ca3af" }
                             ]}
                         />
                     </View>
-                    <Text 
+                    <Text
                         style={[
-                            tripstyle.navLabel, 
+                            tripstyle.navLabel,
                             { color: currentRoute === "Profile" ? "#dc2626" : "#9ca3af" }
                         ]}
                     >
