@@ -1,249 +1,17 @@
 import { StyleSheet } from "react-native";
 
 export const profilestyle = StyleSheet.create({
-    // container: {
-    //     flex: 1,
-    //     alignItems: "center",
-    //     justifyContent: "center",
-    //     padding: 20,
-    //     backgroundColor: "#f5f5f5", 
-  
-    //   },
-
-      
-    //   profileCard: {
-    //     backgroundColor: "#fff",
-    //     padding: 20,
-    //     borderRadius: 15,
-    //     shadowColor: "#000",
-    //     shadowOpacity: 0.1,
-    //     shadowOffset: { width: 0, height: 3 },
-    //     elevation: 5,
-    //     width: "100%",
-    //     maxWidth: 400,
-    //     alignItems: "center",
-    //     bottom:40,
-    //   },
-    //   avatarContainer: {
-    //     alignItems: "center",
-    //     marginBottom: 20,
-    //   },
-    //   avatar: {
-    //     width: 100,
-    //     height: 100,
-    //   },
-    //   name: {
-    //     fontSize: 22,
-    //     fontWeight: "bold",
-    //     color: "#333",
-    //     marginTop: 20,
-    //   },
-    //   role: {
-    //     fontSize: 16,
-    //     color: "#666",
-    //       marginTop: 10,
-    //   },
-    //   detailsContainer: {
-    //     width: "100%",
-    //     marginTop: 10,
-    //   },
-    //   detailTitle: {
-    //     fontSize: 18,
-    //     fontWeight: "bold",
-    //     color: "#444",
-    //     marginBottom: 8,
-    //     textAlign: "center",
-    //   },
-    //   driverInfo: {
-    //     fontSize: 14,
-    //     color: "#555",
-    //     marginTop: 20,
-    //   },
-    //   editButton: {
-    //     marginTop: 20,
-    //     backgroundColor: "#007bff",
-    //     paddingVertical: 12,
-    //     paddingHorizontal: 30,
-    //     borderRadius: 8,
-    //   },
-    //   buttonText: {
-    //     color: "#fff",
-    //     fontSize: 16,
-    //     fontWeight: "bold",
-    //   },
-    //   inputContainer: {
-    //     flexDirection: "row",
-    //     alignItems: "center",  
-    //     justifyContent: "space-between", 
-    //     // backgroundColor: "#f5f5f5", 
-    //     padding: 10,
-    //     borderRadius: 8,
-    //     marginBottom: 10,
-    // },
-    
-
-    
-    // input: {
-    //     flex: 1,
-    //     fontSize: 16,
-    //     color: "#333",
-    //     backgroundColor: "transparent", 
-    //     padding: 0, 
-    // },
- 
-    
-    // editButton: {
-    //     backgroundColor: "blue",
-    //     paddingVertical: 5,
-    //     paddingHorizontal: 10,
-    //     borderRadius: 5,
-    //     marginLeft: 10,
-    // },
-    
-    // editButtonText: {
-    //     color: "white",
-    //     fontWeight: "bold",
-    // },
-    
-  
-      
- 
- 
-  infoRow: {
-      padding: 12,
-      borderBottomWidth: 1,
-      borderBottomColor: "#EAEAEA",
-  },
-  buttonContainer: {
-      flexDirection: "row",
-      marginTop: 20,
-      justifyContent: "space-between",
-      textAlign: "center",
-  },
-  changePasswordButton: {
-      backgroundColor: "#FFEB99",
-      padding: 12,
-      borderRadius: 20,
-      marginRight: 10,
-      width: 140,
-      alignItems: "center",
-  },
-
-  messageButton: {
-    backgroundColor: "#7380ef",
-    padding: 12,
-    borderRadius: 20,
-    marginRight: 0,
-    width: 250,
-    alignItems: "center",
-},
-  logoutButton: {
-      backgroundColor: "#FFB6C1",
-      padding: 12,
-      borderRadius: 20,
-      width: 105,
-      alignItems: "center",
-  },
-  buttonText: {
-      fontWeight: "bold",
-      color: "#333",
-  },
-  buttonText2: {
-    fontWeight: "bold",
-    color: "#fff",
-},
-  inputContainer: {
-      marginTop: 15,
-      width: "90%",
-      alignItems: "center",
-  },
-  input: {
-      width: "100%",
-      padding: 10,
-      borderRadius: 10,
-      borderWidth: 1,
-      borderColor: "#ddd",
-      backgroundColor: "#fff",
-  },
-  errorText: {
-      color: "red",
-      fontSize: 12,
-      marginTop: 5,
-  },
-  saveButton: {
-      backgroundColor: "#4CAF50",
-      padding: 12,
-      borderRadius: 10,
-      marginTop: 10,
-      width: "100%",
-      alignItems: "center",
-  },
-
-  modalContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-},
-modalContent: {
-    width: "80%",
-    backgroundColor: "#fff",
-    padding: 20,
-    borderRadius: 10,
-    alignItems: "center",
-},
-modalTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 10,
-},
-input: {
-    width: "100%",
-    borderWidth: 1,
-    borderColor: "#ccc",
-    padding: 10,
-    borderRadius: 5,
-    marginBottom: 10,
-},
-errorText: {
-    color: "red",
-    fontSize: 12,
-},
-modalButtonContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    width: "100%",
-},
-saveButton: {
-    backgroundColor: "#2ecc71",
-    padding: 10,
-    borderRadius: 5,
-    flex: 1,
-    alignItems: "center",
-    marginRight: 5,
-},
-cancelButton: {
-    backgroundColor: "#e74c3c",
-    padding: 10,
-    borderRadius: 5,
-    flex: 1,
-    alignItems: "center",
-    marginLeft: 5,
-},
-
-
-
-      container: {
+    container: {
         flex: 1,
-        backgroundColor: "#F8FAFB",
+        backgroundColor: "#F8FAFB", // Light background for the main body
     },
     scrollContainer: {
-        paddingBottom: 80,
+        paddingBottom: 80, // Space for bottom navigation
     },
     profileHeader: {
         alignItems: 'center',
         paddingVertical: 20,
-        backgroundColor: '#7a0f0f',
+        backgroundColor: '#7a0f0f', // Dark red header background
         borderBottomLeftRadius: 30,
         borderBottomRightRadius: 30,
         marginBottom: 20,
@@ -257,24 +25,30 @@ cancelButton: {
         position: 'relative',
         marginBottom: 15,
     },
-    avatar: {
-        fontSize:90,
-        borderRadius: 60,
+    // NEW style for the <Image> component
+    avatarImage: {
+        width: 120,
+        height: 120,
+        borderRadius: 60, // Makes the image circular
         borderWidth: 3,
         borderColor: '#fff',
+    },
+    // Kept this for the emoji placeholder
+    avatar: {
+        fontSize: 90,
     },
     editIcon: {
         position: 'absolute',
         bottom: 5,
         right: 5,
-        backgroundColor: '#7a0f0f',
-        borderRadius: 15,
-        padding: 5,
+        backgroundColor: '#fff',
+        borderRadius: 20,
+        padding: 8,
         borderWidth: 2,
-        borderColor: '#fff',
+        borderColor: '#7a0f0f',
     },
     editIconText: {
-        fontSize: 20,
+        fontSize: 18,
     },
     name: {
         fontSize: 24,
@@ -306,10 +80,6 @@ cancelButton: {
         borderBottomColor: '#f0f0f0',
         paddingBottom: 10,
     },
-    icon: {
-        fontSize: 20,
-        marginRight: 10,
-    },
     cardTitle: {
         fontSize: 18,
         fontWeight: '700',
@@ -328,13 +98,15 @@ cancelButton: {
         alignItems: 'center',
         paddingVertical: 12,
     },
+    icon: {
+        fontSize: 20,
+        marginRight: 10,
+    },
     infoText: {
         fontSize: 16,
         color: '#333',
         marginLeft: 10,
-        
         flexWrap: 'nowrap',
-        
     },
     actionButtons: {
         flexDirection: 'row',
@@ -372,7 +144,7 @@ cancelButton: {
         elevation: 5,
     },
     buttonIcon: {
-        fontSize: 14,
+        fontSize: 20,
         marginRight: 8,
     },
     primaryButtonText: {
@@ -385,21 +157,113 @@ cancelButton: {
         fontWeight: '600',
         fontSize: 16,
     },
+
+    // --- MODAL STYLES ---
+    modalContainer: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+        backgroundColor: "rgba(0, 0, 0, 0.5)",
+    },
+    modalContent: {
+        width: "90%",
+        backgroundColor: "#fff",
+        padding: 20,
+        borderRadius: 10,
+        alignItems: "center",
+    },
+    modalTitle: {
+        fontSize: 22,
+        fontWeight: "bold",
+        marginBottom: 20,
+    },
+    input: {
+        width: "100%",
+        borderWidth: 1,
+        borderColor: "#ccc",
+        padding: 12,
+        borderRadius: 8,
+    },
+    inputContainer: {
+        width: '100%',
+        marginBottom: 15,
+    },
+    inputLabel: {
+        fontSize: 14,
+        fontWeight: '600',
+        marginBottom: 5,
+        color: '#333',
+    },
+    passwordInputContainer: {
+        flexDirection: "row",
+        alignItems: 'center',
+        width: '100%',
+        borderWidth: 1,
+        borderColor: '#ccc',
+        borderRadius: 8,
+        paddingLeft: 10,
+    },
+    errorText: {
+        color: "red",
+        fontSize: 12,
+        alignSelf: 'flex-start',
+        marginTop: 5,
+        marginBottom: 10,
+    },
+    modalButtonContainer: {
+        flexDirection: "row",
+        marginTop: 20,
+        width: "100%",
+    },
+    saveButton: {
+        backgroundColor: "#2ecc71", // Green for save
+        padding: 12,
+        borderRadius: 8,
+        flex: 1,
+        alignItems: "center",
+        marginRight: 5,
+    },
+    cancelButton: {
+        backgroundColor: "#e74c3c", // Red for cancel
+        padding: 12,
+        borderRadius: 8,
+        flex: 1,
+        alignItems: "center",
+        marginLeft: 5,
+    },
+    buttonText: {
+        color: 'white',
+        fontWeight: 'bold',
+        fontSize: 16,
+    },
     toggleButton: {
-        padding: 5,
-        marginLeft: 30,
+        padding: 10,
     },
     toggleText: {
-        fontSize: 20,
+        color: '#7a0f0f',
+        fontWeight: '600',
     },
 
-    inputContainer: {
-    marginBottom: 15,
-},
-inputLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    marginBottom: 5,
-    color: '#333',
-},
+    // --- NEW STYLES for Image Editing in Modal ---
+    modalAvatarPreview: {
+        width: 120,
+        height: 120,
+        borderRadius: 60,
+        marginBottom: 10,
+        backgroundColor: '#e5e7eb', // A light grey for the placeholder background
+    },
+    changePhotoButton: {
+        marginTop: 10,
+        backgroundColor: '#f3f4f6',
+        paddingVertical: 8,
+        paddingHorizontal: 15,
+        borderRadius: 20,
+        borderWidth: 1,
+        borderColor: '#d1d5db',
+    },
+    changePhotoButtonText: {
+        color: '#374151',
+        fontSize: 14,
+        fontWeight: '600',
+    },
 });
