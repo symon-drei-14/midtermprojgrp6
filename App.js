@@ -1,10 +1,10 @@
 import "react-native-gesture-handler";
 import React, { useState, useEffect } from "react";
 import { NavigationContainer } from "@react-navigation/native";
-import { createStackNavigator } from "@react-navigation/stack";
+import { createStackNavigator, CardStyleInterpolators } from "@react-navigation/stack";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { View, ActivityIndicator, Text } from "react-native";
+import { View, ActivityIndicator, Text, Platform } from "react-native";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import auth from '@react-native-firebase/auth';
 
@@ -114,29 +114,34 @@ const App = () => {
     }
   };
 
-  if (isLoading) {
-    return (
-      <SafeAreaProvider style={{ flex: 1 }}>
-        <GestureHandlerRootView style={{ flex: 1 }}>
-          <View style={{ 
-            flex: 1, 
-            justifyContent: 'center', 
-            alignItems: 'center', 
-            backgroundColor: '#FFFAF3' 
-          }}>
-            <ActivityIndicator size="large" color="#478843" />
-            <Text style={{ 
-              marginTop: 20, 
-              fontSize: 16, 
-              color: '#666' 
-            }}>
-              Loading...
-            </Text>
-          </View>
-        </GestureHandlerRootView>
-      </SafeAreaProvider>
-    );
-  }
+
+const screenOptions = {
+  headerShown: false,
+  cardStyleInterpolator: CardStyleInterpolators.forFadeFromBottomAndroid,
+  cardStyle: {
+    backgroundColor: '#FFFAF3',
+  },
+  transitionSpec: {
+    open: {
+      animation: 'timing',
+      config: {
+        duration: 400, 
+        useNativeDriver: true,
+      },
+    },
+    close: {
+      animation: 'timing',
+      config: {
+        duration: 20, 
+        useNativeDriver: true,
+      },
+    },
+  },
+  gestureEnabled: false,
+   detachPreviousScreen: true, 
+};
+
+
 
   return (
     <SafeAreaProvider style={{ flexGrow: 1 }}>
@@ -144,10 +149,7 @@ const App = () => {
         <NavigationContainer>
           <Stack.Navigator
             initialRouteName={isAuthenticated ? "Dashboard" : "Login"}
-            screenOptions={{ 
-              headerShown: false,
-              animation: "none"
-            }}
+            screenOptions={screenOptions} 
           >
             {isAuthenticated ? (
               <>
