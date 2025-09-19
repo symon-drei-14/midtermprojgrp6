@@ -138,7 +138,6 @@ const screenOptions = {
     },
   },
   gestureEnabled: false,
-   detachPreviousScreen: true, 
 };
 
 

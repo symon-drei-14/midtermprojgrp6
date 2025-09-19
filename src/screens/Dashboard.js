@@ -9,7 +9,7 @@ import {
     ScrollView,
     AppState,
 } from "react-native";
-import { useNavigation, useNavigationState } from "@react-navigation/native";
+import { useNavigation, useNavigationState, useFocusEffect } from "@react-navigation/native";
 import database from '@react-native-firebase/database';
 import auth from '@react-native-firebase/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -21,7 +21,7 @@ import DashboardSkeleton from "../components/DashboardSkeleton";
 function Dashboard({ route }) {
     const nav = useNavigation();
     const [isLoading, setIsLoading] = useState(true);
-
+    const [currentTime, setCurrentTime] = useState(new Date());
     const [locationEnabled, setLocationEnabled] = useState(false);
     const [sensorEnabled, setSensorEnabled] = useState(false);
     const [currentLocation, setCurrentLocation] = useState(null);
@@ -43,7 +43,7 @@ function Dashboard({ route }) {
         remainingBalance: 0
     });
     const [driverInfo, setDriverInfo] = useState(null);
-
+    const debounceRef = useRef(null);
     const currentUser = auth().currentUser;
     const userId = currentUser?.uid || route.params?.userId || 'guest_user';
     const email = currentUser?.email || route.params?.email || 'guest@example.com';
@@ -51,7 +51,11 @@ function Dashboard({ route }) {
     const tripId = route.params?.tripId || `trip_${Date.now()}`;
     const truckId = route.params?.truckId || `truck_${Date.now()}`;
 
-    const API_BASE_URL = 'http://192.168.1.4/capstone-1-eb';
+    const hasInitialized = useRef(false);
+    const listenerAttached = useRef(false);
+
+    const API_BASE_URL = 'http://192.168.100.17/capstone-1-eb';
+    
 
     const getDriverInfo = async () => {
         try {
@@ -111,6 +115,15 @@ function Dashboard({ route }) {
         return null;
     };
 
+    const debouncedSetLocationEnabled = useCallback((value) => {
+        if (debounceRef.current) {
+            clearTimeout(debounceRef.current);
+        }
+        
+        debounceRef.current = setTimeout(() => {
+            setLocationEnabled(value);
+        }, 100);
+    }, []);
 
     const fetchCurrentTrip = async (driver) => {
         try {
@@ -220,15 +233,27 @@ function Dashboard({ route }) {
         setIsBalanceVisible(!isBalanceVisible);
     };
 
+    const syncLocationState = useCallback(() => {
+        const status = LocationService.getTrackingStatus();
+        console.log('Syncing location state:', status.isTracking);
+        setLocationEnabled(status.isTracking);
+        setDriverStatus(status.isTracking ? 'online' : 'offline');
+    }, []);
+
     const handleLocationUpdate = useCallback((data) => {
+        console.log('Location update received:', data);
+        
         if (data.status) {
             setLocationUpdateStatus(data.status);
             if (data.status === 'Online' || data.status === 'Updated') {
                 setDriverStatus('online');
+                setLocationEnabled(true);
             } else if (data.status === 'Offline') {
                 setDriverStatus('offline');
+                setLocationEnabled(false);
             }
         }
+
         if (data.location) {
             setCurrentLocation(data.location);
             setHeading(data.location.heading || 0);
@@ -239,49 +264,89 @@ function Dashboard({ route }) {
         if (data.address) {
             setAddress(data.address);
         }
-        if (data.isTracking !== undefined) {
-            setLocationEnabled(data.isTracking);
-        }
         if (data.error) {
             setDatabaseStatus(`Error: ${data.error}`);
         } else if (data.status === 'Updated') {
             setDatabaseStatus("Location updated successfully");
         }
-    }, []);
 
-    const [currentTime, setCurrentTime] = useState(new Date());
-    useEffect(() => {
-        const timer = setInterval(() => {
-            setCurrentTime(new Date());
-        }, 60000);
-        return () => clearInterval(timer);
-    }, []);
+        if (data.activeTrip && !currentTrip) {
+            setCurrentTrip(data.activeTrip);
+            if (data.activeTrip.trip_id) {
+                fetchBalanceData(data.activeTrip.trip_id);
+            }
+        }
+    }, [currentTrip]);
 
-    useEffect(() => {
-        LocationService.addListener(handleLocationUpdate);
-
-        const status = LocationService.getTrackingStatus();
-        setLocationEnabled(status.isTracking);
-        setSensorEnabled(status.sensorEnabled);
-        setUpdateInterval(status.updateInterval);
-        setDriverStatus(status.driverStatus || 'offline');
-
-        if (status.isTracking) {
-            setLocationUpdateStatus('Online');
-            setDriverStatus('online');
-        } else {
-            setLocationUpdateStatus('Offline');
-            setDriverStatus('offline');
+   useEffect(() => {
+        if (hasInitialized.current) {
+            console.log('Dashboard: Already initialized, skipping');
+            return;
         }
 
-        initializeTripData();
-        const unsubscribeStatus = listenToDriverStatus();
+        console.log('Dashboard: First time initialization');
+        hasInitialized.current = true;
+
+        const initialize = async () => {
+            if (!listenerAttached.current) {
+                console.log('Dashboard: Adding LocationService listener');
+                LocationService.removeListener(handleLocationUpdate); // Remove any existing
+                LocationService.addListener(handleLocationUpdate);
+                listenerAttached.current = true;
+            }
+
+            const status = LocationService.getTrackingStatus();
+            setLocationEnabled(status.isTracking);
+            setDriverStatus(status.isTracking ? 'online' : 'offline');
+
+            await initializeTripData();
+            const unsubscribeStatus = listenToDriverStatus();
+
+            return unsubscribeStatus;
+        };
+
+        const unsubscribePromise = initialize();
 
         return () => {
-            LocationService.removeListener(handleLocationUpdate);
-            if (unsubscribeStatus) unsubscribeStatus();
+            unsubscribePromise.then(unsubscribe => {
+                if (unsubscribe) unsubscribe();
+            });
+
+            if (listenerAttached.current) {
+                console.log('Dashboard: Component unmounting, removing listener');
+                LocationService.removeListener(handleLocationUpdate);
+                listenerAttached.current = false;
+            }
+
         };
-    }, [handleLocationUpdate, listenToDriverStatus]);
+    }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      console.log('Dashboard focused - syncing UI state from service');
+
+      const status = LocationService.getTrackingStatus();
+
+      setLocationEnabled(status.isTracking);
+      setDriverStatus(status.isTracking ? 'online' : 'offline');
+
+      if (status.activeTrip && (!currentTrip || currentTrip.trip_id !== status.activeTrip.trip_id)) {
+        console.log('Syncing UI with the service\'s active trip');
+        setCurrentTrip(status.activeTrip);
+
+        if (status.activeTrip.trip_id) {
+          fetchBalanceData(status.activeTrip.trip_id);
+        }
+      }
+
+      else if (!status.activeTrip && currentTrip) {
+        console.log('Service has no trip, clearing UI');
+        setCurrentTrip(null);
+      }
+      
+    }, [currentTrip?.trip_id])
+  );
+
 
     useEffect(() => {
         if (userId !== 'guest_user') {
@@ -337,10 +402,16 @@ function Dashboard({ route }) {
         }
     }, [sensorEnabled, updateInterval, locationEnabled]);
 
-    const handleLocationToggle = async (value) => {
+ const handleLocationToggle = async (value) => {
+        console.log(`Location toggle requested: ${value}`);
+        
         if (value) {
-            if (!auth().currentUser && userId === 'guest_user') {
-                Alert.alert('Authentication Required', 'Please log in to track your location.');
+            const currentStatus = LocationService.getTrackingStatus();
+
+            if (currentStatus.isTracking) {
+                console.log('Service already tracking - updating UI only');
+                setLocationEnabled(true);
+                setDriverStatus('online');
                 return;
             }
 
@@ -351,20 +422,27 @@ function Dashboard({ route }) {
                     { text: "Cancel", style: "cancel" },
                     {
                         text: "Allow",
-                        onPress: () => {
-                            LocationService.startTracking(userId, updateInterval, sensorEnabled);
+                        onPress: async () => {
+                            console.log('Starting location tracking for first time');
+                            await LocationService.startTracking(userId, updateInterval, sensorEnabled);
                             setLocationEnabled(true);
                             setDriverStatus('online');
+                            setLocationUpdateStatus('Online');
                         }
                     }
                 ]
             );
         } else {
-            LocationService.stopTracking();
+            const currentStatus = LocationService.getTrackingStatus();
+            if (currentStatus.isTracking) {
+                LocationService.stopTracking();
+            }
             setLocationEnabled(false);
             setDriverStatus('offline');
+            setLocationUpdateStatus('Offline');
         }
     };
+
 
     if (isLoading) {
         return <DashboardSkeleton />;
