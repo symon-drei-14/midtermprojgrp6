@@ -725,6 +725,7 @@ const resetForm = () => {
   setExpenseAmountError("");
   setCustomCategoryError("");
   setReceiptImage(null);
+  setModalVisible(false); // It should CLOSE the modal, not open it.
 };
 
   const closeDropdown = () => {
@@ -941,19 +942,14 @@ const resetForm = () => {
   visible={modalVisible}
   animationType="slide"
   transparent={true}
-  onRequestClose={resetForm}
+  onRequestClose={resetForm} 
 >
   <KeyboardAvoidingView
     behavior={Platform.OS === "ios" ? "padding" : "height"}
     style={expensestyle.keyboardAvoidingView}
   >
-   
-    <TouchableWithoutFeedback onPress={() => {
-      Keyboard.dismiss();
-      closeDropdown(); 
-    }}>
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <View style={expensestyle.modalOverlay}>
-     
         <TouchableWithoutFeedback>
           <View style={expensestyle.modalContainer}>
             {/* ---- MODAL HEADER ---- */}
@@ -961,6 +957,7 @@ const resetForm = () => {
               <Text style={expensestyle.modalTitle}>
                 {editingExpense ? "Edit Expense" : "Add Expense"}
               </Text>
+             
               <TouchableOpacity
                 onPress={resetForm}
                 style={expensestyle.modalCloseButton}
@@ -1171,46 +1168,49 @@ const resetForm = () => {
                 )}
               </View>
 
-              {/* ---- ACTION BUTTONS ---- */}
-              <View style={expensestyle.buttonGroup}>
-                <TouchableOpacity
-                  style={[
-                    expensestyle.submitButton,
-                    (submitting || uploadingImage) && expensestyle.buttonDisabled,
-                  ]}
-                  onPress={editingExpense ? updateExpense : addExpense}
-                  disabled={submitting || uploadingImage}
-                >
-                  <Text style={expensestyle.submitButtonText}>
-                    {submitting
-                      ? "Saving..."
-                      : editingExpense
-                      ? "Update Expense"
-                      : "Add Expense"}
-                  </Text>
-                </TouchableOpacity>
+                    {/* ---- ACTION BUTTONS ---- */}
+                <View style={expensestyle.buttonGroup}>
+                    {/* ... your submit button ... */}
+                    <TouchableOpacity
+                      style={[
+                        expensestyle.submitButton,
+                        (submitting || uploadingImage) && expensestyle.buttonDisabled,
+                      ]}
+                      onPress={editingExpense ? updateExpense : addExpense}
+                      disabled={submitting || uploadingImage}
+                    >
+                      <Text style={expensestyle.submitButtonText}>
+                        {submitting
+                          ? "Saving..."
+                          : editingExpense
+                          ? "Update Expense"
+                          : "Add Expense"}
+                      </Text>
+                    </TouchableOpacity>
 
-                {editingExpense && (
-                  <TouchableOpacity
-                    style={[
-                      expensestyle.deleteButton,
-                      (submitting || uploadingImage) && expensestyle.buttonDisabled,
-                    ]}
-                    onPress={handleDeleteExpense}
-                    disabled={submitting || uploadingImage}
-                  >
-                    <Text style={expensestyle.deleteButtonText}>Delete Expense</Text>
-                  </TouchableOpacity>
-                )}
-
-                <TouchableOpacity
-                  style={expensestyle.cancelButton}
-                  onPress={resetForm}
-                  disabled={submitting || uploadingImage}
-                >
-                  <Text style={expensestyle.cancelButtonText}>Cancel</Text>
-                </TouchableOpacity>
-              </View>
+                    {/* ... your delete button (if editing) ... */}
+                    {editingExpense && (
+                      <TouchableOpacity
+                        style={[
+                          expensestyle.deleteButton,
+                          (submitting || uploadingImage) && expensestyle.buttonDisabled,
+                        ]}
+                        onPress={() => handleDeleteExpense(editingExpense)}
+                        disabled={submitting || uploadingImage}
+                      >
+                        <Text style={expensestyle.deleteButtonText}>Delete Expense</Text>
+                      </TouchableOpacity>
+                    )}
+                    
+                    {/* This button's onPress should also call resetForm */}
+                    <TouchableOpacity
+                      style={expensestyle.cancelButton}
+                      onPress={resetForm}
+                      disabled={submitting || uploadingImage}
+                    >
+                      <Text style={expensestyle.cancelButtonText}>Cancel</Text>
+                    </TouchableOpacity>
+                </View>
             </ScrollView>
           </View>
         </TouchableWithoutFeedback>
