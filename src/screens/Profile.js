@@ -24,13 +24,25 @@ const Profile = ({ route }) => {
     const [isLocationTracking, setIsLocationTracking] = useState(false);
     const [editModalVisible, setEditModalVisible] = useState(false);
     const [isUpdating, setIsUpdating] = useState(false);
+    const [oldPassword, setOldPassword] = useState("");
+const [oldPasswordError, setOldPasswordError] = useState("");
+const [showOldPassword, setShowOldPassword] = useState(false);
     
     const [driverInfo, setDriverInfo] = useState({
         name: "",
         email: "",
         contact_no: "",
-        driver_pic: null // Added to store base64 image string
+        driver_pic: null 
     });
+
+    const validateOldPassword = (text) => {
+    setOldPassword(text);
+    if (text.trim() === "") {
+        setOldPasswordError("Current password is required.");
+    } else {
+        setOldPasswordError("");
+    }
+};
     
     const [tempDriverInfo, setTempDriverInfo] = useState({
         name: "",
@@ -146,47 +158,53 @@ const Profile = ({ route }) => {
     };
 
     const handleSavePassword = async () => {
-        if (!password.trim() || password.length < 8 || password !== password2) {
-            validatePassword(password);
-            validateConfirmPassword(password2);
-            return;
+    // Re-run all validations on submit attempt
+    validateOldPassword(oldPassword);
+    validatePassword(password);
+    validateConfirmPassword(password2);
+
+    // Check for any validation errors before proceeding
+    if (!oldPassword.trim() || !password.trim() || password.length < 8 || password !== password2) {
+        return; // Stop if any validation fails
+    }
+
+    setIsChangingPassword(true);
+    try {
+        const sessionData = await AsyncStorage.getItem('userSession');
+        if (!sessionData) throw new Error("No session data found");
+
+        const session = JSON.parse(sessionData);
+        const driverId = session.userId;
+        
+        const formData = new FormData();
+        formData.append('driver_id', driverId);
+        formData.append('old_password', oldPassword); // Send the current password
+        formData.append('password', password);       // This is the new password
+
+        const response = await fetch(`${API_BASE_URL}/include/handlers/update_mobile_driver.php`, {
+            method: 'POST',
+            body: formData,
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            setModalVisible(false);
+            setOldPassword("");
+            setPassword("");
+            setPassword2("");
+            Alert.alert("Success", "Password updated successfully!");
+        } else {
+            // Display the specific error from the server (e.g., "Incorrect current password")
+            Alert.alert("Error", data.message || "Failed to update password.");
         }
-
-        setIsChangingPassword(true);
-        try {
-            const sessionData = await AsyncStorage.getItem('userSession');
-            if (!sessionData) throw new Error("No session data found");
-
-            const session = JSON.parse(sessionData);
-            const driverId = session.userId;
-            
-            // Use FormData for consistency with profile update
-            const formData = new FormData();
-            formData.append('driver_id', driverId);
-            formData.append('password', password);
-
-            const response = await fetch(`${API_BASE_URL}/include/handlers/update_mobile_driver.php`, {
-                method: 'POST',
-                body: formData,
-            });
-
-            const data = await response.json();
-
-            if (data.success) {
-                setModalVisible(false);
-                setPassword("");
-                setPassword2("");
-                Alert.alert("Success", "Password updated successfully!");
-            } else {
-                Alert.alert("Error", data.message || "Failed to update password.");
-            }
-        } catch (error) {
-            console.error('Error updating password:', error);
-            Alert.alert("Error", "Failed to update password. Please try again.");
-        } finally {
-            setIsChangingPassword(false);
-        }
-    };
+    } catch (error) {
+        console.error('Error updating password:', error);
+        Alert.alert("Error", "An unexpected error occurred. Please try again.");
+    } finally {
+        setIsChangingPassword(false);
+    }
+};
 
     const openEditModal = () => {
         setTempDriverInfo(driverInfo);
@@ -337,34 +355,74 @@ const Profile = ({ route }) => {
 
             {/* Password Change Modal */}
             <Modal visible={modalVisible} transparent animationType="slide">
-                <View style={profilestyle.modalContainer}>
-                    <View style={profilestyle.modalContent}>
-                        <Text style={profilestyle.modalTitle}>Change Password</Text>
-                        <View style={[profilestyle.passwordInputContainer, { flexDirection: "row", alignItems: "center" }]}>
-                            <TextInput style={[profilestyle.input, { flex: 1 }]} placeholder="Enter new password" secureTextEntry={!showNewPassword} value={password} onChangeText={validatePassword} />
-                            <TouchableOpacity onPress={() => setShowNewPassword(!showNewPassword)} style={profilestyle.toggleButton}>
-                                <Text style={profilestyle.toggleText}>{showNewPassword ? "Hide" : "Show"}</Text>
-                            </TouchableOpacity>
-                        </View>
-                        {passwordError ? <Text style={profilestyle.errorText}>{passwordError}</Text> : null}
-                        <View style={[profilestyle.passwordInputContainer, { flexDirection: "row", alignItems: "center" }]}>
-                            <TextInput style={[profilestyle.input, { flex: 1 }]} placeholder="Confirm Password" secureTextEntry={!showNewPassword2} value={password2} onChangeText={(text) => validateConfirmPassword(text)} />
-                            <TouchableOpacity onPress={() => setShowNewPassword2(!showNewPassword2)} style={profilestyle.toggleButton}>
-                                <Text style={profilestyle.toggleText}>{showNewPassword2 ? "Hide" : "Show"}</Text>
-                            </TouchableOpacity>
-                        </View>
-                        {confirmPasswordError ? <Text style={profilestyle.errorText}>{confirmPasswordError}</Text> : null}
-                        <View style={profilestyle.modalButtonContainer}>
-                            <TouchableOpacity onPress={handleSavePassword} style={[profilestyle.saveButton, isChangingPassword && { opacity: 0.6 }]} disabled={isChangingPassword}>
-                                <Text style={profilestyle.buttonText}>{isChangingPassword ? "Saving..." : "Save"}</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity onPress={() => setModalVisible(false)} style={profilestyle.cancelButton} disabled={isChangingPassword}>
-                                <Text style={profilestyle.buttonText}>Cancel</Text>
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-                </View>
-            </Modal>
+    <View style={profilestyle.modalContainer}>
+        <View style={profilestyle.modalContent}>
+            <Text style={profilestyle.modalTitle}>Change Password</Text>
+            
+            {/* Current Password Input */}
+            <View style={[profilestyle.passwordInputContainer, { flexDirection: "row", alignItems: "center" }]}>
+                <TextInput 
+                    style={[profilestyle.input, { flex: 1 }]} 
+                    placeholder="Enter current password" 
+                    secureTextEntry={!showOldPassword} 
+                    value={oldPassword} 
+                    onChangeText={validateOldPassword} 
+                />
+                <TouchableOpacity onPress={() => setShowOldPassword(!showOldPassword)} style={profilestyle.toggleButton}>
+                    <Text style={profilestyle.toggleText}>{showOldPassword ? "Hide" : "Show"}</Text>
+                </TouchableOpacity>
+            </View>
+            {oldPasswordError ? <Text style={profilestyle.errorText}>{oldPasswordError}</Text> : null}
+
+            {/* New Password Input */}
+            <View style={[profilestyle.passwordInputContainer, { flexDirection: "row", alignItems: "center" }]}>
+                <TextInput 
+                    style={[profilestyle.input, { flex: 1 }]} 
+                    placeholder="Enter new password" 
+                    secureTextEntry={!showNewPassword} 
+                    value={password} 
+                    onChangeText={validatePassword} 
+                />
+                <TouchableOpacity onPress={() => setShowNewPassword(!showNewPassword)} style={profilestyle.toggleButton}>
+                    <Text style={profilestyle.toggleText}>{showNewPassword ? "Hide" : "Show"}</Text>
+                </TouchableOpacity>
+            </View>
+            {passwordError ? <Text style={profilestyle.errorText}>{passwordError}</Text> : null}
+            
+            {/* Confirm New Password Input */}
+            <View style={[profilestyle.passwordInputContainer, { flexDirection: "row", alignItems: "center" }]}>
+                <TextInput 
+                    style={[profilestyle.input, { flex: 1 }]} 
+                    placeholder="Confirm New Password" 
+                    secureTextEntry={!showNewPassword2} 
+                    value={password2} 
+                    onChangeText={(text) => validateConfirmPassword(text)} 
+                />
+                <TouchableOpacity onPress={() => setShowNewPassword2(!showNewPassword2)} style={profilestyle.toggleButton}>
+                    <Text style={profilestyle.toggleText}>{showNewPassword2 ? "Hide" : "Show"}</Text>
+                </TouchableOpacity>
+            </View>
+            {confirmPasswordError ? <Text style={profilestyle.errorText}>{confirmPasswordError}</Text> : null}
+            
+            <View style={profilestyle.modalButtonContainer}>
+                <TouchableOpacity 
+                    onPress={handleSavePassword} 
+                    style={[profilestyle.saveButton, isChangingPassword && { opacity: 0.6 }]} 
+                    disabled={isChangingPassword}
+                >
+                    <Text style={profilestyle.buttonText}>{isChangingPassword ? "Saving..." : "Save"}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                    onPress={() => setModalVisible(false)} 
+                    style={profilestyle.cancelButton} 
+                    disabled={isChangingPassword}
+                >
+                    <Text style={profilestyle.buttonText}>Cancel</Text>
+                </TouchableOpacity>
+            </View>
+        </View>
+    </View>
+</Modal>
 
             {/* Edit Profile Modal */}
             <Modal visible={editModalVisible} transparent animationType="slide">
