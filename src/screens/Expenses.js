@@ -63,10 +63,9 @@ export default function Expenses({ navigation, route }) {
   const currentRoute = state.routes[state.index].name;
   const tripId = route?.params?.tripId;
 
- const handleOpenModal = () => {
-  resetForm(); 
-  setEditingExpense(null); 
-  setModalVisible(true);
+const handleOpenModal = () => {
+  resetForm(); // Clear all previous data
+  setModalVisible(true); // Now, open the modal
   loadExpenseTypes();
 };
 
@@ -475,139 +474,80 @@ const handleViewReceipt = (uri) => {
   };
   
 const addExpense = async () => {
+  // --- Validation ---
   let hasError = false;
   const expenseAmountNum = parseFloat(expenseAmount);
-
-  if (expenseAmount.trim().length === 0) {
-    setExpenseAmountError("Amount is required.");
-    hasError = true;
-  } else if (isNaN(expenseAmountNum)) {
-    setExpenseAmountError("Please enter a valid number.");
-    hasError = true;
-  } else if (expenseAmountNum <= 0) {
-    setExpenseAmountError("Amount must be greater than 0.");
+  if (!expenseAmount || isNaN(expenseAmountNum) || expenseAmountNum <= 0) {
+    setExpenseAmountError("A valid amount is required.");
     hasError = true;
   } else {
     setExpenseAmountError("");
   }
-
-  if (showCustomInput && customCategory.trim().length === 0) {
+  if (showCustomInput && !customCategory.trim()) {
     setCustomCategoryError("Category is required.");
-    hasError = true;
-  } else if (showCustomInput && customCategory.trim().length > 50) {
-    setCustomCategoryError("Category name too long (max 50 characters).");
     hasError = true;
   } else {
     setCustomCategoryError("");
   }
-
   if (hasError) return;
 
-  if (!driverInfo) {
-    Alert.alert('Error', 'Driver information not found');
+  // --- Data Preparation ---
+  if (!driverInfo || !driverInfo.driver_id || parseInt(driverInfo.driver_id, 10) <= 0) {
+    Alert.alert('Error', 'Driver information is invalid. Please try logging out and back in.');
     return;
   }
 
-  let targetTripId = null;
-  
-  if (tripId && !isNaN(parseInt(tripId)) && parseInt(tripId) > 0) {
-    targetTripId = parseInt(tripId);
-  } else if (currentTrip && currentTrip.trip_id && !isNaN(parseInt(currentTrip.trip_id)) && parseInt(currentTrip.trip_id) > 0) {
-    targetTripId = parseInt(currentTrip.trip_id);
+  // This logic now correctly and reliably uses the active trip's ID.
+  if (!currentTrip || !currentTrip.trip_id) {
+    Alert.alert('Error', 'Could not find an active trip. The trip may have recently ended.');
+    return;
   }
   
-  if (!targetTripId || targetTripId <= 0) {
-    Alert.alert('Error', 'No valid active trip found. Please ensure you have an active trip.');
+  const targetTripId = parseInt(currentTrip.trip_id, 10);
+
+  // Final check to ensure the ID is a valid number
+  if (isNaN(targetTripId) || targetTripId <= 0) {
+    Alert.alert('Error', 'The active trip has an invalid ID. Please contact support.');
     return;
   }
 
+  setSubmitting(true);
   try {
-    setSubmitting(true);
-    
     let imagePath = null;
-
-    if (receiptImage) {
-      try {
-        console.log('Uploading receipt image...');
-        imagePath = await uploadImage(receiptImage);
-        console.log('Image uploaded successfully:', imagePath);
-      } catch (uploadError) {
-        console.error('Image upload failed:', uploadError);
-
-        const continueWithoutImage = await new Promise((resolve) => {
-          Alert.alert(
-            'Image Upload Failed', 
-            `Failed to upload receipt image: ${uploadError.message}\n\nWould you like to save the expense without the image?`,
-            [
-              { 
-                text: 'Cancel', 
-                style: 'cancel', 
-                onPress: () => resolve(false) 
-              },
-              { 
-                text: 'Continue', 
-                onPress: () => resolve(true) 
-              }
-            ]
-          );
-        });
-        
-        if (!continueWithoutImage) {
-          setSubmitting(false);
-          return;
-        }
-      }
+    if (receiptImage && receiptImage.uri && !receiptImage.uri.startsWith('http')) {
+      imagePath = await uploadImage(receiptImage);
     }
 
     const expenseData = {
       action: 'add_expense',
       trip_id: targetTripId,
-      driver_id: parseInt(driverInfo.driver_id),
+      driver_id: parseInt(driverInfo.driver_id, 10),
       expense_type: showCustomInput ? customCategory.trim() : expenseName,
       amount: expenseAmountNum,
-      receipt_image: imagePath
+      receipt_image: imagePath,
     };
-    
-    console.log('Submitting expense data:', expenseData);
     
     const response = await fetch(`${API_BASE_URL}/include/handlers/expense_handler.php`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      },
-      body: JSON.stringify(expenseData)
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(expenseData),
     });
 
+    const resultText = await response.text();
     if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        throw new Error(`Server Error: ${resultText}`);
+    }
+    const result = JSON.parse(resultText);
+
+    if (!result.success) {
+      throw new Error(result.message || 'The server returned an error.');
     }
 
-    const responseText = await response.text();
-    console.log('Add expense response:', responseText);
+    Alert.alert('Success', 'Expense added successfully!');
+    setModalVisible(false);
+    await initializeData();
 
-    let data;
-    try {
-      data = JSON.parse(responseText);
-    } catch (parseError) {
-      console.error('Parse error on add expense:', parseError);
-      throw new Error('Invalid response from server');
-    }
-    
-    if (data.success) {
-      Alert.alert('Success', 'Expense added successfully');
-
-      resetForm();
-      await fetchExpensesByTripId(targetTripId);
-      await loadExpenseTypes();
-      
-    } else {
-      console.error('Add expense failed:', data.message);
-      Alert.alert('Error', data.message || 'Failed to add expense');
-    }
-    
   } catch (error) {
-    console.error('Add expense error:', error.message);
     Alert.alert('Error', `Failed to add expense: ${error.message}`);
   } finally {
     setSubmitting(false);
@@ -773,7 +713,8 @@ const testServerConnection = async () => {
   }
 };
 
-  const resetForm = () => {
+const resetForm = () => {
+  setEditingExpense(null);
   setExpenseAmount("");
   setCustomCategory("");
   setShowCustomInput(false);
@@ -781,8 +722,6 @@ const testServerConnection = async () => {
   setExpenseAmountError("");
   setCustomCategoryError("");
   setReceiptImage(null);
-  setModalVisible(false);
-  setEditingExpense(null); // Make sure to clear the editing state
 };
 
   const closeDropdown = () => {
