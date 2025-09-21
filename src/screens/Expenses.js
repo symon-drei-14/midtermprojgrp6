@@ -13,7 +13,10 @@ import {
   ActivityIndicator,
   Alert,
   StatusBar,
-  Animated
+  Animated,
+  KeyboardAvoidingView,
+  Platform,
+  Keyboard
 } from "react-native";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -52,6 +55,9 @@ export default function Expenses({ navigation, route }) {
 
   const [receiptImage, setReceiptImage] = useState(null);
   const [uploadingImage, setUploadingImage] = useState(false);
+ 
+  const [receiptModalVisible, setReceiptModalVisible] = useState(false);
+  const [viewingReceiptUri, setViewingReceiptUri] = useState(null);
   
   const state = useNavigationState((state) => state);
   const currentRoute = state.routes[state.index].name;
@@ -62,7 +68,7 @@ export default function Expenses({ navigation, route }) {
     loadExpenseTypes();
   };
 
-  const API_BASE_URL = 'http://192.168.100.17/capstone-1-eb';
+  const API_BASE_URL = 'http://192.168.1.7/capstone-1-eb';
 
   const quickAmounts = [100, 500, 1000, 5000];
 
@@ -207,6 +213,13 @@ const uploadImage = async (imageData) => {
     setUploadingImage(false);
   }
 };
+
+const handleViewReceipt = (uri) => {
+    if (uri) {
+      setViewingReceiptUri(uri);
+      setReceiptModalVisible(true);
+    }
+  };
 
   const getDriverInfo = async () => {
     try {
@@ -672,39 +685,47 @@ const testServerConnection = async () => {
     return Math.max(100 - getSpendingPercentage(), 0);
   };
 
-  const renderExpenseItem = ({ item, index }) => (
-    <View style={[expensestyle.expenseItem, { 
-      transform: [{ translateY: index * 2 }], 
-      opacity: 1 - (index * 0.02)
-    }]}>
-      <View style={expensestyle.expenseIconContainer}>
-        <Text style={expensestyle.expenseIcon}>
-          {getCategoryIcon(item.expense_type || item.expense_type_name)}
-        </Text>
-      </View>
-      <View style={expensestyle.expenseDetails}>
-        <View style={expensestyle.expenseHeader}>
-          <Text style={expensestyle.expenseText}>
-            {item.expense_type || item.expense_type_name || 'Unknown Expense'}
+ const renderExpenseItem = ({ item, index }) => {
+    // Construct the full URL for the receipt image from the server
+    const fullImageUrl = item.receipt_image ? `${API_BASE_URL}/${item.receipt_image}` : null;
+  
+    return (
+      <TouchableOpacity
+        onPress={() => handleViewReceipt(fullImageUrl)}
+        disabled={!item.receipt_image}
+        style={[expensestyle.expenseItem, { 
+          transform: [{ translateY: index * 2 }], 
+          opacity: 1 - (index * 0.02)
+        }]}>
+        <View style={expensestyle.expenseIconContainer}>
+          <Text style={expensestyle.expenseIcon}>
+            {getCategoryIcon(item.expense_type || item.expense_type_name)}
           </Text>
-          {item.receipt_image && (
-            <Text style={expensestyle.receiptIndicator}>📎</Text>
+        </View>
+        <View style={expensestyle.expenseDetails}>
+          <View style={expensestyle.expenseHeader}>
+            <Text style={expensestyle.expenseText}>
+              {item.expense_type || item.expense_type_name || 'Unknown Expense'}
+            </Text>
+            {item.receipt_image && (
+              <Text style={expensestyle.receiptIndicator}>📎</Text>
+            )}
+          </View>
+          <Text style={expensestyle.expenseDate}>
+            {item.formatted_date || new Date(item.created_at).toLocaleDateString()}
+          </Text>
+          {item.destination && (
+            <Text style={expensestyle.tripInfo}>
+              🚗 {item.destination}
+            </Text>
           )}
         </View>
-        <Text style={expensestyle.expenseDate}>
-          {item.formatted_date || new Date(item.created_at).toLocaleDateString()}
-        </Text>
-        {item.destination && (
-          <Text style={expensestyle.tripInfo}>
-            🚗 {item.destination}
-          </Text>
-        )}
-      </View>
-      <View style={expensestyle.amountContainer}>
-        <Text style={expensestyle.expenseAmount}>₱{formatCurrency(item.amount)}</Text>
-      </View>
-    </View>
-  );
+        <View style={expensestyle.amountContainer}>
+          <Text style={expensestyle.expenseAmount}>₱{formatCurrency(item.amount)}</Text>
+        </View>
+      </TouchableOpacity>
+    );
+  };
 
   if (loading) {
     return <ExpensesSkeleton />;
@@ -845,242 +866,282 @@ const testServerConnection = async () => {
       visible={modalVisible}
       animationType="slide"
       transparent={true}
-      presentationStyle="pageSheet"
+      onRequestClose={resetForm}
     >
-      <TouchableWithoutFeedback onPress={closeDropdown}>
-        <View style={expensestyle.modalOverlay}>
-          <View style={expensestyle.modalContainer}>
-            <View style={expensestyle.modalHeader}>
-              <Text style={expensestyle.modalTitle}>Add Expense</Text>
-              <TouchableOpacity
-                onPress={resetForm}
-                style={expensestyle.modalCloseButton}
-              >
-                <Text style={expensestyle.modalCloseIcon}>✕</Text>
-              </TouchableOpacity>
-            </View>
-
-            <ScrollView
-              style={expensestyle.modalContent}
-              showsVerticalScrollIndicator={false}
-            >
-              {isEnRoute && (
-                <View style={expensestyle.balanceAlert}>
-                  <Text style={expensestyle.balanceAlertIcon}>💳</Text>
-                  <Text style={expensestyle.balanceAlertText}>
-                    Available: ₱{formatCurrency(remainingBalance)}
-                  </Text>
-                </View>
-              )}
-
-              <View style={expensestyle.inputGroup}>
-                <Text style={expensestyle.inputLabel}>Amount</Text>
-                <TextInput
-                  style={[
-                    expensestyle.input,
-                    expenseAmountError && expensestyle.inputError,
-                  ]}
-                  placeholder="₱ 0.00"
-                  keyboardType="numeric"
-                  value={expenseAmount}
-                  onChangeText={validateExpenseAmount}
-                  onBlur={handleBlurExpenseAmount}
-                />
-                {expenseAmountError && (
-                  <Text style={expensestyle.errorText}>
-                    {expenseAmountError}
-                  </Text>
-                )}
-              </View>
-
-              <View style={expensestyle.quickAmountSection}>
-                <Text style={expensestyle.quickAmountLabel}>Quick amounts</Text>
-                <View style={expensestyle.quickAmountGrid}>
-                  {quickAmounts.map((amount) => {
-                    const isDisabled =
-                      isEnRoute && amount > remainingBalance && remainingBalance > 0;
-                    return (
-                      <TouchableOpacity
-                        key={amount}
-                        style={[
-                          expensestyle.quickAmountButton,
-                          isDisabled && expensestyle.quickAmountButtonDisabled,
-                        ]}
-                        onPress={() => {
-                          if (!isDisabled) {
-                            setExpenseAmount(amount.toString());
-                            setExpenseAmountError("");
-                          }
-                        }}
-                        disabled={isDisabled}
-                      >
-                        <Text
-                          style={[
-                            expensestyle.quickAmountText,
-                            isDisabled && expensestyle.quickAmountTextDisabled,
-                          ]}
-                        >
-                          ₱{amount}
-                        </Text>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
-              </View>
-
-              <View style={expensestyle.inputGroup}>
-                <Text style={expensestyle.inputLabel}>Category</Text>
-                <View style={expensestyle.dropdownContainer}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={expensestyle.keyboardAvoidingView}
+      >
+        {/* This outer touchable allows dismissing the modal by tapping the background */}
+        <TouchableWithoutFeedback onPress={resetForm}>
+          <View style={expensestyle.modalOverlay}>
+            {/* This inner touchable prevents taps inside the modal from closing it */}
+            <TouchableWithoutFeedback>
+              <View style={expensestyle.modalContainer}>
+                {/* ---- MODAL HEADER ---- */}
+                <View style={expensestyle.modalHeader}>
+                  <Text style={expensestyle.modalTitle}>Add Expense</Text>
                   <TouchableOpacity
-                    style={[
-                      expensestyle.dropdown,
-                      dropdownVisible && expensestyle.dropdownOpen,
-                    ]}
-                    onPress={() => setDropdownVisible(!dropdownVisible)}
-                    disabled={loadingExpenseTypes}
+                    onPress={resetForm}
+                    style={expensestyle.modalCloseButton}
                   >
-                    <Text style={expensestyle.dropdownText}>
-                      {loadingExpenseTypes
-                        ? "Loading..."
-                        : `${getCategoryIcon(expenseName)} ${expenseName}`}
-                    </Text>
-                    <Text
-                      style={[
-                        expensestyle.dropdownArrow,
-                        dropdownVisible && expensestyle.dropdownArrowRotated,
-                      ]}
-                    >
-                      ▼
-                    </Text>
+                    <Text style={expensestyle.modalCloseIcon}>✕</Text>
                   </TouchableOpacity>
+                </View>
 
-                  {dropdownVisible && (
-                    <View style={expensestyle.dropdownList}>
-                      <ScrollView
-                        nestedScrollEnabled={true}
-                        style={expensestyle.dropdownScrollView}
-                        showsVerticalScrollIndicator={false}
-                      >
-                        {expenseCategories.map((category) => (
+                {/* ---- SCROLLABLE FORM CONTENT ---- */}
+                <ScrollView
+                  style={expensestyle.modalContent}
+                  showsVerticalScrollIndicator={false}
+                  keyboardShouldPersistTaps="handled"
+                >
+                  {isEnRoute && (
+                    <View style={expensestyle.balanceAlert}>
+                      <Text style={expensestyle.balanceAlertIcon}>💳</Text>
+                      <Text style={expensestyle.balanceAlertText}>
+                        Available: ₱{formatCurrency(remainingBalance)}
+                      </Text>
+                    </View>
+                  )}
+
+                  {/* ---- AMOUNT INPUT ---- */}
+                  <View style={expensestyle.inputGroup}>
+                    <Text style={expensestyle.inputLabel}>Amount</Text>
+                    <TextInput
+                      style={[
+                        expensestyle.input,
+                        expenseAmountError && expensestyle.inputError,
+                      ]}
+                      placeholder="₱ 0.00"
+                      keyboardType="numeric"
+                      value={expenseAmount}
+                      onChangeText={validateExpenseAmount}
+                      onBlur={handleBlurExpenseAmount}
+                    />
+                    {expenseAmountError && (
+                      <Text style={expensestyle.errorText}>
+                        {expenseAmountError}
+                      </Text>
+                    )}
+                  </View>
+
+                  {/* ---- QUICK AMOUNTS ---- */}
+                  <View style={expensestyle.quickAmountSection}>
+                    <Text style={expensestyle.quickAmountLabel}>Quick amounts</Text>
+                    <View style={expensestyle.quickAmountGrid}>
+                      {quickAmounts.map((amount) => {
+                        const isDisabled =
+                          isEnRoute && amount > remainingBalance && remainingBalance > 0;
+                        return (
                           <TouchableOpacity
-                            key={category}
+                            key={amount}
                             style={[
-                              expensestyle.dropdownItem,
-                              expenseName === category &&
-                                expensestyle.dropdownItemSelected,
+                              expensestyle.quickAmountButton,
+                              isDisabled && expensestyle.quickAmountButtonDisabled,
                             ]}
-                            onPress={() => handleCategorySelect(category)}
+                            onPress={() => {
+                              if (!isDisabled) {
+                                setExpenseAmount(amount.toString());
+                                setExpenseAmountError("");
+                              }
+                            }}
+                            disabled={isDisabled}
                           >
-                            <Text style={expensestyle.dropdownItemIcon}>
-                              {getCategoryIcon(category)}
-                            </Text>
                             <Text
                               style={[
-                                expensestyle.dropdownItemText,
-                                expenseName === category &&
-                                  expensestyle.dropdownItemTextSelected,
+                                expensestyle.quickAmountText,
+                                isDisabled && expensestyle.quickAmountTextDisabled,
                               ]}
                             >
-                              {category}
+                              ₱{amount}
                             </Text>
                           </TouchableOpacity>
-                        ))}
-                      </ScrollView>
-                    </View>
-                  )}
-                </View>
-              </View>
-
-              {showCustomInput && (
-                <View style={expensestyle.inputGroup}>
-                  <Text style={expensestyle.inputLabel}>Custom Category</Text>
-                  <TextInput
-                    style={[
-                      expensestyle.input,
-                      customCategoryError && expensestyle.inputError,
-                    ]}
-                    placeholder="Enter category name"
-                    value={customCategory}
-                    onChangeText={validateCustomCategory}
-                    onBlur={handleBlurCustomCategory}
-                    maxLength={50}
-                  />
-                  {customCategoryError && (
-                    <Text style={expensestyle.errorText}>
-                      {customCategoryError}
-                    </Text>
-                  )}
-                </View>
-              )}
-
-              <View style={expensestyle.inputGroup}>
-                <Text style={expensestyle.inputLabel}>Receipt</Text>
-                
-                {!receiptImage ? (
-                  <TouchableOpacity
-                    style={expensestyle.imageUploadButton}
-                    onPress={pickImage}
-                    disabled={uploadingImage}
-                  >
-                    <View style={expensestyle.imageUploadContent}>
-                      <Text style={expensestyle.imageUploadIcon}>📷</Text>
-                      <Text style={expensestyle.imageUploadText}>
-                        {uploadingImage ? 'Processing...' : 'Add Receipt Photo'}
-                      </Text>
-                      <Text style={expensestyle.imageUploadSubtext}>
-                        Tap to select from gallery
-                      </Text>
-                    </View>
-                  </TouchableOpacity>
-                ) : (
-                  <View style={expensestyle.imagePreviewContainer}>
-                    <Image 
-                      source={{ uri: receiptImage.uri }} 
-                      style={expensestyle.imagePreview}
-                      resizeMode="cover"
-                    />
-                    <TouchableOpacity
-                      style={expensestyle.removeImageButton}
-                      onPress={removeImage}
-                    >
-                      <Text style={expensestyle.removeImageIcon}>✕</Text>
-                    </TouchableOpacity>
-                    <View style={expensestyle.imageInfo}>
-                      <Text style={expensestyle.imageInfoText}>Receipt attached</Text>
-                      <TouchableOpacity onPress={pickImage}>
-                        <Text style={expensestyle.changeImageText}>Change photo</Text>
-                      </TouchableOpacity>
+                        );
+                      })}
                     </View>
                   </View>
-                )}
-              </View>
 
-              <View style={expensestyle.buttonGroup}>
-                <TouchableOpacity
-                  style={[
-                    expensestyle.submitButton,
-                    (submitting || uploadingImage) && expensestyle.buttonDisabled,
-                  ]}
-                  onPress={addExpense}
-                  disabled={submitting || uploadingImage}
-                >
-                  <Text style={expensestyle.submitButtonText}>
-                    {submitting ? "Adding..." : "Add Expense"}
-                  </Text>
-                </TouchableOpacity>
+                  {/* ---- CATEGORY DROPDOWN ---- */}
+                  <View style={expensestyle.inputGroup}>
+                    <Text style={expensestyle.inputLabel}>Category</Text>
+                    <View style={expensestyle.dropdownContainer}>
+                      <TouchableOpacity
+                        style={[
+                          expensestyle.dropdown,
+                          dropdownVisible && expensestyle.dropdownOpen,
+                        ]}
+                        onPress={() => setDropdownVisible(!dropdownVisible)}
+                        disabled={loadingExpenseTypes}
+                      >
+                        <Text style={expensestyle.dropdownText}>
+                          {loadingExpenseTypes
+                            ? "Loading..."
+                            : `${getCategoryIcon(expenseName)} ${expenseName}`}
+                        </Text>
+                        <Text
+                          style={[
+                            expensestyle.dropdownArrow,
+                            dropdownVisible && expensestyle.dropdownArrowRotated,
+                          ]}
+                        >
+                          ▼
+                        </Text>
+                      </TouchableOpacity>
 
-                <TouchableOpacity
-                  style={expensestyle.cancelButton}
-                  onPress={resetForm}
-                  disabled={submitting || uploadingImage}
-                >
-                  <Text style={expensestyle.cancelButtonText}>Cancel</Text>
-                </TouchableOpacity>
+                      {dropdownVisible && (
+                        <View style={expensestyle.dropdownList}>
+                          <ScrollView
+                            nestedScrollEnabled={true}
+                            style={expensestyle.dropdownScrollView}
+                            showsVerticalScrollIndicator={false}
+                          >
+                            {expenseCategories.map((category) => (
+                              <TouchableOpacity
+                                key={category}
+                                style={[
+                                  expensestyle.dropdownItem,
+                                  expenseName === category &&
+                                    expensestyle.dropdownItemSelected,
+                                ]}
+                                onPress={() => handleCategorySelect(category)}
+                              >
+                                <Text style={expensestyle.dropdownItemIcon}>
+                                  {getCategoryIcon(category)}
+                                </Text>
+                                <Text
+                                  style={[
+                                    expensestyle.dropdownItemText,
+                                    expenseName === category &&
+                                      expensestyle.dropdownItemTextSelected,
+                                  ]}
+                                >
+                                  {category}
+                                </Text>
+                              </TouchableOpacity>
+                            ))}
+                          </ScrollView>
+                        </View>
+                      )}
+                    </View>
+                  </View>
+
+                  {/* ---- CUSTOM CATEGORY INPUT ---- */}
+                  {showCustomInput && (
+                    <View style={expensestyle.inputGroup}>
+                      <Text style={expensestyle.inputLabel}>Custom Category</Text>
+                      <TextInput
+                        style={[
+                          expensestyle.input,
+                          customCategoryError && expensestyle.inputError,
+                        ]}
+                        placeholder="Enter category name"
+                        value={customCategory}
+                        onChangeText={validateCustomCategory}
+                        onBlur={handleBlurCustomCategory}
+                        maxLength={50}
+                      />
+                      {customCategoryError && (
+                        <Text style={expensestyle.errorText}>
+                          {customCategoryError}
+                        </Text>
+                      )}
+                    </View>
+                  )}
+                  
+                  {/* ---- RECEIPT UPLOAD / PREVIEW ---- */}
+                  <View style={expensestyle.inputGroup}>
+                    <Text style={expensestyle.inputLabel}>Receipt</Text>
+                    {!receiptImage ? (
+                      <TouchableOpacity
+                        style={expensestyle.imageUploadButton}
+                        onPress={pickImage}
+                        disabled={uploadingImage}
+                      >
+                        <View style={expensestyle.imageUploadContent}>
+                          <Text style={expensestyle.imageUploadIcon}>📷</Text>
+                          <Text style={expensestyle.imageUploadText}>
+                            {uploadingImage ? 'Processing...' : 'Add Receipt Photo'}
+                          </Text>
+                          <Text style={expensestyle.imageUploadSubtext}>
+                            Tap to select from gallery
+                          </Text>
+                        </View>
+                      </TouchableOpacity>
+                    ) : (
+                      <View style={expensestyle.imagePreviewContainer}>
+                        <TouchableOpacity onPress={() => handleViewReceipt(receiptImage.uri)}>
+                          <Image
+                            source={{ uri: receiptImage.uri }}
+                            style={expensestyle.imagePreview}
+                            resizeMode="cover"
+                          />
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={expensestyle.removeImageButton}
+                          onPress={removeImage}
+                        >
+                          <Text style={expensestyle.removeImageIcon}>✕</Text>
+                        </TouchableOpacity>
+                        <View style={expensestyle.imageInfo}>
+                          <Text style={expensestyle.imageInfoText}>Receipt attached</Text>
+                          <TouchableOpacity onPress={pickImage}>
+                            <Text style={expensestyle.changeImageText}>Change photo</Text>
+                          </TouchableOpacity>
+                        </View>
+                      </View>
+                    )}
+                  </View>
+
+                  {/* ---- ACTION BUTTONS ---- */}
+                  <View style={expensestyle.buttonGroup}>
+                    <TouchableOpacity
+                      style={[
+                        expensestyle.submitButton,
+                        (submitting || uploadingImage) && expensestyle.buttonDisabled,
+                      ]}
+                      onPress={addExpense}
+                      disabled={submitting || uploadingImage}
+                    >
+                      <Text style={expensestyle.submitButtonText}>
+                        {submitting ? "Adding..." : "Add Expense"}
+                      </Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={expensestyle.cancelButton}
+                      onPress={resetForm}
+                      disabled={submitting || uploadingImage}
+                    >
+                      <Text style={expensestyle.cancelButtonText}>Cancel</Text>
+                    </TouchableOpacity>
+                  </View>
+                </ScrollView>
               </View>
-            </ScrollView>
+            </TouchableWithoutFeedback>
           </View>
-        </View>
-      </TouchableWithoutFeedback>
+        </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
+    </Modal>
+
+    <Modal
+      visible={receiptModalVisible}
+      animationType="fade"
+      transparent={true}
+      onRequestClose={() => setReceiptModalVisible(false)}
+    >
+      <View style={expensestyle.receiptModalContainer}>
+        <Image
+          source={{ uri: viewingReceiptUri }}
+          style={expensestyle.receiptModalImage}
+          resizeMode="contain"
+        />
+        <TouchableOpacity
+          style={expensestyle.receiptModalCloseButton}
+          onPress={() => setReceiptModalVisible(false)}
+        >
+          <Text style={expensestyle.receiptModalCloseText}>✕</Text>
+        </TouchableOpacity>
+      </View>
     </Modal>
 
       <View style={tripstyle.bottomNav}>

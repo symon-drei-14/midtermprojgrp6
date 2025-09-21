@@ -49,31 +49,31 @@ export const expensestyle = StyleSheet.create({
   },
 
   statusMessage: {
-  backgroundColor: '#f8f9ff',
-  margin: 20,
-  padding: 24,
-  borderRadius: 16,
-  alignItems: 'center',
-  borderWidth: 1,
-  borderColor: '#e1e5f2',
-},
-statusMessageIcon: {
-  fontSize: 32,
-  marginBottom: 12,
-},
-statusMessageText: {
-  fontSize: 18,
-  fontWeight: '600',
-  color: '#4a5568',
-  marginBottom: 8,
-  textAlign: 'center',
-},
-statusMessageSubtext: {
-  fontSize: 14,
-  color: '#718096',
-  textAlign: 'center',
-  lineHeight: 20,
-},
+    backgroundColor: '#f8f9ff',
+    margin: 20,
+    padding: 24,
+    borderRadius: 16,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#e1e5f2',
+  },
+  statusMessageIcon: {
+    fontSize: 32,
+    marginBottom: 12,
+  },
+  statusMessageText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#4a5568',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  statusMessageSubtext: {
+    fontSize: 14,
+    color: '#718096',
+    textAlign: 'center',
+    lineHeight: 20,
+  },
 
   refreshButton: {
     width: 44,
@@ -344,14 +344,6 @@ statusMessageSubtext: {
     justifyContent: "flex-end",
   },
 
-  modalContainer: {
-    backgroundColor: "#ffffff",
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    maxHeight: "90%",
-    minHeight: "60%",
-  },
-
   modalHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -382,7 +374,7 @@ statusMessageSubtext: {
   },
 
   modalContent: {
-    padding: 20,
+    paddingHorizontal: 20, // Only horizontal padding
   },
 
   balanceAlert: {
@@ -392,6 +384,7 @@ statusMessageSubtext: {
     borderRadius: 12,
     padding: 16,
     marginBottom: 24,
+    marginTop: 20, // Add margin top
     borderWidth: 1,
     borderColor: "#0ea5e9",
   },
@@ -522,30 +515,6 @@ statusMessageSubtext: {
     transform: [{ rotate: "180deg" }],
   },
 
-  dropdownList: {
-    position: "absolute",
-    top: "100%",
-    left: 0,
-    right: 0,
-    backgroundColor: "#ffffff",
-    borderWidth: 1,
-    borderColor: "#d1d5db",
-    borderTopWidth: 0,
-    borderBottomLeftRadius: 12,
-    borderBottomRightRadius: 12,
-    maxHeight: 200,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 8,
-    zIndex: 1001,
-  },
-
-  dropdownScrollView: {
-    maxHeight: 200,
-  },
-
   dropdownItem: {
     flexDirection: "row",
     alignItems: "center",
@@ -574,7 +543,6 @@ statusMessageSubtext: {
     fontWeight: "600",
   },
 
-  // Image Upload Styles
   imageUploadButton: {
     backgroundColor: "#f8fafc",
     borderWidth: 2,
@@ -650,12 +618,6 @@ statusMessageSubtext: {
     fontSize: 14,
     color: "#374151",
     fontWeight: "500",
-  },
-
-  changeImageText: {
-    fontSize: 14,
-    color: "#7a0f0fff",
-    fontWeight: "600",
   },
 
   buttonGroup: {
@@ -859,5 +821,81 @@ statusMessageSubtext: {
   remainingPercentage: {
     fontSize: 12,
     color: '#666',
+  },
+  
+  // ===============================================
+  // === NEW AND MODIFIED STYLES ARE ADDED BELOW ===
+  // ===============================================
+
+  // For the KeyboardAvoidingView wrapper
+  keyboardAvoidingView: {
+    flex: 1,
+  },
+  
+  // MODIFIED for better scrolling behavior
+  modalContainer: {
+    backgroundColor: "#ffffff",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    maxHeight: "90%",
+    // minHeight has been removed to allow the modal to shrink for the keyboard
+  },
+
+  // MODIFIED for scrollability
+  dropdownList: {
+    position: "absolute",
+    top: "100%",
+    left: 0,
+    right: 0,
+    backgroundColor: "#ffffff",
+    borderWidth: 1,
+    borderColor: "#d1d5db",
+    borderTopWidth: 0,
+    borderBottomLeftRadius: 12,
+    borderBottomRightRadius: 12,
+    maxHeight: 200, // This is the key change that makes the list scroll
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 8,
+    zIndex: 1001,
+  },
+
+  // NEW styles for the full-screen receipt viewer
+  receiptModalContainer: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.85)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 15,
+  },
+  receiptModalImage: {
+    width: '100%',
+    height: '80%',
+  },
+  receiptModalCloseButton: {
+    position: 'absolute',
+    top: 40,
+    right: 20,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    borderRadius: 15,
+    width: 30,
+    height: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1,
+  },
+  receiptModalCloseText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+
+  // MODIFIED for consistency
+  changeImageText: {
+    fontSize: 14,
+    color: "#667eea", // Changed to a more vibrant color
+    fontWeight: "600",
   },
 });
