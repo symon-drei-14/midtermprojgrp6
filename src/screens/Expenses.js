@@ -64,8 +64,8 @@ export default function Expenses({ navigation, route }) {
   const tripId = route?.params?.tripId;
 
  const handleOpenModal = () => {
-  resetForm(); // Reset everything before opening
-  setEditingExpense(null); // Ensure we are in "add" mode
+  resetForm(); 
+  setEditingExpense(null); 
   setModalVisible(true);
   loadExpenseTypes();
 };
@@ -825,7 +825,7 @@ const testServerConnection = async () => {
 
   return (
     <TouchableOpacity
-      onPress={() => handleOpenEditModal(item)} // This now opens the modal for editing
+      onPress={() => handleOpenEditModal(item)} 
       style={[expensestyle.expenseItem, {
         transform: [{ translateY: index * 2 }],
         opacity: 1 - (index * 0.02)
@@ -1005,13 +1005,13 @@ const testServerConnection = async () => {
     behavior={Platform.OS === "ios" ? "padding" : "height"}
     style={expensestyle.keyboardAvoidingView}
   >
-    {/* This outer touchable allows dismissing the modal/keyboard by tapping the background */}
+   
     <TouchableWithoutFeedback onPress={() => {
       Keyboard.dismiss();
-      closeDropdown(); // Also close the dropdown if open
+      closeDropdown(); 
     }}>
       <View style={expensestyle.modalOverlay}>
-        {/* This inner touchable prevents taps inside the modal from closing it */}
+     
         <TouchableWithoutFeedback>
           <View style={expensestyle.modalContainer}>
             {/* ---- MODAL HEADER ---- */}
