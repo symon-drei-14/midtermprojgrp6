@@ -898,4 +898,18 @@ export const expensestyle = StyleSheet.create({
     color: "#667eea", // Changed to a more vibrant color
     fontWeight: "600",
   },
+
+  deleteButton: {
+  backgroundColor: "#fee2e2",
+  borderWidth: 1,
+  borderColor: "#ef4444",
+  borderRadius: 12,
+  padding: 16,
+  alignItems: "center",
+},
+deleteButtonText: {
+  fontSize: 16,
+  fontWeight: "600",
+  color: "#b91c1c",
+},
 });
