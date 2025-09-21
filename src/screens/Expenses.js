@@ -474,7 +474,10 @@ const handleViewReceipt = (uri) => {
   };
   
 const addExpense = async () => {
-  // --- Validation ---
+    console.log("--- Checking State Inside addExpense ---");
+  console.log("Value of currentTrip:", currentTrip);
+  console.log("Value of tripId from route:", tripId);
+  console.log("------------------------------------");
   let hasError = false;
   const expenseAmountNum = parseFloat(expenseAmount);
   if (!expenseAmount || isNaN(expenseAmountNum) || expenseAmountNum <= 0) {
