@@ -70,57 +70,82 @@ const TripScreen = () => {
   };
 
  const fetchTrips = async () => {
-  try {
-    setLoading(true);
-    let driver = driverInfo;
-    if (!driver) {
-      driver = await getDriverInfo();
-      if (!driver) return;
-    }
-
-    const response = await fetch(`${API_BASE_URL}/include/handlers/trip_handler.php`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        action: 'get_trips_with_drivers',
-        driver_id: driver.driver_id,
-        driver_name: driver.name,
-      }),
-    });
-
-    const data = await response.json();
-
-    if (data.success) {
+    try {
+      setLoading(true);
+      let driver = driverInfo;
+      if (!driver) {
+        driver = await getDriverInfo();
+        if (!driver) { setLoading(false); return; }
+      }
+  
+      const response = await fetch(`${API_BASE_URL}/include/handlers/trip_handler.php`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'get_trips_with_drivers',
+          driver_id: driver.driver_id,
+        }),
+      });
+  
+      const data = await response.json();
+      if (!data.success) {
+        throw new Error(data.message || "Failed to fetch trip data.");
+      }
+  
       const allTrips = data.trips || [];
       const activeTrip = allTrips.find(trip => trip.status === 'En Route');
-      const pending = allTrips.filter(trip => trip.status === 'Pending');
-
-      const tripsWithChecklistStatus = await Promise.all(pending.map(async trip => {
+      const pendingTrips = allTrips.filter(trip => trip.status === 'Pending');
+  
+      let reassignmentTriggered = false;
+      const processedPendingTrips = [];
+  
+      // This loop checks each pending trip for its checklist status and deadline.
+      for (const trip of pendingTrips) {
         const checklistResponse = await fetch(`${API_BASE_URL}/include/handlers/trip_handler.php`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            action: 'get_checklist',
-            trip_id: trip.trip_id,
-          }),
+          body: JSON.stringify({ action: 'get_checklist', trip_id: trip.trip_id }),
         });
         const checklistData = await checklistResponse.json();
-        return {
-          ...trip,
-          hasChecklist: checklistData.success && checklistData.checklist
-        };
-      }));
-      
+        const hasChecklist = checklistData.success && checklistData.checklist;
+  
+        const now = new Date();
+        const tripDate = new Date(trip.date);
+        const oneHourBefore = new Date(tripDate.getTime() - (1 * 60 * 60 * 1000));
+  
+        // If the deadline has passed and there's no checklist, trigger reassignment.
+        if (now > oneHourBefore && !hasChecklist) {
+          console.log(`Trip ID ${trip.trip_id} missed deadline. Reassigning...`);
+          const reassigned = await triggerReassignment(trip.trip_id, driver.driver_id, 'missed_deadline', false);
+          if (reassigned) {
+            reassignmentTriggered = true;
+          }
+          continue; // Don't add this trip to the UI list as it's being removed from the driver.
+        }
+        
+        // If the trip is fine, add it to our list for display.
+        processedPendingTrips.push({ ...trip, hasChecklist });
+      }
+  
+      // If a reassignment happened, we refresh the entire screen to get the latest data.
+      if (reassignmentTriggered) {
+        Alert.alert("Schedule Updated", "One or more trips were reassigned due to a missed checklist deadline.");
+        await fetchTrips(); // Simple recursive call to refresh all data.
+        return;
+      }
+  
+      // If everything is normal, update the state with the trips.
       setCurrentTrip(activeTrip);
-      setScheduledTrips(tripsWithChecklistStatus);
+      setScheduledTrips(processedPendingTrips);
       if (activeTrip) setStatus(activeTrip.status);
+  
+    } catch (error) {
+      console.error('Error fetching trips:', error);
+      Alert.alert("Error", "Could not load trip data. Please pull down to refresh.");
+    } finally {
+      setLoading(false);
     }
-  } catch (error) {
-    console.error('Error fetching trips:', error);
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
 const onRefresh = useCallback(async () => {
   setRefreshing(true);
@@ -159,6 +184,8 @@ const onRefresh = useCallback(async () => {
       setUpdating(false);
     }
   };
+
+  
 
   const handleStatusChange = (newStatus) => {
     setModalVisible(false);
@@ -234,39 +261,104 @@ const resetChecklistData = () => {
 };
 
 const submitChecklist = async () => {
-  try {
-    setUpdating(true);
-    const response = await fetch(`${API_BASE_URL}/include/handlers/trip_handler.php`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        action: 'save_checklist',
-        trip_id: currentTripId,
-        no_fatigue: checklistData.noFatigue,
-        no_drugs: checklistData.noDrugs,
-        no_distractions: checklistData.noDistractions,
-        no_illness: checklistData.noIllness,
-        fit_to_work: checklistData.fitToWork,
-        alcohol_test: parseFloat(checklistData.alcoholTest) || 0,
-        hours_sleep: parseFloat(checklistData.hoursSleep) || 0
-      }),
-    });
+    // Let's define what it means to fail the checklist.
+    const isFit = checklistData.fitToWork;
+    const isSober = parseFloat(checklistData.alcoholTest) === 0;
+    const passedAllChecks = 
+      checklistData.noFatigue &&
+      checklistData.noDrugs &&
+      checklistData.noDistractions &&
+      checklistData.noIllness;
 
-    const data = await response.json();
-    if (data.success) {
-      Alert.alert('Success', 'Checklist submitted successfully!');
-      setChecklistModalVisible(false);
-      fetchTrips(); // Refresh to update checklist status
-    } else {
-      Alert.alert('Error', data.message || 'Failed to submit checklist');
+    // A driver fails if they are not fit, not sober, or didn't pass all the yes/no checks.
+    const didFailChecklist = !isFit || !isSober || !passedAllChecks;
+
+    if (didFailChecklist) {
+      // If the checklist is failed, we don't save it. Instead, we trigger the reassignment.
+      Alert.alert(
+        "Checklist Failed",
+        "You've indicated that you are not fit for this trip. The trip will be reassigned, and a 16-hour penalty will apply.",
+        [{ text: "OK", onPress: async () => {
+            setUpdating(true);
+            setChecklistModalVisible(false);
+            await triggerReassignment(currentTripId, driverInfo.driver_id, 'failed_checklist');
+            await fetchTrips(); // Refresh the screen
+            setUpdating(false);
+        }}]
+      );
+      return; // Stop right here.
     }
-  } catch (error) {
-    console.error('Error submitting checklist:', error);
-    Alert.alert('Error', 'Failed to submit checklist');
-  } finally {
-    setUpdating(false);
-  }
-};
+
+    // If the checklist passed, we proceed with the normal submission.
+    try {
+      setUpdating(true);
+      const response = await fetch(`${API_BASE_URL}/include/handlers/trip_handler.php`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'save_checklist',
+          trip_id: currentTripId,
+          driver_id: driverInfo.driver_id, // Important: send the driver's ID for the bypass logic
+          no_fatigue: checklistData.noFatigue,
+          no_drugs: checklistData.noDrugs,
+          no_distractions: checklistData.noDistractions,
+          no_illness: checklistData.noIllness,
+          fit_to_work: checklistData.fitToWork,
+          alcohol_test: parseFloat(checklistData.alcoholTest) || 0,
+          hours_sleep: parseFloat(checklistData.hoursSleep) || 0
+        }),
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        Alert.alert('Success', 'Checklist submitted successfully!');
+        setChecklistModalVisible(false);
+        fetchTrips(); // Refresh to show the updated status.
+      } else {
+        Alert.alert('Error', data.message || 'Failed to submit checklist');
+      }
+    } catch (error) {
+      console.error('Error submitting checklist:', error);
+      Alert.alert('Error', 'An unexpected error occurred while submitting.');
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+const triggerReassignment = async (tripId, driverId, reason, showAlert = true) => {
+    // A helper function to call our new backend endpoint.
+    console.log(`Triggering reassignment for trip ${tripId} due to: ${reason}`);
+    
+    // We set the updating state in the component that calls this function.
+    try {
+      const response = await fetch(`${API_BASE_URL}/include/handlers/trip_operations.php`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'reassign_trip_on_failure',
+          trip_id: tripId,
+          original_driver_id: driverId,
+          reason: reason,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (showAlert) {
+        // Show an alert to the driver so they know what happened.
+        const alertTitle = data.success ? 'Trip Reassigned' : 'Reassignment Failed';
+        Alert.alert(alertTitle, data.message);
+      }
+      return data.success; // Return whether the operation was successful
+
+    } catch (error) {
+      console.error('Error triggering reassignment:', error);
+      if (showAlert) {
+        Alert.alert('Error', 'An error occurred while trying to reassign the trip.');
+      }
+      return false; // The operation failed
+    }
+  };
 
   const handleTripCardPress = (trip) => {
     setSelectedTrip(trip);
