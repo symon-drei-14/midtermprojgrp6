@@ -246,18 +246,40 @@ const [checklistData, setChecklistData] = useState({
   hoursSleep: ''
 });
 
-const isChecklistAvailable = (tripDate) => {
-  const deliveryDate = new Date(tripDate);
-  const now = new Date();
-
-  // Calculate 3 hours before the trip (start of window)
-  const threeHoursBefore = new Date(deliveryDate.getTime() - 3 * 60 * 60 * 1000);
-
-  // Calculate 1 hour before the trip (end of window)
-  const oneHourBefore = new Date(deliveryDate.getTime() - 1 * 60 * 60 * 1000);
-
-  return now >= threeHoursBefore && now <= oneHourBefore;
-};
+const isChecklistAvailable = (trip) => {
+    // If there's no trip object or date, it's definitely not available.
+    if (!trip?.date) return false;
+  
+    const deliveryDate = new Date(trip.date);
+    const now = new Date();
+  
+    // This is the standard time window for the original driver.
+    const threeHoursBefore = new Date(deliveryDate.getTime() - 3 * 60 * 60 * 1000);
+    const oneHourBefore = new Date(deliveryDate.getTime() - 1 * 60 * 60 * 1000);
+  
+    const isWithinStandardWindow = now >= threeHoursBefore && now <= oneHourBefore;
+  
+    // If we're in the normal time frame, the checklist is available.
+    if (isWithinStandardWindow) {
+      return true;
+    }
+  
+    // --- BYPASS LOGIC FOR REASSIGNED DRIVERS ---
+    // If the standard window has passed, we check if this trip was recently reassigned.
+    if (trip.last_modified_at && trip.edit_reason?.includes('reassigned')) {
+      const modifiedDate = new Date(trip.last_modified_at);
+      // Give the new driver a 1-hour grace period from the moment they were assigned the trip.
+      const gracePeriod = 1 * 60 * 60 * 1000; 
+  
+      if (now.getTime() - modifiedDate.getTime() < gracePeriod) {
+        // If it was reassigned within the last hour, the checklist is available!
+        return true;
+      }
+    }
+  
+    // If neither the standard window nor the grace period applies, it's not available.
+    return false;
+  };
 
 const resetChecklistData = () => {
   setChecklistData({
@@ -674,53 +696,57 @@ const triggerReassignment = async (tripId, driverId, reason, showAlert = true) =
 
             <View style={TripDetail.bottomActions}>
               <TouchableOpacity 
-                style={[
-                  TripDetail.startButton,
-                  selectedTrip?.hasChecklist && TripDetail.startButtonCompleted,
-                  !isChecklistAvailable(selectedTrip?.date) && TripDetail.startButtonDisabled
-                ]}
-              onPress={() => {
-  if (selectedTrip?.hasChecklist || !isChecklistAvailable(selectedTrip?.date)) return;
-  
-  const tripDate = new Date(selectedTrip.date);
-  const now = new Date();
-  const threeHoursBefore = new Date(tripDate.getTime() - 3 * 60 * 60 * 1000);
-  const oneHourBefore = new Date(tripDate.getTime() - 1 * 60 * 60 * 1000);
+    style={[
+        TripDetail.startButton,
+        selectedTrip?.hasChecklist && TripDetail.startButtonCompleted,
+        // Pass the entire selectedTrip object now
+        !isChecklistAvailable(selectedTrip) && TripDetail.startButtonDisabled
+    ]}
+    onPress={() => {
+        // Update this check as well
+        if (selectedTrip?.hasChecklist || !isChecklistAvailable(selectedTrip)) return;
 
-  if (now < threeHoursBefore) {
-    const formattedTime = threeHoursBefore.toLocaleTimeString('en-US', {
-      hour: '2-digit', minute: '2-digit', hour12: true
-    });
-    Alert.alert(
-      'Checklist Not Available Yet',
-      `Checklist will be available starting at ${formattedTime} (3 hours before the scheduled trip).`
-    );
-    return;
-  }
+        const tripDate = new Date(selectedTrip.date);
+        const now = new Date();
+        const threeHoursBefore = new Date(tripDate.getTime() - 3 * 60 * 60 * 1000);
+        const oneHourBefore = new Date(tripDate.getTime() - 1 * 60 * 60 * 1000);
 
-  if (now > oneHourBefore) {
-    Alert.alert(
-      'Checklist Submission Closed',
-      'Checklist submission closed 1 hour before the scheduled trip time.'
-    );
-    return;
-  }
+        // This alert logic remains mostly the same, as isChecklistAvailable already handles the grace period.
+        if (now < threeHoursBefore && !isChecklistAvailable(selectedTrip)) {
+            const formattedTime = threeHoursBefore.toLocaleTimeString('en-US', {
+                hour: '2-digit', minute: '2-digit', hour12: true
+            });
+            Alert.alert(
+                'Checklist Not Available Yet',
+                `Checklist will be available starting at ${formattedTime} (3 hours before the scheduled trip).`
+            );
+            return;
+        }
 
-  setCurrentTripId(selectedTrip.trip_id);
-  resetChecklistData();
-  setTripDetailModalVisible(false);
-  setChecklistModalVisible(true);
-}}
-              >
-                <Text style={TripDetail.startButtonText}>
-                  {selectedTrip?.hasChecklist 
-                    ? 'Checklist Submitted' 
-                    : !isChecklistAvailable(selectedTrip?.date)
-                      ? 'Checklist Not Available'
-                      : 'Start Trip'
-                  }
-                </Text>
-              </TouchableOpacity>
+        if (now > oneHourBefore && !isChecklistAvailable(selectedTrip)) {
+            Alert.alert(
+                'Checklist Submission Closed',
+                'Checklist submission closed 1 hour before the scheduled trip time.'
+            );
+            return;
+        }
+
+        setCurrentTripId(selectedTrip.trip_id);
+        resetChecklistData();
+        setTripDetailModalVisible(false);
+        setChecklistModalVisible(true);
+    }}
+>
+    <Text style={TripDetail.startButtonText}>
+        {selectedTrip?.hasChecklist 
+            ? 'Checklist Submitted' 
+            // And finally, update this check
+            : !isChecklistAvailable(selectedTrip)
+                ? 'Checklist Not Available'
+                : 'Start Trip'
+        }
+    </Text>
+</TouchableOpacity>
             </View>
           </View>
         </View>
