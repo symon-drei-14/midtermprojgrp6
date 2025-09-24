@@ -112,9 +112,20 @@ const TripScreen = () => {
         const now = new Date();
         const tripDate = new Date(trip.date);
         const oneHourBefore = new Date(tripDate.getTime() - (1 * 60 * 60 * 1000));
+        
+        let wasRecentlyReassigned = false;
+        // Check if the trip was recently reassigned to give the new driver a grace period.
+        if (trip.last_modified_at && trip.edit_reason?.includes('reassigned')) {
+            const modifiedDate = new Date(trip.last_modified_at);
+            // We give the new driver a 1-hour grace period to submit their checklist.
+            const gracePeriod = 1 * 60 * 60 * 1000;
+            if (now.getTime() - modifiedDate.getTime() < gracePeriod) {
+                wasRecentlyReassigned = true;
+            }
+        }
   
-        // If the deadline has passed and there's no checklist, trigger reassignment.
-        if (now > oneHourBefore && !hasChecklist) {
+        // If the deadline has passed, there's no checklist, AND it wasn't just reassigned, then we trigger a reassignment.
+        if (now > oneHourBefore && !hasChecklist && !wasRecentlyReassigned) {
           console.log(`Trip ID ${trip.trip_id} missed deadline. Reassigning...`);
           const reassigned = await triggerReassignment(trip.trip_id, driver.driver_id, 'missed_deadline', false);
           if (reassigned) {
