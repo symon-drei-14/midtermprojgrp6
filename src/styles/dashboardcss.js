@@ -810,4 +810,43 @@ export const modernStyles = StyleSheet.create({
         borderColor: '#F59E0B',
         color: '#F59E0B',
     },
+
+     checkInContainer: {
+        // Just a simple container for the status text
+        paddingVertical: 10,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    checkInText: {
+        // The main text, like "You are in the queue"
+        fontSize: 16,
+        color: '#374151', 
+        textAlign: 'center',
+        marginBottom: 4,
+    },
+    checkInExpiry: {
+        // The smaller text for the expiry time
+        fontSize: 14,
+        color: '#6B7280', 
+        fontWeight: '500',
+    },
+    checkInButton: {
+        // The main button for the driver to press
+        backgroundColor: '#3B82F6', // Using a nice blue to match your theme
+        borderRadius: 12,
+        paddingVertical: 16,
+        justifyContent: 'center',
+        alignItems: 'center',
+        shadowColor: '#3B82F6',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
+        elevation: 3,
+    },
+    checkInButtonText: {
+        // Text for inside the button
+        color: 'white',
+        fontSize: 16,
+        fontWeight: '600',
+    },
 });

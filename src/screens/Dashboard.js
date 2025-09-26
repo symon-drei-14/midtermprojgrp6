@@ -47,6 +47,9 @@ function Dashboard({ route }) {
     const currentUser = auth().currentUser;
     const userId = currentUser?.uid || route.params?.userId || 'guest_user';
     const email = currentUser?.email || route.params?.email || 'guest@example.com';
+    const [isCheckInVisible, setIsCheckInVisible] = useState(false);
+const [isCheckedIn, setIsCheckedIn] = useState(false);
+const [checkInExpiry, setCheckInExpiry] = useState(null);
 
     const tripId = route.params?.tripId || `trip_${Date.now()}`;
     const truckId = route.params?.truckId || `truck_${Date.now()}`;
@@ -278,6 +281,87 @@ function Dashboard({ route }) {
         }
     }, [currentTrip]);
 
+    useEffect(() => {
+    const checkTime = () => {
+        const now = new Date();
+        
+        const currentHour = now.getHours();
+        if (currentHour >= 6 && currentHour < 22) {
+            setIsCheckInVisible(true);
+        } else {
+            setIsCheckInVisible(false);
+        }
+    };
+
+    checkTime(); 
+    const timer = setInterval(checkTime, 60000); 
+    
+    return () => clearInterval(timer); 
+}, []);
+
+const fetchCheckInStatus = useCallback(async () => {
+    // just a little check to make sure we have the driver's id
+    if (!driverInfo?.driver_id) return;
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/include/handlers/trip_handler.php`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                action: 'get_check_in_status',
+                driver_id: driverInfo.driver_id,
+            }),
+        });
+        const data = await response.json();
+        if (data.success) {
+            setIsCheckedIn(data.isCheckedIn);
+            setCheckInExpiry(data.expiryTime);
+        } else {
+            console.error("Failed to fetch check-in status:", data.message);
+        }
+    } catch (error) {
+        console.error('Error fetching check-in status:', error);
+    }
+}, [driverInfo]);
+
+// Fetch the status once the driver info is available
+useEffect(() => {
+    if (driverInfo) {
+        fetchCheckInStatus();
+    }
+}, [driverInfo, fetchCheckInStatus]);
+
+// This is what runs when the driver taps the check-in button
+const handleCheckIn = async () => {
+    if (!driverInfo?.driver_id) {
+        Alert.alert("Error", "Driver information not available. Cannot check in.");
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/include/handlers/trip_handler.php`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                action: 'driver_check_in',
+                driver_id: driverInfo.driver_id,
+            }),
+        });
+        const data = await response.json();
+
+        if (data.success) {
+            Alert.alert("Success", "You have been checked in and added to the trip queue.");
+            // Refresh the status from the server to update the UI
+            fetchCheckInStatus();
+        } else {
+            Alert.alert("Check-In Failed", data.message || "An unknown error occurred.");
+        }
+    } catch (error) {
+        console.error("Check-in API error:", error);
+        Alert.alert("Error", "A network error occurred. Please try again.");
+    }
+};
+
    useEffect(() => {
         if (hasInitialized.current) {
             console.log('Dashboard: Already initialized, skipping');
@@ -401,6 +485,9 @@ function Dashboard({ route }) {
             LocationService.updateSettings(updateInterval, sensorEnabled);
         }
     }, [sensorEnabled, updateInterval, locationEnabled]);
+
+
+    
 
  const handleLocationToggle = async (value) => {
         console.log(`Location toggle requested: ${value}`);
@@ -582,6 +669,38 @@ function Dashboard({ route }) {
                 <View style={dashboardstyles.sectionHeader}>
                     <Text style={dashboardstyles.sectionTitle}>Tracking Settings</Text>
                 </View>
+
+                <View style={dashboardstyles.sectionHeader}>
+    <Text style={dashboardstyles.sectionTitle}>Daily Queue</Text>
+</View>
+
+<View style={dashboardstyles.card}>
+    {isCheckInVisible ? (
+        isCheckedIn ? (
+            <View style={dashboardstyles.checkInContainer}>
+                <Text style={dashboardstyles.checkInText}>
+                    You are currently in the queue.
+                </Text>
+                <Text style={dashboardstyles.checkInExpiry}>
+                    Your check-in expires at: {checkInExpiry ? new Date(checkInExpiry).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : 'N/A'}
+                </Text>
+            </View>
+        ) : (
+            <TouchableOpacity
+                style={dashboardstyles.checkInButton}
+                onPress={handleCheckIn}
+            >
+                <Text style={dashboardstyles.checkInButtonText}>Check-In to Join Queue</Text>
+            </TouchableOpacity>
+        )
+    ) : (
+        <View style={dashboardstyles.checkInContainer}>
+            <Text style={dashboardstyles.checkInText}>
+                Check-in is available from 6:00 AM to 10:00 PM.
+            </Text>
+        </View>
+    )}
+</View>
 
                 <View style={dashboardstyles.card}>
                     <View style={dashboardstyles.trackingRow}>
