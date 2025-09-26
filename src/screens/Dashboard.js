@@ -265,6 +265,29 @@ const checkInButtonState = getCheckInButtonState();
         }
     };
 
+    const getCheckInStatusText = () => {
+    const now = new Date();
+    if (queueStatus.penaltyUntil) {
+        const penaltyTime = new Date(queueStatus.penaltyUntil);
+        if (now < penaltyTime) {
+            return `On penalty cooldown until ${penaltyTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+        }
+    }
+
+    if (queueStatus.isCheckedIn) {
+         const checkedInTime = new Date(queueStatus.checkedInAt);
+         const expiryTime = new Date(checkedInTime.getTime() + 16 * 60 * 60 * 1000);
+         return `Checked in, valid until ${expiryTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+    }
+    
+    const currentHour = now.getHours();
+    if (currentHour < 6 || currentHour >= 22) {
+        return 'Check-in is available from 6 AM to 10 PM';
+    }
+
+    return 'Ready to check-in for a trip';
+};
+
     const fetchBalanceData = async (tripId) => {
         try {
             const response = await fetch(`${API_BASE_URL}/include/handlers/expense_handler.php`, {
@@ -695,13 +718,30 @@ const checkInButtonState = getCheckInButtonState();
                     <Text style={dashboardstyles.sectionTitle}>Tracking Settings</Text>
                 </View>
 
-                 <TouchableOpacity
-                        style={[dashboardstyles.checkInButton, { backgroundColor: checkInButtonState.color }]}
+                  <View style={dashboardstyles.card}>
+                    <View style={dashboardstyles.trackingRow}>
+                        <View style={dashboardstyles.trackingInfo}>
+                            <View style={dashboardstyles.queueIconContainer}>
+                                <Text style={dashboardstyles.queueIcon}>🕒</Text>
+                            </View>
+                            <View style={dashboardstyles.trackingText}>
+                                <Text style={dashboardstyles.trackingLabel}>Driver Queue Check In</Text>
+                                {/* <Text style={dashboardstyles.trackingStatus}>
+                                    {getCheckInStatusText()}
+                                </Text> */}
+                            </View>
+                        </View>
+                    </View>
+                     <TouchableOpacity
+                        style={[dashboardstyles.checkInButton, { backgroundColor: checkInButtonState.color, marginTop: 16 }]}
                         onPress={handleCheckIn}
-                        disabled={checkInButtonState.disabled}
+                        disabled={checkInButtonState.disabled || isCheckInLoading}
                     >
-                        <Text style={dashboardstyles.checkInButtonText}>{checkInButtonState.title}</Text>
+                        <Text style={dashboardstyles.checkInButtonText}>
+                            {isCheckInLoading ? 'PROCESSING...' : checkInButtonState.title}
+                        </Text>
                     </TouchableOpacity>
+                </View>
 
                 <View style={dashboardstyles.card}>
                     <View style={dashboardstyles.trackingRow}>

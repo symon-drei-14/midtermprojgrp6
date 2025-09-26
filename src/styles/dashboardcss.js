@@ -811,13 +811,13 @@ export const modernStyles = StyleSheet.create({
         color: '#F59E0B',
     },
 
-     checkInButton: {
+      checkInButton: {
         backgroundColor: '#3B82F6',
         borderRadius: 12,
         paddingVertical: 16,
         justifyContent: 'center',
         alignItems: 'center',
-        marginBottom: 20,
+        // removed margin from here to apply it directly in the component
         shadowColor: '#3B82F6',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.2,
@@ -828,5 +828,19 @@ export const modernStyles = StyleSheet.create({
         color: 'white',
         fontSize: 16,
         fontWeight: '600',
+    },
+
+     queueIconContainer: {
+        width: 48,
+        height: 48,
+        borderRadius: 12,
+        backgroundColor: '#FEF3C7', // A nice warm yellow for the queue status
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 16,
+    },
+    
+    queueIcon: {
+        fontSize: 24,
     },
 });
