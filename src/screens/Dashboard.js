@@ -50,6 +50,12 @@ function Dashboard({ route }) {
 
     const tripId = route.params?.tripId || `trip_${Date.now()}`;
     const truckId = route.params?.truckId || `truck_${Date.now()}`;
+    const [queueStatus, setQueueStatus] = useState({
+    isCheckedIn: false,
+    penaltyUntil: null,
+    checkedInAt: null
+});
+const [isCheckInLoading, setIsCheckInLoading] = useState(false);
 
     const hasInitialized = useRef(false);
     const listenerAttached = useRef(false);
@@ -124,6 +130,112 @@ function Dashboard({ route }) {
             setLocationEnabled(value);
         }, 100);
     }, []);
+
+    const fetchQueueStatus = useCallback(async () => {
+    // This depends on getDriverInfo() running first
+    if (!driverInfo?.driver_id) return;
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/include/handlers/trip_handler.php`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                action: 'get_driver_queue_status',
+                driver_id: driverInfo.driver_id
+            }),
+        });
+        const data = await response.json();
+        if (data.success) {
+            setQueueStatus({
+                isCheckedIn: data.isCheckedIn,
+                penaltyUntil: data.penaltyUntil,
+                checkedInAt: data.checkedInAt,
+            });
+        }
+    } catch (error) {
+        console.error('Error fetching queue status:', error);
+    }
+}, [driverInfo?.driver_id]);
+
+// Add this useFocusEffect hook to fetch the status when the screen is focused
+useFocusEffect(
+    useCallback(() => {
+        fetchQueueStatus();
+    }, [fetchQueueStatus])
+);
+
+const handleCheckIn = async () => {
+    const now = new Date();
+    const currentHour = now.getHours();
+
+    // Check-in is only available between 6 AM and 10 PM (22:00)
+    if (currentHour < 6 || currentHour >= 22) {
+        Alert.alert("Check-In Window Closed", "You can only check-in between 6:00 AM and 10:00 PM.");
+        return;
+    }
+
+    setIsCheckInLoading(true);
+    try {
+        const response = await fetch(`${API_BASE_URL}/include/handlers/trip_handler.php`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                action: 'check_in_driver',
+                driver_id: driverInfo.driver_id,
+            }),
+        });
+        const data = await response.json();
+        if (data.success) {
+            Alert.alert("Check-In Successful", "You are now in the queue. Your check-in is valid for 16 hours.");
+            await fetchQueueStatus(); // Refresh the UI
+        } else {
+            Alert.alert("Check-In Failed", data.message || "An unknown error occurred.");
+        }
+    } catch (error) {
+        console.error('Error during check-in:', error);
+        Alert.alert("Error", "A network error occurred. Please try again.");
+    } finally {
+        setIsCheckInLoading(false);
+    }
+};
+
+// This helper determines the button's appearance and state
+const getCheckInButtonState = () => {
+    const now = new Date();
+    if (queueStatus.penaltyUntil) {
+        const penaltyTime = new Date(queueStatus.penaltyUntil);
+        if (now < penaltyTime) {
+            return {
+                disabled: true,
+                title: `PENALIZED UNTIL ${penaltyTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
+                color: '#9CA3AF'
+            };
+        }
+    }
+
+    if (queueStatus.isCheckedIn) {
+        const checkedInTime = new Date(queueStatus.checkedInAt);
+        const expiryTime = new Date(checkedInTime.getTime() + 16 * 60 * 60 * 1000);
+        return {
+            disabled: true,
+            title: `CHECKED IN (EXPIRES ${expiryTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})`,
+            color: '#10B981' // Green for active
+        };
+    }
+    
+    const currentHour = now.getHours();
+    if (currentHour < 6 || currentHour >= 22) {
+         return {
+            disabled: true,
+            title: 'CHECK-IN OPENS AT 6 AM',
+            color: '#9CA3AF' // Gray for unavailable
+        };
+    }
+
+    return { disabled: isCheckInLoading, title: 'CHECK-IN TO QUEUE', color: '#3B82F6' }; // Blue for ready
+};
+
+const checkInButtonState = getCheckInButtonState();
 
     const fetchCurrentTrip = async (driver) => {
         try {
@@ -582,6 +694,14 @@ function Dashboard({ route }) {
                 <View style={dashboardstyles.sectionHeader}>
                     <Text style={dashboardstyles.sectionTitle}>Tracking Settings</Text>
                 </View>
+
+                 <TouchableOpacity
+                        style={[dashboardstyles.checkInButton, { backgroundColor: checkInButtonState.color }]}
+                        onPress={handleCheckIn}
+                        disabled={checkInButtonState.disabled}
+                    >
+                        <Text style={dashboardstyles.checkInButtonText}>{checkInButtonState.title}</Text>
+                    </TouchableOpacity>
 
                 <View style={dashboardstyles.card}>
                     <View style={dashboardstyles.trackingRow}>
