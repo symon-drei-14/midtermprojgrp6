@@ -52,7 +52,7 @@ export default function Expenses({ navigation, route }) {
   const [isEnRoute, setIsEnRoute] = useState(false);
   const [expenseCategories, setExpenseCategories] = useState(["Gas", "Toll Gate", "Maintenance", "Food", "Parking", "Other"]);
   const [refreshing, setRefreshing] = useState(false);
-
+  const [unreadCount, setUnreadCount] = useState(0);
   const [receiptImage, setReceiptImage] = useState(null);
   const [uploadingImage, setUploadingImage] = useState(false);
  
@@ -69,7 +69,7 @@ const handleOpenModal = () => {
   loadExpenseTypes();
 };
 
-  const API_BASE_URL = 'http://192.168.1.4/capstone-1-eb';
+  const API_BASE_URL = 'http://192.168.100.17/capstone-1-eb';
 
   const quickAmounts = [100, 500, 1000, 5000];
 
@@ -1241,75 +1241,101 @@ const resetForm = () => {
     </Modal>
 
       <View style={tripstyle.bottomNav}>
-        <TouchableOpacity 
-          style={[tripstyle.navButton, currentRoute === "Dashboard" && tripstyle.navButtonActive]}
-          onPress={() => nav.navigate("Dashboard")}
-        >
-          <View style={tripstyle.navIconContainer}>
-            <Image 
-              source={require("../assets/Home.png")} 
-              style={[
-                tripstyle.navIcon, 
-                { tintColor: currentRoute === "Dashboard" ? "#dc2626" : "#9ca3af" }
-              ]}
-            />
-          </View>
-          <Text 
-            style={[
-              tripstyle.navLabel, 
-              { color: currentRoute === "Dashboard" ? "#dc2626" : "#9ca3af" }
-            ]}
-          >
-            Home
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity 
-          style={[tripstyle.navButton, currentRoute === "Trips" && tripstyle.navButtonActive]}
-          onPress={() => nav.navigate("Trips")}
-        >
-          <View style={tripstyle.navIconContainer}>
-            <Image 
-              source={require("../assets/location2.png")} 
-              style={[
-                tripstyle.navIcon, 
-                { tintColor: currentRoute === "Trips" ? "#dc2626" : "#9ca3af" }
-              ]}
-            />
-          </View>
-          <Text 
-            style={[
-              tripstyle.navLabel, 
-              { color: currentRoute === "Trips" ? "#dc2626" : "#9ca3af" }
-            ]}
-          >
-            Trips
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity 
-          style={[tripstyle.navButton, currentRoute === "Profile" && tripstyle.navButtonActive]}
-          onPress={() => nav.navigate("Profile")}
-        >
-          <View style={tripstyle.navIconContainer}>
-            <Image 
-              source={require("../assets/user.png")} 
-              style={[
-                tripstyle.navIcon, 
-                { tintColor: currentRoute === "Profile" ? "#dc2626" : "#9ca3af" }
-              ]}
-            />
-          </View>
-          <Text 
-            style={[
-              tripstyle.navLabel, 
-              { color: currentRoute === "Profile" ? "#dc2626" : "#9ca3af" }
-            ]}
-          >
-            Profile
-          </Text>
-        </TouchableOpacity>
-      </View>
+                      <TouchableOpacity
+                          style={[tripstyle.navButton, currentRoute === "Dashboard" && tripstyle.navButtonActive]}
+                          onPress={() => nav.navigate("Dashboard")}
+                      >
+                          <View style={tripstyle.navIconContainer}>
+                              <Image
+                                  source={require("../assets/Home.png")}
+                                  style={[
+                                      tripstyle.navIcon,
+                                      { tintColor: currentRoute === "Dashboard" ? "#dc2626" : "#9ca3af" }
+                                  ]}
+                              />
+                          </View>
+                          <Text
+                              style={[
+                                  tripstyle.navLabel,
+                                  { color: currentRoute === "Dashboard" ? "#dc2626" : "#9ca3af" }
+                              ]}
+                          >
+                              Home
+                          </Text>
+                      </TouchableOpacity>
+      
+                      <TouchableOpacity
+                          style={[tripstyle.navButton, currentRoute === "Notifications" && tripstyle.navButtonActive]}
+                          onPress={() => nav.navigate("Notifications")}
+                      >
+                          <View style={tripstyle.navIconContainer}>
+                          <Image
+                              source={require("../assets/bell.png")}
+                              style={[tripstyle.navIcon, { 
+                              tintColor: currentRoute === "Notifications" ? "#dc2626" : "#9ca3af" 
+                          }]}
+                          />
+                              {unreadCount > 0 && (
+                                  <View style={tripstyle.navBadge}>
+                                      <Text style={tripstyle.navBadgeText}>
+                                          {unreadCount > 9 ? '9+' : unreadCount}
+                                       </Text>
+                                  </View>
+                              )}
+                                  </View>
+                              <Text style={[tripstyle.navLabel, { 
+                              color: currentRoute === "Notifications" ? "#dc2626" : "#9ca3af" 
+                                  }]}>
+                          Notifications
+                          </Text>
+                      </TouchableOpacity>
+      
+                      <TouchableOpacity
+                          style={[tripstyle.navButton, currentRoute === "Trips" && tripstyle.navButtonActive]}
+                          onPress={() => nav.navigate("Trips")}
+                      >
+                          <View style={tripstyle.navIconContainer}>
+                              <Image
+                                  source={require("../assets/location2.png")}
+                                  style={[
+                                      tripstyle.navIcon,
+                                      { tintColor: currentRoute === "Trips" ? "#dc2626" : "#9ca3af" }
+                                  ]}
+                              />
+                          </View>
+                          <Text
+                              style={[
+                                  tripstyle.navLabel,
+                                  { color: currentRoute === "Trips" ? "#dc2626" : "#9ca3af" }
+                              ]}
+                          >
+                              Trips
+                          </Text>
+                      </TouchableOpacity>
+      
+                      <TouchableOpacity
+                          style={[tripstyle.navButton, currentRoute === "Profile" && tripstyle.navButtonActive]}
+                          onPress={() => nav.navigate("Profile")}
+                      >
+                          <View style={tripstyle.navIconContainer}>
+                              <Image
+                                  source={require("../assets/user.png")}
+                                  style={[
+                                      tripstyle.navIcon,
+                                      { tintColor: currentRoute === "Profile" ? "#dc2626" : "#9ca3af" }
+                                  ]}
+                              />
+                          </View>
+                          <Text
+                              style={[
+                                  tripstyle.navLabel,
+                                  { color: currentRoute === "Profile" ? "#dc2626" : "#9ca3af" }
+                              ]}
+                          >
+                              Profile
+                          </Text>
+                      </TouchableOpacity>
+                  </View>
   </View>
   );
 }

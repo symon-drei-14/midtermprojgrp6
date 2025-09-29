@@ -7,6 +7,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { View, ActivityIndicator, Text, Platform } from "react-native";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import auth from '@react-native-firebase/auth';
+import NotificationService from './src/services/NotificationService';
 
 import Login from "./src/screens/Login";
 import Dashboard from "./src/screens/Dashboard";
@@ -14,7 +15,7 @@ import Register from "./src/screens/Register";
 import Trips from "./src/screens/Trips";
 import Expenses from "./src/screens/Expenses";
 import Profile from "./src/screens/Profile";
-import Message from "./src/screens/Message";
+import Notifications from "./src/screens/Notifications";
 
 const Stack = createStackNavigator();
 
@@ -22,10 +23,39 @@ const App = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [userSession, setUserSession] = useState(null);
+  const navigationRef = React.useRef();
 
   useEffect(() => {
-    checkAuthState();
+    initializeApp();
   }, []);
+
+  const initializeApp = async () => {
+    try {
+      await checkAuthState();
+
+      const initialized = await NotificationService.initialize();
+      console.log('Notification service initialized:', initialized);
+
+      if (initialized) {
+        NotificationService.addListener((data) => {
+          handleNotificationEvent(data);
+        });
+      }
+    } catch (error) {
+      console.error('Error initializing app:', error);
+    }
+  };
+
+  const handleNotificationEvent = (data) => {
+    console.log('Notification event received:', data);
+
+    if (data.type === 'navigate_to_trip' && navigationRef.current) {
+      navigationRef.current?.navigate('Trips', { 
+        tripId: data.tripId,
+        focusTrip: true 
+      });
+    }
+  };
 
   const checkAuthState = async () => {
     try {
@@ -42,6 +72,8 @@ const App = () => {
         
         setUserSession(userData);
         setIsAuthenticated(true);
+
+        await NotificationService.registerTokenWithBackend(userData.userId);
       } else {
         const storedSession = await AsyncStorage.getItem('userSession');
         
@@ -55,6 +87,8 @@ const App = () => {
           if (currentTime - sessionTimestamp < sessionDuration) {
             setUserSession(userData);
             setIsAuthenticated(true);
+
+            await NotificationService.registerTokenWithBackend(userData.userId);
           } else {
             await AsyncStorage.removeItem('userSession');
             setIsAuthenticated(false);
@@ -72,7 +106,7 @@ const App = () => {
   };
 
   useEffect(() => {
-    const subscriber = auth().onAuthStateChanged((user) => {
+    const subscriber = auth().onAuthStateChanged(async (user) => {
       if (user) {
         const userData = {
           userId: user.uid,
@@ -84,6 +118,8 @@ const App = () => {
         
         setUserSession(userData);
         setIsAuthenticated(true);
+
+        await NotificationService.registerTokenWithBackend(userData.userId);
       } else if (!userSession) {
         setIsAuthenticated(false);
       }
@@ -102,6 +138,7 @@ const App = () => {
       }
 
       await AsyncStorage.removeItem('userSession');
+      await AsyncStorage.removeItem('fcm_token');
 
       setIsAuthenticated(false);
       setUserSession(null);
@@ -114,38 +151,51 @@ const App = () => {
     }
   };
 
+  const handleLoginSuccess = async (userData) => {
+    setIsAuthenticated(true);
+    setUserSession(userData);
 
-const screenOptions = {
-  headerShown: false,
-  cardStyleInterpolator: CardStyleInterpolators.forFadeFromBottomAndroid,
-  cardStyle: {
-    backgroundColor: '#FFFAF3',
-  },
-  transitionSpec: {
-    open: {
-      animation: 'timing',
-      config: {
-        duration: 400, 
-        useNativeDriver: true,
+    await NotificationService.registerTokenWithBackend(userData.userId);
+  };
+
+  const screenOptions = {
+    headerShown: false,
+    cardStyleInterpolator: CardStyleInterpolators.forFadeFromBottomAndroid,
+    cardStyle: {
+      backgroundColor: '#FFFAF3',
+    },
+    transitionSpec: {
+      open: {
+        animation: 'timing',
+        config: {
+          duration: 400, 
+          useNativeDriver: true,
+        },
+      },
+      close: {
+        animation: 'timing',
+        config: {
+          duration: 20, 
+          useNativeDriver: true,
+        },
       },
     },
-    close: {
-      animation: 'timing',
-      config: {
-        duration: 20, 
-        useNativeDriver: true,
-      },
-    },
-  },
-  gestureEnabled: false,
-};
+    gestureEnabled: false,
+  };
 
-
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color="#FF6B35" />
+        <Text style={{ marginTop: 10 }}>Loading...</Text>
+      </View>
+    );
+  }
 
   return (
     <SafeAreaProvider style={{ flexGrow: 1 }}>
       <GestureHandlerRootView style={{ flex: 1 }}>
-        <NavigationContainer>
+        <NavigationContainer ref={navigationRef}>
           <Stack.Navigator
             initialRouteName={isAuthenticated ? "Dashboard" : "Login"}
             screenOptions={screenOptions} 
@@ -192,8 +242,8 @@ const screenOptions = {
                     }
                   }} />}
                 </Stack.Screen>
-                <Stack.Screen name="Message">
-                  {(props) => <Message {...props} route={{
+                <Stack.Screen name="Notifications">
+                  {(props) => <Notifications {...props} route={{
                     ...props.route,
                     params: {
                       ...props.route.params,
@@ -206,7 +256,7 @@ const screenOptions = {
             ) : (
               <>
                 <Stack.Screen name="Login">
-                  {(props) => <Login {...props} onLoginSuccess={setIsAuthenticated} setUserSession={setUserSession} />}
+                  {(props) => <Login {...props} onLoginSuccess={handleLoginSuccess} setUserSession={setUserSession} />}
                 </Stack.Screen>
                 <Stack.Screen name="Register" component={Register} />
               </>

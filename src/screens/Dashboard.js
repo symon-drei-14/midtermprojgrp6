@@ -17,6 +17,7 @@ import { dashboardstyles } from "../styles/dashboardcss";
 import { tripstyle } from "../styles/Tripcss";
 import LocationService from "../services/LocationService";
 import DashboardSkeleton from "../components/DashboardSkeleton";
+import NotificationService from '../services/NotificationService';
 
 function Dashboard({ route }) {
     const nav = useNavigation();
@@ -37,6 +38,9 @@ function Dashboard({ route }) {
     const [driverStatus, setDriverStatus] = useState('offline');
     const state = useNavigationState((state) => state);
     const currentRoute = state.routes[state.index].name;
+
+    const [notifications, setNotifications] = useState([]);
+    const [unreadCount, setUnreadCount] = useState(0);
 
     const [currentTrip, setCurrentTrip] = useState(null);
     const [balanceData, setBalanceData] = useState({
@@ -60,8 +64,80 @@ const [isCheckInLoading, setIsCheckInLoading] = useState(false);
     const hasInitialized = useRef(false);
     const listenerAttached = useRef(false);
 
-    const API_BASE_URL = 'http://192.168.1.4/capstone-1-eb';
+    const API_BASE_URL = 'http://192.168.100.17/capstone-1-eb';
+
+    const handleNotificationEvent = useCallback((event) => {
+    console.log('Notification event received:', event);
     
+    switch (event.type) {
+        case 'foreground_message':
+        case 'notification_received':
+            if (driverInfo?.driver_id) {
+                fetchUnreadCount();
+                initializeTripData();
+            }
+            break;
+            
+        case 'navigate_to_trip':
+            nav.navigate('Trips');
+            break;
+    }
+    }, [driverInfo?.driver_id, nav]);
+
+    const fetchUnreadCount = useCallback(async () => {
+    if (driverInfo?.driver_id) {
+        try {
+            const count = await NotificationService.getUnreadCount(driverInfo.driver_id);
+            setUnreadCount(count);
+        } catch (error) {
+            console.error('Error fetching unread count:', error);
+        }
+    }
+    }, [driverInfo?.driver_id]);
+
+    useEffect(() => {
+    const initializeNotifications = async () => {
+        await NotificationService.initialize();
+
+        if (driverInfo?.driver_id) {
+            await NotificationService.registerTokenWithBackend(driverInfo.driver_id);
+            await fetchUnreadCount();
+        }
+
+        NotificationService.addListener(handleNotificationEvent);
+    };
+    
+    if (driverInfo?.driver_id) {
+        initializeNotifications();
+    }
+    
+    return () => {
+        NotificationService.removeListener(handleNotificationEvent);
+    };
+    }, [driverInfo?.driver_id, handleNotificationEvent, fetchUnreadCount]);
+
+    const NotificationBell = () => (
+        <TouchableOpacity 
+            style={dashboardstyles.notificationButton}
+            onPress={() => nav.navigate('Notifications')}
+        >
+            <View style={dashboardstyles.notificationIconContainer}>
+                <Image
+                    source={require("../assets/notification.png")}
+                    style={dashboardstyles.notificationIcon}
+                    resizeMode="contain"
+                />
+                {unreadCount > 0 && (
+                    <View style={dashboardstyles.notificationBadge}>
+                        <Text style={dashboardstyles.notificationBadgeText}>
+                            {unreadCount > 99 ? '99+' : unreadCount}
+                        </Text>
+                    </View>
+                )}
+            </View>
+        </TouchableOpacity>
+    );
+        
 
     const getDriverInfo = async () => {
         try {
@@ -608,6 +684,7 @@ const checkInButtonState = getCheckInButtonState();
                             <Text style={dashboardstyles.userName}>{driverInfo?.name || email.split('@')[0]}</Text>
                         </View>
                     </View>
+                        <NotificationBell />    
                 </View>
 
                 <View style={dashboardstyles.headerBottom}>
@@ -717,7 +794,6 @@ const checkInButtonState = getCheckInButtonState();
                 <View style={dashboardstyles.sectionHeader}>
                     <Text style={dashboardstyles.sectionTitle}>Tracking Settings</Text>
                 </View>
-
                   <View style={dashboardstyles.card}>
                     <View style={dashboardstyles.trackingRow}>
                         <View style={dashboardstyles.trackingInfo}>
@@ -793,6 +869,32 @@ const checkInButtonState = getCheckInButtonState();
                         ]}
                     >
                         Home
+                    </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                    style={[tripstyle.navButton, currentRoute === "Notifications" && tripstyle.navButtonActive]}
+                    onPress={() => nav.navigate("Notifications")}
+                >
+                    <View style={tripstyle.navIconContainer}>
+                    <Image
+                        source={require("../assets/bell.png")}
+                        style={[tripstyle.navIcon, { 
+                        tintColor: currentRoute === "Notifications" ? "#dc2626" : "#9ca3af" 
+                    }]}
+                    />
+                        {unreadCount > 0 && (
+                            <View style={tripstyle.navBadge}>
+                                <Text style={tripstyle.navBadgeText}>
+                                    {unreadCount > 9 ? '9+' : unreadCount}
+                                 </Text>
+                            </View>
+                        )}
+                            </View>
+                        <Text style={[tripstyle.navLabel, { 
+                        color: currentRoute === "Notifications" ? "#dc2626" : "#9ca3af" 
+                            }]}>
+                    Notifications
                     </Text>
                 </TouchableOpacity>
 

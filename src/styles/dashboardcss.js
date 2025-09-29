@@ -843,4 +843,44 @@ export const modernStyles = StyleSheet.create({
     queueIcon: {
         fontSize: 24,
     },
+
+    notificationButton: {
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: '#F3F4F6',
+},
+
+    notificationIconContainer: {
+    position: 'relative',
+    width: 24,
+    height: 24,
+},
+
+    notificationIcon: {
+    width: 20,
+    height: 20,
+    tintColor: '#6B7280',
+},
+
+    notificationBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    backgroundColor: '#EF4444',
+    borderRadius: 8,
+    minWidth: 16,
+    height: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#FFFFFF',
+},
+
+    notificationBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontWeight: '600',
+    lineHeight: 12,
+},
 });
+
