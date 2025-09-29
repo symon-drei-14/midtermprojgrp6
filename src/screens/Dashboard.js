@@ -64,7 +64,7 @@ const [isCheckInLoading, setIsCheckInLoading] = useState(false);
     const hasInitialized = useRef(false);
     const listenerAttached = useRef(false);
 
-    const API_BASE_URL = 'http://192.168.100.17/capstone-1-eb';
+    const API_BASE_URL = 'http://192.168.1.4/capstone-1-eb';
 
     const handleNotificationEvent = useCallback((event) => {
     console.log('Notification event received:', event);
