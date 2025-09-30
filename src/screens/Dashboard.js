@@ -64,7 +64,7 @@ const [isCheckInLoading, setIsCheckInLoading] = useState(false);
     const hasInitialized = useRef(false);
     const listenerAttached = useRef(false);
 
-    const API_BASE_URL = 'http://192.168.1.4/capstone-1-eb';
+    const API_BASE_URL = 'http://192.168.100.17/capstone-1-eb';
 
     const handleNotificationEvent = useCallback((event) => {
     console.log('Notification event received:', event);
@@ -451,7 +451,8 @@ const checkInButtonState = getCheckInButtonState();
         setDriverStatus(status.isTracking ? 'online' : 'offline');
     }, []);
 
-    const handleLocationUpdate = useCallback((data) => {
+const handleLocationUpdate = useCallback((data) => {
+    if (data.status === 'Updated' || data.activeTrip || data.location) {
         console.log('Location update received:', data);
         
         if (data.status) {
@@ -487,7 +488,8 @@ const checkInButtonState = getCheckInButtonState();
                 fetchBalanceData(data.activeTrip.trip_id);
             }
         }
-    }, [currentTrip]);
+    }
+}, [currentTrip]);
 
    useEffect(() => {
         if (hasInitialized.current) {

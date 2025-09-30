@@ -64,23 +64,21 @@ debugListeners() {
   }
 
   notifyListeners(data) {
-    const now = Date.now();
-    
-    if (data.status && !data.location && !data.activeTrip) {
-      if (now - this.lastStatusUpdate < this.statusUpdateThreshold) {
-        return;
+      const dataString = JSON.stringify(data);
+      if (this.lastNotification === dataString && Date.now() - this.lastNotificationTime < 1000) {
+          return;
       }
-      this.lastStatusUpdate = now;
-    }
-    
-    console.log(`Notifying ${this.listeners.size} listeners:`, data);
-    this.listeners.forEach(callback => {
-      try {
-        callback(data);
-      } catch (error) {
-        console.error('Error in listener callback:', error);
-      }
-    });
+      this.lastNotification = dataString;
+      this.lastNotificationTime = Date.now();
+      
+      console.log(`Notifying ${this.listeners.size} listeners:`, data);
+      this.listeners.forEach(callback => {
+          try {
+              callback(data);
+          } catch (error) {
+              console.error('Error in listener callback:', error);
+          }
+      });
   }
 
   emergencyReset() {
@@ -461,6 +459,13 @@ debugListeners() {
 
  async startTracking(userId, updateInterval = 10, sensorEnabled = false) {
     console.log(`START TRACKING REQUEST - Current state: tracking=${this.isTracking}, timer=${!!this.locationTimer}`);
+
+        if (this.locationTimer) {
+        console.log(`Force clearing existing timer ${this.locationTimer}`);
+        clearInterval(this.locationTimer);
+        this.locationTimer = null;
+        await new Promise(resolve => setTimeout(resolve, 200));
+    }
 
     if (this.isStarting) {
       console.log('Start tracking already in progress, ignoring request');

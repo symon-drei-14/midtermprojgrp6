@@ -54,7 +54,7 @@ const Profile = ({ route }) => {
     const [selectedImage, setSelectedImage] = useState(null); // To hold the newly selected image file
     const [isChangingPassword, setIsChangingPassword] = useState(false);
 
-    const API_BASE_URL = 'http://192.168.1.4/capstone-1-eb';
+    const API_BASE_URL = 'http://192.168.100.17/capstone-1-eb';
 
     const { onLogout } = route.params || {};
 
