@@ -8,12 +8,15 @@ import {
     StyleSheet,
     RefreshControl,
     ActivityIndicator,
-    Image,
+    Animated,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import NotificationService from '../services/NotificationService';
 import { useNavigation, useNavigationState } from '@react-navigation/native';
 import { tripstyle } from "../styles/Tripcss";
+import Icon from 'react-native-vector-icons/Feather';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 const NotificationScreen = () => {
     const nav = useNavigation();
@@ -117,6 +120,21 @@ const NotificationScreen = () => {
         }
     };
 
+    const handleNotificationPress = async (notification) => {
+        if (notification.is_read == 0) {
+            await markAsRead(notification.notification_id);
+        }
+
+        if (notification.trip_id) {
+            nav.navigate('Trips', { 
+                tripId: notification.trip_id,
+                highlightTrip: true 
+            });
+        } else {
+            nav.navigate('Trips');
+        }
+    };
+
     const markAllAsRead = async () => {
         if (!driverId || unreadCount === 0) return;
         
@@ -165,19 +183,27 @@ const NotificationScreen = () => {
 
     const getNotificationIcon = (type) => {
         switch (type) {
-            case 'trip_assigned': return '🚛';
-            case 'trip_updated': return '📝';
-            case 'trip_cancelled': return '❌';
-            case 'trip_status_change': return '📊';
-            case 'payment_confirmed': return '💰';
-            case 'system_update': return '🔔';
-            default: return '📱';
+            case 'trip_assigned':
+                return { name: 'truck-fast', library: 'MaterialCommunityIcons', color: '#FF6B35' };
+            case 'trip_updated':
+                return { name: 'file-document-edit', library: 'MaterialCommunityIcons', color: '#2196F3' };
+            case 'trip_cancelled':
+                return { name: 'close-circle', library: 'MaterialCommunityIcons', color: '#F44336' };
+            case 'trip_status_change':
+                return { name: 'chart-line', library: 'MaterialCommunityIcons', color: '#9C27B0' };
+            case 'payment_confirmed':
+                return { name: 'cash-check', library: 'MaterialCommunityIcons', color: '#4CAF50' };
+            case 'system_update':
+                return { name: 'bell-ring', library: 'MaterialCommunityIcons', color: '#FF9800' };
+            default:
+                return { name: 'notifications', library: 'Ionicons', color: '#607D8B' };
         }
     };
 
     const getPriorityColor = (type) => {
         if (type === 'trip_assigned' || type === 'trip_cancelled') return '#FF6B35';
         if (type === 'payment_confirmed') return '#4CAF50';
+        if (type === 'trip_updated') return '#2196F3';
         return '#999';
     };
 
@@ -191,16 +217,35 @@ const NotificationScreen = () => {
         return notifications;
     };
 
+    const renderIcon = (iconData) => {
+        const IconComponent = iconData.library === 'MaterialCommunityIcons' 
+            ? MaterialCommunityIcons 
+            : Ionicons;
+        
+        return (
+            <IconComponent 
+                name={iconData.name} 
+                size={24} 
+                color={iconData.color} 
+            />
+        );
+    };
+
     const filteredNotifications = getFilteredNotifications();
 
     if (loading && notifications.length === 0) {
         return (
             <View style={styles.container}>
                 <View style={styles.header}>
-                    <Text style={styles.headerTitle}>Notifications</Text>
+                    <View style={styles.headerTop}>
+                        <View style={styles.headerTitleContainer}>
+                            <Ionicons name="notifications" size={28} color="#fff" />
+                            <Text style={styles.headerTitle}>Notifications</Text>
+                        </View>
+                    </View>
                 </View>
                 <View style={styles.loadingContainer}>
-                    <ActivityIndicator size="large" color="#a62626ff" />
+                    <ActivityIndicator size="large" color="#d32f2f" />
                     <Text style={styles.loadingText}>Loading notifications...</Text>
                 </View>
             </View>
@@ -209,23 +254,29 @@ const NotificationScreen = () => {
 
     return (
         <View style={styles.container}>
-            {/* Header */}
             <View style={styles.header}>
                 <View style={styles.headerTop}>
-                    <Text style={styles.headerTitle}>Notifications</Text>
+                    <View style={styles.headerTitleContainer}>
+                        <Text style={styles.headerTitle}>Notifications</Text>
+                    </View>
                     {unreadCount > 0 && (
                         <TouchableOpacity onPress={markAllAsRead} style={styles.markAllButton}>
+                            <Icon name="check-circle" size={16} color="#fff" style={styles.markAllIcon} />
                             <Text style={styles.markAllText}>Mark all read</Text>
                         </TouchableOpacity>
                     )}
                 </View>
-                
-                {/* Filter Tabs */}
                 <View style={styles.tabContainer}>
                     <TouchableOpacity
                         style={[styles.tab, activeTab === 'All' && styles.activeTab]}
                         onPress={() => setActiveTab('All')}
                     >
+                        <Icon 
+                            name="inbox" 
+                            size={16} 
+                            color={activeTab === 'All' ? '#fff' : 'rgba(255,255,255,0.7)'} 
+                            style={styles.tabIcon}
+                        />
                         <Text style={[styles.tabText, activeTab === 'All' && styles.activeTabText]}>
                             All
                         </Text>
@@ -235,6 +286,12 @@ const NotificationScreen = () => {
                         style={[styles.tab, activeTab === 'Unread' && styles.activeTab]}
                         onPress={() => setActiveTab('Unread')}
                     >
+                        <Icon 
+                            name="mail" 
+                            size={16} 
+                            color={activeTab === 'Unread' ? '#fff' : 'rgba(255,255,255,0.7)'} 
+                            style={styles.tabIcon}
+                        />
                         <Text style={[styles.tabText, activeTab === 'Unread' && styles.activeTabText]}>
                             Unread
                         </Text>
@@ -249,40 +306,55 @@ const NotificationScreen = () => {
                         style={[styles.tab, activeTab === 'Read' && styles.activeTab]}
                         onPress={() => setActiveTab('Read')}
                     >
+                        <Icon 
+                            name="check-square" 
+                            size={16} 
+                            color={activeTab === 'Read' ? '#fff' : 'rgba(255,255,255,0.7)'} 
+                            style={styles.tabIcon}
+                        />
                         <Text style={[styles.tabText, activeTab === 'Read' && styles.activeTabText]}>
                             Read
                         </Text>
                     </TouchableOpacity>
                 </View>
             </View>
-
-            {/* Notifications List */}
             <ScrollView
                 style={styles.notificationsList}
-                contentContainerStyle={styles.notificationsContent}
+                contentContainerStyle={[
+                    styles.notificationsContent,
+                    { paddingBottom: 80 }
+                ]}
                 refreshControl={
                     <RefreshControl 
                         refreshing={refreshing} 
                         onRefresh={onRefresh}
-                        colors={['#a62626ff']}
-                        tintColor="#a62626ff"
+                        colors={['#d32f2f']}
+                        tintColor="#d32f2f"
                     />
                 }
             >
                 {filteredNotifications.length === 0 ? (
                     <View style={styles.emptyState}>
-                        <Text style={styles.emptyStateIcon}>
-                            {activeTab === 'Unread' ? '✅' : activeTab === 'Read' ? '📭' : '📪'}
-                        </Text>
+                        <View style={styles.emptyStateIconContainer}>
+                            {activeTab === 'Unread' ? (
+                                <Ionicons name="checkmark-done-circle" size={80} color="#4CAF50" />
+                            ) : activeTab === 'Read' ? (
+                                <MaterialCommunityIcons name="email-open" size={80} color="#9E9E9E" />
+                            ) : (
+                                <Ionicons name="notifications-off" size={80} color="#BDBDBD" />
+                            )}
+                        </View>
                         <Text style={styles.emptyStateText}>
                             {activeTab === 'Unread' 
-                                ? 'No unread notifications' 
+                                ? 'All caught up!' 
                                 : activeTab === 'Read'
                                 ? 'No read notifications'
                                 : 'No notifications yet'}
                         </Text>
                         <Text style={styles.emptyStateSubtext}>
-                            {activeTab === 'All' 
+                            {activeTab === 'Unread' 
+                                ? 'You have no unread notifications' 
+                                : activeTab === 'All' 
                                 ? 'New notifications will appear here'
                                 : 'Pull down to refresh'}
                         </Text>
@@ -295,18 +367,15 @@ const NotificationScreen = () => {
                                 styles.notificationItem,
                                 notification.is_read == 0 && styles.unreadNotification
                             ]}
-                            onPress={() => {
-                                if (notification.is_read == 0) {
-                                    markAsRead(notification.notification_id);
-                                }
-                            }}
+                            onPress={() => handleNotificationPress(notification)}
                             activeOpacity={0.7}
                         >
                             <View style={styles.notificationContent}>
-                                <View style={styles.iconContainer}>
-                                    <Text style={styles.notificationIcon}>
-                                        {getNotificationIcon(notification.type)}
-                                    </Text>
+                                <View style={[
+                                    styles.iconContainer,
+                                    { backgroundColor: `${getNotificationIcon(notification.type).color}15` }
+                                ]}>
+                                    {renderIcon(getNotificationIcon(notification.type))}
                                 </View>
                                 
                                 <View style={styles.textContainer}>
@@ -323,28 +392,16 @@ const NotificationScreen = () => {
                                         {notification.body}
                                     </Text>
                                     
-                                    {notification.trip_id && (
-                                        <View style={styles.tripInfoContainer}>
-                                            <Text style={styles.tripInfoText} numberOfLines={1}>
-                                                Trip #{notification.trip_id}
-                                                {notification.destination && ` • ${notification.destination}`}
-                                            </Text>
-                                        </View>
-                                    )}
-                                    
                                     <View style={styles.metaRow}>
                                         <Text style={styles.timeText}>
                                             {formatDate(notification.created_at)}
                                         </Text>
-                                        <View style={[styles.priorityBadge, { 
-                                            backgroundColor: `${getPriorityColor(notification.type)}15` 
-                                        }]}>
-                                            <Text style={[styles.priorityText, { 
-                                                color: getPriorityColor(notification.type) 
-                                            }]}>
-                                                {notification.type.replace('_', ' ')}
-                                            </Text>
-                                        </View>
+                                        <Icon 
+                                            name="chevron-right" 
+                                            size={16} 
+                                            color="#999" 
+                                            style={styles.chevronIcon}
+                                        />
                                     </View>
                                 </View>
                             </View>
@@ -353,102 +410,79 @@ const NotificationScreen = () => {
                 )}
             </ScrollView>
 
+            {/* Bottom Navigation */}
             <View style={tripstyle.bottomNav}>
-                            <TouchableOpacity
-                                style={[tripstyle.navButton, currentRoute === "Dashboard" && tripstyle.navButtonActive]}
-                                onPress={() => nav.navigate("Dashboard")}
-                            >
-                                <View style={tripstyle.navIconContainer}>
-                                    <Image
-                                        source={require("../assets/Home.png")}
-                                        style={[
-                                            tripstyle.navIcon,
-                                            { tintColor: currentRoute === "Dashboard" ? "#dc2626" : "#9ca3af" }
-                                        ]}
-                                    />
-                                </View>
-                                <Text
-                                    style={[
-                                        tripstyle.navLabel,
-                                        { color: currentRoute === "Dashboard" ? "#dc2626" : "#9ca3af" }
-                                    ]}
-                                >
-                                    Home
+                <TouchableOpacity
+                    style={[tripstyle.navButton, currentRoute === "Dashboard" && tripstyle.navButtonActive]}
+                    onPress={() => nav.navigate("Dashboard")}
+                >
+                    <View style={tripstyle.navIconContainer}>
+                        <Icon 
+                            name="home" 
+                            size={24} 
+                            color={currentRoute === "Dashboard" ? "#dc2626" : "#6B7280"} 
+                        />
+                    </View>
+                    <Text style={[tripstyle.navLabel, { color: currentRoute === "Dashboard" ? "#dc2626" : "#6B7280" }]}>
+                        Home
+                    </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                    style={[tripstyle.navButton, currentRoute === "Notifications" && tripstyle.navButtonActive]}
+                    onPress={() => nav.navigate("Notifications")}
+                >
+                    <View style={tripstyle.navIconContainer}>
+                        <Icon 
+                            name="bell" 
+                            size={24} 
+                            color={currentRoute === "Notifications" ? "#dc2626" : "#6B7280"} 
+                        />
+                        {unreadCount > 0 && (
+                            <View style={tripstyle.navBadge}>
+                                <Text style={tripstyle.navBadgeText}>
+                                    {unreadCount > 9 ? '9+' : unreadCount}
                                 </Text>
-                            </TouchableOpacity>
-            
-                            <TouchableOpacity
-                                style={[tripstyle.navButton, currentRoute === "Notifications" && tripstyle.navButtonActive]}
-                                onPress={() => nav.navigate("Notifications")}
-                            >
-                                <View style={tripstyle.navIconContainer}>
-                                <Image
-                                    source={require("../assets/bell.png")}
-                                    style={[tripstyle.navIcon, { 
-                                    tintColor: currentRoute === "Notifications" ? "#dc2626" : "#9ca3af" 
-                                }]}
-                                />
-                                    {unreadCount > 0 && (
-                                        <View style={tripstyle.navBadge}>
-                                            <Text style={tripstyle.navBadgeText}>
-                                                {unreadCount > 9 ? '9+' : unreadCount}
-                                             </Text>
-                                        </View>
-                                    )}
-                                        </View>
-                                    <Text style={[tripstyle.navLabel, { 
-                                    color: currentRoute === "Notifications" ? "#dc2626" : "#9ca3af" 
-                                        }]}>
-                                Notifications
-                                </Text>
-                            </TouchableOpacity>
-            
-                            <TouchableOpacity
-                                style={[tripstyle.navButton, currentRoute === "Trips" && tripstyle.navButtonActive]}
-                                onPress={() => nav.navigate("Trips")}
-                            >
-                                <View style={tripstyle.navIconContainer}>
-                                    <Image
-                                        source={require("../assets/location2.png")}
-                                        style={[
-                                            tripstyle.navIcon,
-                                            { tintColor: currentRoute === "Trips" ? "#dc2626" : "#9ca3af" }
-                                        ]}
-                                    />
-                                </View>
-                                <Text
-                                    style={[
-                                        tripstyle.navLabel,
-                                        { color: currentRoute === "Trips" ? "#dc2626" : "#9ca3af" }
-                                    ]}
-                                >
-                                    Trips
-                                </Text>
-                            </TouchableOpacity>
-            
-                            <TouchableOpacity
-                                style={[tripstyle.navButton, currentRoute === "Profile" && tripstyle.navButtonActive]}
-                                onPress={() => nav.navigate("Profile")}
-                            >
-                                <View style={tripstyle.navIconContainer}>
-                                    <Image
-                                        source={require("../assets/user.png")}
-                                        style={[
-                                            tripstyle.navIcon,
-                                            { tintColor: currentRoute === "Profile" ? "#dc2626" : "#9ca3af" }
-                                        ]}
-                                    />
-                                </View>
-                                <Text
-                                    style={[
-                                        tripstyle.navLabel,
-                                        { color: currentRoute === "Profile" ? "#dc2626" : "#9ca3af" }
-                                    ]}
-                                >
-                                    Profile
-                                </Text>
-                            </TouchableOpacity>
-                        </View>
+                            </View>
+                        )}
+                    </View>
+                    <Text style={[tripstyle.navLabel, { color: currentRoute === "Notifications" ? "#dc2626" : "#6B7280" }]}>
+                        Notifications
+                    </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                    style={[tripstyle.navButton, currentRoute === "Trips" && tripstyle.navButtonActive]}
+                    onPress={() => nav.navigate("Trips")}
+                >
+                    <View style={tripstyle.navIconContainer}>
+                        <Icon 
+                            name="map-pin" 
+                            size={24} 
+                            color={currentRoute === "Trips" ? "#dc2626" : "#6B7280"} 
+                        />
+                    </View>
+                    <Text style={[tripstyle.navLabel, { color: currentRoute === "Trips" ? "#dc2626" : "#6B7280" }]}>
+                        Trips
+                    </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                    style={[tripstyle.navButton, currentRoute === "Profile" && tripstyle.navButtonActive]}
+                    onPress={() => nav.navigate("Profile")}
+                >
+                    <View style={tripstyle.navIconContainer}>
+                        <Icon 
+                            name="user" 
+                            size={24} 
+                            color={currentRoute === "Profile" ? "#dc2626" : "#6B7280"} 
+                        />
+                    </View>
+                    <Text style={[tripstyle.navLabel, { color: currentRoute === "Profile" ? "#dc2626" : "#6B7280" }]}>
+                        Profile
+                    </Text>
+                </TouchableOpacity>
+            </View>
         </View>
     );
 };
@@ -456,17 +490,17 @@ const NotificationScreen = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#F8FAFB',
+        backgroundColor: '#F5F7FA',
     },
     header: {
         backgroundColor: '#7a0f0fff',
-        paddingTop: 50,
+        paddingTop: 10,
         paddingBottom: 0,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 4,
+        shadowOpacity: 0.15,
+        shadowRadius: 6,
+        elevation: 8,
     },
     headerTop: {
         flexDirection: 'row',
@@ -475,16 +509,28 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20,
         paddingBottom: 15,
     },
+    headerTitleContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 12,
+    },
     headerTitle: {
-        fontSize: 28,
+        fontSize: 26,
         fontWeight: '700',
         color: '#fff',
+        letterSpacing: 0.5,
     },
     markAllButton: {
-        paddingHorizontal: 12,
-        paddingVertical: 6,
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 14,
+        paddingVertical: 8,
         borderRadius: 20,
-        backgroundColor: 'rgba(255,255,255,0.2)',
+        backgroundColor: 'rgba(255,255,255,0.25)',
+        gap: 6,
+    },
+    markAllIcon: {
+        marginRight: 2,
     },
     markAllText: {
         color: '#fff',
@@ -505,13 +551,17 @@ const styles = StyleSheet.create({
         paddingVertical: 12,
         borderBottomWidth: 3,
         borderBottomColor: 'transparent',
+        gap: 6,
     },
     activeTab: {
         borderBottomColor: '#fff',
     },
+    tabIcon: {
+        marginRight: 2,
+    },
     tabText: {
-        fontSize: 16,
-        fontWeight: '500',
+        fontSize: 15,
+        fontWeight: '600',
         color: 'rgba(255,255,255,0.7)',
     },
     activeTabText: {
@@ -521,10 +571,10 @@ const styles = StyleSheet.create({
     unreadBadge: {
         backgroundColor: '#fff',
         borderRadius: 10,
-        paddingHorizontal: 6,
+        paddingHorizontal: 7,
         paddingVertical: 2,
         marginLeft: 6,
-        minWidth: 20,
+        minWidth: 22,
         alignItems: 'center',
     },
     unreadBadgeText: {
@@ -538,35 +588,36 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     loadingText: {
-        marginTop: 12,
+        marginTop: 16,
         fontSize: 16,
         color: '#666',
+        fontWeight: '500',
     },
     notificationsList: {
         flex: 1,
     },
     notificationsContent: {
-        paddingVertical: 10,
+        paddingVertical: 12,
     },
     emptyState: {
-        paddingVertical: 80,
+        paddingVertical: 100,
         alignItems: 'center',
         paddingHorizontal: 40,
     },
-    emptyStateIcon: {
-        fontSize: 64,
-        marginBottom: 16,
+    emptyStateIconContainer: {
+        marginBottom: 24,
+        opacity: 0.8,
     },
     emptyStateText: {
-        fontSize: 20,
+        fontSize: 22,
         fontWeight: '700',
-        color: '#333',
+        color: '#1A1A1A',
         marginBottom: 8,
         textAlign: 'center',
     },
     emptyStateSubtext: {
         fontSize: 15,
-        color: '#999',
+        color: '#757575',
         textAlign: 'center',
         lineHeight: 22,
     },
@@ -574,34 +625,33 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
         marginHorizontal: 16,
         marginVertical: 6,
-        borderRadius: 12,
+        borderRadius: 16,
         overflow: 'hidden',
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.05,
-        shadowRadius: 3,
-        elevation: 2,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.06,
+        shadowRadius: 8,
+        elevation: 3,
+        borderWidth: 1,
+        borderColor: '#F0F0F0',
     },
     unreadNotification: {
-        borderLeftWidth: 4,
+        borderLeftWidth: 5,
         borderLeftColor: '#d32f2f',
-        backgroundColor: '#fffbf5',
+        backgroundColor: '#FFFBF5',
+        borderColor: '#FFE5E5',
     },
     notificationContent: {
         flexDirection: 'row',
         padding: 16,
     },
     iconContainer: {
-        width: 44,
-        height: 44,
-        borderRadius: 22,
-        backgroundColor: '#f5f5f5',
+        width: 50,
+        height: 50,
+        borderRadius: 25,
         justifyContent: 'center',
         alignItems: 'center',
-        marginRight: 12,
-    },
-    notificationIcon: {
-        fontSize: 22,
+        marginRight: 14,
     },
     textContainer: {
         flex: 1,
@@ -609,34 +659,38 @@ const styles = StyleSheet.create({
     titleRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 4,
+        marginBottom: 6,
     },
     notificationTitle: {
         flex: 1,
         fontSize: 16,
         fontWeight: '700',
         color: '#1A1A1A',
+        letterSpacing: 0.2,
     },
     unreadDot: {
-        width: 8,
-        height: 8,
-        borderRadius: 4,
+        width: 10,
+        height: 10,
+        borderRadius: 5,
         backgroundColor: '#d32f2f',
         marginLeft: 8,
     },
     notificationBody: {
         fontSize: 14,
-        color: '#555',
+        color: '#4A4A4A',
         lineHeight: 20,
-        marginBottom: 8,
+        marginBottom: 10,
     },
     tripInfoContainer: {
-        backgroundColor: '#f0f9ff',
-        paddingHorizontal: 10,
-        paddingVertical: 6,
-        borderRadius: 6,
-        marginBottom: 8,
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#E3F2FD',
+        paddingHorizontal: 12,
+        paddingVertical: 7,
+        borderRadius: 8,
+        marginBottom: 10,
         alignSelf: 'flex-start',
+        gap: 6,
     },
     tripInfoText: {
         fontSize: 12,
@@ -651,67 +705,21 @@ const styles = StyleSheet.create({
     timeText: {
         fontSize: 12,
         color: '#999',
+        fontWeight: '500',
+    },
+    chevronIcon: {
+        marginLeft: 'auto',
     },
     priorityBadge: {
-        paddingHorizontal: 8,
-        paddingVertical: 3,
-        borderRadius: 4,
+        paddingHorizontal: 10,
+        paddingVertical: 4,
+        borderRadius: 6,
     },
     priorityText: {
         fontSize: 11,
-        fontWeight: '600',
-        textTransform: 'capitalize',
-    },
-    bottomNav: {
-        flexDirection: "row",
-        backgroundColor: "#fff",
-        paddingVertical: 10,
-        borderTopWidth: 1,
-        borderTopColor: "#e5e7eb",
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: -2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 10,
-    },
-    navButton: {
-        flex: 1,
-        alignItems: "center",
-        paddingVertical: 8,
-    },
-    navIconContainer: {
-        position: 'relative',
-        marginBottom: 4,
-    },
-    navIcon: {
-        width: 24,
-        height: 24,
-    },
-    navBadge: {
-        position: 'absolute',
-        top: -6,
-        right: -10,
-        backgroundColor: '#dc2626',
-        borderRadius: 10,
-        minWidth: 18,
-        height: 18,
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderWidth: 2,
-        borderColor: '#fff',
-    },
-    navBadgeText: {
-        color: '#fff',
-        fontSize: 10,
         fontWeight: '700',
-    },
-    navLabel: {
-        fontSize: 12,
-        fontWeight: "500",
-    },
-    navButtonActive: {
-        borderTopWidth: 2,
-        borderTopColor: "#dc2626",
+        textTransform: 'capitalize',
+        letterSpacing: 0.3,
     },
 });
 

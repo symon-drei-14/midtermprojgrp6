@@ -29,7 +29,9 @@ import userIcon from "../assets/schedule.png";
 import profileicon from "../assets/profile2.png";
 import { tripstyle } from "../styles/Tripcss";
 import ExpensesSkeleton from "../components/ExpensesSkeleton"; 
-
+import Icon from 'react-native-vector-icons/Feather';
+import NotificationService from '../services/NotificationService';
+import MaterialIcon from "react-native-vector-icons/MaterialCommunityIcons";
 export default function Expenses({ navigation, route }) {
   const [expenses, setExpenses] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -64,8 +66,8 @@ export default function Expenses({ navigation, route }) {
   const tripId = route?.params?.tripId;
 
 const handleOpenModal = () => {
-  resetForm(); // Clear all previous data
-  setModalVisible(true); // Now, open the modal
+  resetForm();
+  setModalVisible(true);
   loadExpenseTypes();
 };
 
@@ -89,6 +91,58 @@ const handleOpenModal = () => {
       }
     })();
   }, []);
+
+      const handleNotificationEvent = useCallback((event) => {
+          console.log('Notification event received:', event);
+          
+          switch (event.type) {
+              case 'foreground_message':
+              case 'notification_received':
+                  if (driverInfo?.driver_id) {
+                      fetchUnreadCount();
+                      initializeTripData();
+                  }
+                  break;
+                  
+              case 'navigate_to_trip':
+                  nav.navigate('Trips');
+                  break;
+          }
+      }, [driverInfo?.driver_id, nav]);
+
+          useEffect(() => {
+              const initializeNotifications = async () => {
+                  await NotificationService.initialize();
+      
+                  if (driverInfo?.driver_id) {
+                      await NotificationService.registerTokenWithBackend(driverInfo.driver_id);
+                      await fetchUnreadCount();
+                  }
+      
+                  NotificationService.addListener(handleNotificationEvent);
+              };
+              
+              if (driverInfo?.driver_id) {
+                  initializeNotifications();
+              }
+              
+              return () => {
+                  NotificationService.removeListener(handleNotificationEvent);
+              };
+          }, [driverInfo?.driver_id, handleNotificationEvent, fetchUnreadCount]);
+
+      const fetchUnreadCount = useCallback(async () => {
+          if (driverInfo?.driver_id) {
+              try {
+                  const count = await NotificationService.getUnreadCount(driverInfo.driver_id);
+                  setUnreadCount(count);
+              } catch (error) {
+                  console.error('Error fetching unread count:', error);
+              }
+          }
+      }, [driverInfo?.driver_id]);
+
+      
 
 const pickImage = async () => {
   const options = {
@@ -725,7 +779,7 @@ const resetForm = () => {
   setExpenseAmountError("");
   setCustomCategoryError("");
   setReceiptImage(null);
-  setModalVisible(false); // It should CLOSE the modal, not open it.
+  setModalVisible(false);
 };
 
   const closeDropdown = () => {
@@ -741,17 +795,18 @@ const resetForm = () => {
     });
   };
 
-  const getCategoryIcon = (category) => {
-    const icons = {
-      'Gas': '⛽',
-      'Toll Gate': '🚪',
-      'Maintenance': '🔧',
-      'Food': '🍽️',
-      'Parking': '🅿️',
-      'Other': '📝'
-    };
-    return icons[category] || '💰';
+const getCategoryIcon = (category, size = 20, color = "#374151") => {
+  const icons = {
+    Gas: "gas-station",
+    "Toll Gate": "gate",
+    Maintenance: "wrench",
+    Food: "silverware-fork-knife",
+    Parking: "parking",
+    Other: "note-text-outline",
   };
+  const iconName = icons[category] || "cash";
+  return <MaterialIcon name={iconName} size={size} color={color} />;
+};
 
   const getSpendingPercentage = () => {
     if (totalBudget === 0) return 0;
@@ -774,9 +829,7 @@ const resetForm = () => {
         opacity: 1 - (index * 0.02)
       }]}>
       <View style={expensestyle.expenseIconContainer}>
-        <Text style={expensestyle.expenseIcon}>
-          {getCategoryIcon(item.expense_type || item.expense_type_name)}
-        </Text>
+      {getCategoryIcon(item.expense_type || item.expense_type_name, 24, "#374151")}
       </View>
       <View style={expensestyle.expenseDetails}>
         <View style={expensestyle.expenseHeader}>
@@ -785,7 +838,7 @@ const resetForm = () => {
           </Text>
           {item.receipt_image && (
              <TouchableOpacity onPress={(e) => {
-                 e.stopPropagation(); // Prevents the edit modal from opening
+                 e.stopPropagation();
                  handleViewReceipt(fullImageUrl);
              }}>
                 <Text style={expensestyle.receiptIndicator}>📎</Text>
@@ -827,11 +880,12 @@ const resetForm = () => {
           <View style={expensestyle.totalBudgetCard}>
             <View style={expensestyle.budgetHeader}>
               <View style={expensestyle.budgetIcon}>
-                <Image
-                  source={require("../assets/wallet2.png")}
-                  style={expensestyle.walletIcon}
-                  resizeMode="contain"
-                />
+              <MaterialIcon  
+                name="wallet"
+                size={28}
+                color="#000"
+                style={expensestyle.walletIcon}
+              />
               </View>
               <Text style={expensestyle.totalBudgetLabel}>Total Budget</Text>
             </View>
@@ -894,9 +948,13 @@ const resetForm = () => {
           </View>
         </View>
       ) : (
-        // Message when trip is not en route
         <View style={expensestyle.statusMessage}>
-          <Text style={expensestyle.statusMessageIcon}>📋</Text>
+          <MaterialIcon 
+            name="clipboard-text-outline"
+            size={28} 
+            color="#6b7280"
+            style={expensestyle.statusMessageIcon}
+          />
           <Text style={expensestyle.statusMessageText}>Trip Not Active</Text>
           <Text style={expensestyle.statusMessageSubtext}>
             Budget information is only available for trips that are en route
@@ -918,7 +976,12 @@ const resetForm = () => {
           </View>
         ) : (
           <View style={expensestyle.emptyState}>
-            <Text style={expensestyle.emptyStateIcon}>📊</Text>
+            <Icon 
+              name="bar-chart-2" 
+              size={40} 
+              color="#9ca3af"
+              style={expensestyle.emptyStateIcon}
+            />
             <Text style={expensestyle.emptyStateText}>
               No expenses recorded yet
             </Text>
@@ -952,7 +1015,6 @@ const resetForm = () => {
       <View style={expensestyle.modalOverlay}>
         <TouchableWithoutFeedback>
           <View style={expensestyle.modalContainer}>
-            {/* ---- MODAL HEADER ---- */}
             <View style={expensestyle.modalHeader}>
               <Text style={expensestyle.modalTitle}>
                 {editingExpense ? "Edit Expense" : "Add Expense"}
@@ -966,7 +1028,6 @@ const resetForm = () => {
               </TouchableOpacity>
             </View>
 
-            {/* ---- SCROLLABLE FORM CONTENT ---- */}
             <ScrollView
               style={expensestyle.modalContent}
               showsVerticalScrollIndicator={false}
@@ -974,14 +1035,18 @@ const resetForm = () => {
             >
               {isEnRoute && (
                 <View style={expensestyle.balanceAlert}>
-                  <Text style={expensestyle.balanceAlertIcon}>💳</Text>
+                    <MaterialIcon 
+                      name="credit-card-outline"
+                      size={28} 
+                      color="#ef4444"
+                      style={expensestyle.balanceAlertIcon}
+                    />
                   <Text style={expensestyle.balanceAlertText}>
                     Available: ₱{formatCurrency(remainingBalance)}
                   </Text>
                 </View>
               )}
 
-              {/* ---- AMOUNT INPUT ---- */}
               <View style={expensestyle.inputGroup}>
                 <Text style={expensestyle.inputLabel}>Amount</Text>
                 <TextInput
@@ -1002,7 +1067,6 @@ const resetForm = () => {
                 )}
               </View>
 
-              {/* ---- QUICK AMOUNTS ---- */}
               <View style={expensestyle.quickAmountSection}>
                 <Text style={expensestyle.quickAmountLabel}>Quick amounts</Text>
                 <View style={expensestyle.quickAmountGrid}>
@@ -1038,7 +1102,7 @@ const resetForm = () => {
                 </View>
               </View>
 
-              {/* ---- CATEGORY DROPDOWN ---- */}
+
               <View style={expensestyle.inputGroup}>
                 <Text style={expensestyle.inputLabel}>Category</Text>
                 <View style={expensestyle.dropdownContainer}>
@@ -1050,11 +1114,16 @@ const resetForm = () => {
                     onPress={() => setDropdownVisible(!dropdownVisible)}
                     disabled={loadingExpenseTypes}
                   >
-                    <Text style={expensestyle.dropdownText}>
-                      {loadingExpenseTypes
-                        ? "Loading..."
-                        : `${getCategoryIcon(expenseName)} ${expenseName}`}
-                    </Text>
+                  <View style={expensestyle.dropdownTextWrapper}>
+                    {loadingExpenseTypes ? (
+                      <Text style={expensestyle.dropdownText}>Loading...</Text>
+                    ) : (
+                      <>
+                        {getCategoryIcon(expenseName, 18, "#374151")}
+                        <Text style={expensestyle.dropdownText}>{expenseName}</Text>
+                      </>
+                    )}
+                  </View>
                     <Text
                       style={[
                         expensestyle.dropdownArrow,
@@ -1081,9 +1150,7 @@ const resetForm = () => {
                             ]}
                             onPress={() => handleCategorySelect(category)}
                           >
-                            <Text style={expensestyle.dropdownItemIcon}>
-                              {getCategoryIcon(category)}
-                            </Text>
+                          {getCategoryIcon(category)}
                             <Text
                               style={[
                                 expensestyle.dropdownItemText,
@@ -1101,7 +1168,6 @@ const resetForm = () => {
                 </View>
               </View>
 
-              {/* ---- CUSTOM CATEGORY INPUT ---- */}
               {showCustomInput && (
                 <View style={expensestyle.inputGroup}>
                   <Text style={expensestyle.inputLabel}>Custom Category</Text>
@@ -1123,8 +1189,7 @@ const resetForm = () => {
                   )}
                 </View>
               )}
-              
-              {/* ---- RECEIPT UPLOAD / PREVIEW ---- */}
+
               <View style={expensestyle.inputGroup}>
                 <Text style={expensestyle.inputLabel}>Receipt</Text>
                 {!receiptImage ? (
@@ -1134,7 +1199,12 @@ const resetForm = () => {
                     disabled={uploadingImage}
                   >
                     <View style={expensestyle.imageUploadContent}>
-                      <Text style={expensestyle.imageUploadIcon}>📷</Text>
+                      <Icon 
+                        name="camera"
+                        size={36}
+                        color="#9ca3af"
+                        style={expensestyle.imageUploadIcon}
+                      />
                       <Text style={expensestyle.imageUploadText}>
                         {uploadingImage ? 'Processing...' : 'Add Receipt Photo'}
                       </Text>
@@ -1168,9 +1238,8 @@ const resetForm = () => {
                 )}
               </View>
 
-                    {/* ---- ACTION BUTTONS ---- */}
                 <View style={expensestyle.buttonGroup}>
-                    {/* ... your submit button ... */}
+
                     <TouchableOpacity
                       style={[
                         expensestyle.submitButton,
@@ -1188,7 +1257,6 @@ const resetForm = () => {
                       </Text>
                     </TouchableOpacity>
 
-                    {/* ... your delete button (if editing) ... */}
                     {editingExpense && (
                       <TouchableOpacity
                         style={[
@@ -1202,7 +1270,6 @@ const resetForm = () => {
                       </TouchableOpacity>
                     )}
                     
-                    {/* This button's onPress should also call resetForm */}
                     <TouchableOpacity
                       style={expensestyle.cancelButton}
                       onPress={resetForm}
@@ -1240,102 +1307,78 @@ const resetForm = () => {
       </View>
     </Modal>
 
-      <View style={tripstyle.bottomNav}>
-                      <TouchableOpacity
-                          style={[tripstyle.navButton, currentRoute === "Dashboard" && tripstyle.navButtonActive]}
-                          onPress={() => nav.navigate("Dashboard")}
-                      >
-                          <View style={tripstyle.navIconContainer}>
-                              <Image
-                                  source={require("../assets/Home.png")}
-                                  style={[
-                                      tripstyle.navIcon,
-                                      { tintColor: currentRoute === "Dashboard" ? "#dc2626" : "#9ca3af" }
-                                  ]}
-                              />
-                          </View>
-                          <Text
-                              style={[
-                                  tripstyle.navLabel,
-                                  { color: currentRoute === "Dashboard" ? "#dc2626" : "#9ca3af" }
-                              ]}
-                          >
-                              Home
-                          </Text>
-                      </TouchableOpacity>
-      
-                      <TouchableOpacity
-                          style={[tripstyle.navButton, currentRoute === "Notifications" && tripstyle.navButtonActive]}
-                          onPress={() => nav.navigate("Notifications")}
-                      >
-                          <View style={tripstyle.navIconContainer}>
-                          <Image
-                              source={require("../assets/bell.png")}
-                              style={[tripstyle.navIcon, { 
-                              tintColor: currentRoute === "Notifications" ? "#dc2626" : "#9ca3af" 
-                          }]}
-                          />
-                              {unreadCount > 0 && (
-                                  <View style={tripstyle.navBadge}>
-                                      <Text style={tripstyle.navBadgeText}>
-                                          {unreadCount > 9 ? '9+' : unreadCount}
-                                       </Text>
-                                  </View>
-                              )}
-                                  </View>
-                              <Text style={[tripstyle.navLabel, { 
-                              color: currentRoute === "Notifications" ? "#dc2626" : "#9ca3af" 
-                                  }]}>
-                          Notifications
-                          </Text>
-                      </TouchableOpacity>
-      
-                      <TouchableOpacity
-                          style={[tripstyle.navButton, currentRoute === "Trips" && tripstyle.navButtonActive]}
-                          onPress={() => nav.navigate("Trips")}
-                      >
-                          <View style={tripstyle.navIconContainer}>
-                              <Image
-                                  source={require("../assets/location2.png")}
-                                  style={[
-                                      tripstyle.navIcon,
-                                      { tintColor: currentRoute === "Trips" ? "#dc2626" : "#9ca3af" }
-                                  ]}
-                              />
-                          </View>
-                          <Text
-                              style={[
-                                  tripstyle.navLabel,
-                                  { color: currentRoute === "Trips" ? "#dc2626" : "#9ca3af" }
-                              ]}
-                          >
-                              Trips
-                          </Text>
-                      </TouchableOpacity>
-      
-                      <TouchableOpacity
-                          style={[tripstyle.navButton, currentRoute === "Profile" && tripstyle.navButtonActive]}
-                          onPress={() => nav.navigate("Profile")}
-                      >
-                          <View style={tripstyle.navIconContainer}>
-                              <Image
-                                  source={require("../assets/user.png")}
-                                  style={[
-                                      tripstyle.navIcon,
-                                      { tintColor: currentRoute === "Profile" ? "#dc2626" : "#9ca3af" }
-                                  ]}
-                              />
-                          </View>
-                          <Text
-                              style={[
-                                  tripstyle.navLabel,
-                                  { color: currentRoute === "Profile" ? "#dc2626" : "#9ca3af" }
-                              ]}
-                          >
-                              Profile
-                          </Text>
-                      </TouchableOpacity>
-                  </View>
+<View style={tripstyle.bottomNav}>
+            <TouchableOpacity
+                style={[tripstyle.navButton, currentRoute === "Dashboard" && tripstyle.navButtonActive]}
+                onPress={() => nav.navigate("Dashboard")}
+            >
+                <View style={tripstyle.navIconContainer}>
+                <Icon 
+                    name="home" 
+                    size={24} 
+                    color={currentRoute === "Dashboard" ? "#dc2626" : "#6B7280"} 
+                />
+                </View>
+                <Text style={[tripstyle.navLabel, { color: currentRoute === "Dashboard" ? "#dc2626" : "#6B7280" }]}>
+                Home
+                </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+                style={[tripstyle.navButton, currentRoute === "Notifications" && tripstyle.navButtonActive]}
+                onPress={() => nav.navigate("Notifications")}
+            >
+                <View style={tripstyle.navIconContainer}>
+                <Icon 
+                    name="bell" 
+                    size={24} 
+                    color={currentRoute === "Notifications" ? "#dc2626" : "#6B7280"} 
+                />
+                {unreadCount > 0 && (
+                    <View style={tripstyle.navBadge}>
+                    <Text style={tripstyle.navBadgeText}>
+                        {unreadCount > 9 ? '9+' : unreadCount}
+                    </Text>
+                    </View>
+                )}
+                </View>
+                <Text style={[tripstyle.navLabel, { color: currentRoute === "Notifications" ? "#dc2626" : "#6B7280" }]}>
+                Notifications
+                </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+                style={[tripstyle.navButton, currentRoute === "Trips" && tripstyle.navButtonActive]}
+                onPress={() => nav.navigate("Trips")}
+            >
+                <View style={tripstyle.navIconContainer}>
+                <Icon 
+                    name="map-pin" 
+                    size={24} 
+                    color={currentRoute === "Trips" ? "#dc2626" : "#6B7280"} 
+                />
+                </View>
+                <Text style={[tripstyle.navLabel, { color: currentRoute === "Trips" ? "#dc2626" : "#6B7280" }]}>
+                Trips
+                </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+                style={[tripstyle.navButton, currentRoute === "Profile" && tripstyle.navButtonActive]}
+                onPress={() => nav.navigate("Profile")}
+            >
+                <View style={tripstyle.navIconContainer}>
+                <Icon 
+                    name="user" 
+                    size={24} 
+                    color={currentRoute === "Profile" ? "#dc2626" : "#6B7280"} 
+                />
+                </View>
+                <Text style={[tripstyle.navLabel, { color: currentRoute === "Profile" ? "#dc2626" : "#6B7280" }]}>
+                Profile
+                </Text>
+            </TouchableOpacity>
+            </View>
   </View>
   );
 }

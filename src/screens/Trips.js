@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect} from "react";
 import {
   View,
   Text,
@@ -31,6 +31,8 @@ import helperIcon from "../assets/helper.png";
 import signalIcon from "../assets/signal.png";
 import clockIcon from "../assets/clock.png";
 import TripSkeleton from '../components/TripSkeleton';
+import Icon from 'react-native-vector-icons/Feather';
+import NotificationService from '../services/NotificationService';
 
 const TripScreen = () => {
   const nav = useNavigation();
@@ -69,6 +71,56 @@ const TripScreen = () => {
     }
     return null;
   };
+
+        const handleNotificationEvent = useCallback((event) => {
+            console.log('Notification event received:', event);
+            
+            switch (event.type) {
+                case 'foreground_message':
+                case 'notification_received':
+                    if (driverInfo?.driver_id) {
+                        fetchUnreadCount();
+                        initializeTripData();
+                    }
+                    break;
+                    
+                case 'navigate_to_trip':
+                    nav.navigate('Trips');
+                    break;
+            }
+        }, [driverInfo?.driver_id, nav]);
+  
+            useEffect(() => {
+                const initializeNotifications = async () => {
+                    await NotificationService.initialize();
+        
+                    if (driverInfo?.driver_id) {
+                        await NotificationService.registerTokenWithBackend(driverInfo.driver_id);
+                        await fetchUnreadCount();
+                    }
+        
+                    NotificationService.addListener(handleNotificationEvent);
+                };
+                
+                if (driverInfo?.driver_id) {
+                    initializeNotifications();
+                }
+                
+                return () => {
+                    NotificationService.removeListener(handleNotificationEvent);
+                };
+            }, [driverInfo?.driver_id, handleNotificationEvent, fetchUnreadCount]);
+  
+        const fetchUnreadCount = useCallback(async () => {
+            if (driverInfo?.driver_id) {
+                try {
+                    const count = await NotificationService.getUnreadCount(driverInfo.driver_id);
+                    setUnreadCount(count);
+                } catch (error) {
+                    console.error('Error fetching unread count:', error);
+                }
+            }
+        }, [driverInfo?.driver_id]);
 
  const fetchTrips = async () => {
     try {
@@ -416,7 +468,7 @@ const triggerReassignment = async (tripId, driverId, reason, showAlert = true) =
   return (
     <View style={tripstyle.mainContainer}>
       <View style={tripstyle.headerSection}>
-        <Text style={tripstyle.headerTitle}>My Trips</Text>
+        <Text style={tripstyle.headerTitle}>Trips</Text>
         <Text style={tripstyle.dateText}>
           {new Date().toLocaleDateString('en-US', { 
             weekday: 'short', 
@@ -447,18 +499,16 @@ const triggerReassignment = async (tripId, driverId, reason, showAlert = true) =
             <View style={[tripstyle.activeCard, { paddingBottom: 0 }]}>
               <View style={tripstyle.cardHeader}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <View style={{ flex: 1 }}>
-                    <View style={tripstyle.destinationRow}>
-                      <View style={tripstyle.locationIconContainer}>
-                         <Image 
-                            source={require("../assets/location.png")}
-                            style={tripstyle.walletIcon}
-                            resizeMode="contain"
-                          />
-                        </View>
-                      <View style={{ flex: 1 }}>
-                        <Text style={tripstyle.destinationLabel}>Destination:</Text>
-                        <Text style={tripstyle.destinationText}>{currentTrip.destination}</Text>
+            <View style={{ flex: 1 }}>
+              <View style={tripstyle.destinationRow}>
+                <View style={tripstyle.locationIconContainer}>
+                  <Icon name="map-pin" size={20} color="#dc2626" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={tripstyle.destinationLabel}>Destination:</Text>
+                  <Text style={tripstyle.destinationText}>
+                    {currentTrip.destination}
+                  </Text>
                       </View>
                     </View>
                   </View>
@@ -467,57 +517,73 @@ const triggerReassignment = async (tripId, driverId, reason, showAlert = true) =
                   </View>
                 </View>
               </View>
+            <View style={tripstyle.tripDetails}>
+              <View style={tripstyle.detailRow}>
+                <Icon name="calendar" size={18} color="#6b7280" />
+                <Text style={tripstyle.detailLabel}>Date</Text>
+                <Text style={tripstyle.detailValue}>
+                  {formatDate(currentTrip.date)}
+                </Text>
+              </View>
 
-              <View style={tripstyle.tripDetails}>
-                <View style={tripstyle.detailRow}>
-                  <Image source={dateIcon} style={tripstyle.detailIcon} />
-                  <Text style={tripstyle.detailLabel}>Date</Text>
-                  <Text style={tripstyle.detailValue}>
-                    {formatDate(currentTrip.date)}
-                  </Text>
-                </View>
-                <View style={tripstyle.detailRow}>
-                  <Image source={docIcon} style={tripstyle.detailIcon} />
-                  <Text style={tripstyle.detailLabel}>Plate No.</Text>
-                  <Text style={tripstyle.detailValue}>{currentTrip.plate_no}</Text>
-                </View>
-                <View style={tripstyle.detailRow}>
-                  <Image source={docIcon} style={tripstyle.detailIcon} />
-                  <Text style={tripstyle.detailLabel}>Container No.</Text>
-                  <Text style={tripstyle.detailValue}>{currentTrip.container_no}</Text>
-                </View>
-                <View style={tripstyle.detailRow}>
-                  <Image source={peopleIcon} style={tripstyle.detailIcon} />
-                  <Text style={tripstyle.detailLabel}>Client</Text>
-                  <Text style={tripstyle.detailValue}>{currentTrip.client}</Text>
-                </View>
-                <View style={tripstyle.detailRow}>
-                  <Image source={groupIcon} style={tripstyle.detailIcon} />
-                  <Text style={tripstyle.detailLabel}>Consignee</Text>
-                  <Text style={tripstyle.detailValue}>{currentTrip.consignee}</Text>
-                </View>
-                <View style={tripstyle.detailRow}>
-                  <Image source={dollarIcon} style={tripstyle.detailIcon} />
-                  <Text style={tripstyle.detailLabel}>Cash Advance</Text>
-                  <Text style={tripstyle.cashValue}>P{currentTrip.total_cash_advance || currentTrip.cash_adv || '5000.00'}</Text>
-                </View>
-                <View style={tripstyle.detailRow}>
-                  <Image source={helperIcon} style={tripstyle.detailIcon} />
-                  <Text style={tripstyle.detailLabel}>Helper</Text>
-                  <Text style={tripstyle.detailValue}>{currentTrip.helper || 'N/A'}</Text>
-                </View>
-                <View style={tripstyle.detailRow}>
-                  <Image source={signalIcon} style={tripstyle.detailIcon} />
-                  <Text style={tripstyle.detailLabel}>Dispatcher</Text>
-                  <Text style={tripstyle.detailValue}>{currentTrip.dispatcher}</Text>
-                </View>
-                <View style={tripstyle.detailRow}>
-                  <Image source={boxIcon} style={tripstyle.detailIcon} />
-                  <Text style={tripstyle.detailLabel}>Size</Text>
-                  <Text style={tripstyle.detailValue}>{currentTrip.size || '40'}</Text>
-                </View>
+              <View style={tripstyle.detailRow}>
+                <Icon name="file-text" size={18} color="#6b7280" />
+                <Text style={tripstyle.detailLabel}>Plate No.</Text>
+                <Text style={tripstyle.detailValue}>{currentTrip.plate_no}</Text>
+              </View>
+
+              <View style={tripstyle.detailRow}>
+                <Icon name="file-text" size={18} color="#6b7280" />
+                <Text style={tripstyle.detailLabel}>Container No.</Text>
+                <Text style={tripstyle.detailValue}>
+                  {currentTrip.container_no}
+                </Text>
+              </View>
+
+              <View style={tripstyle.detailRow}>
+                <Icon name="user" size={18} color="#6b7280" />
+                <Text style={tripstyle.detailLabel}>Client</Text>
+                <Text style={tripstyle.detailValue}>{currentTrip.client}</Text>
+              </View>
+
+              <View style={tripstyle.detailRow}>
+                <Icon name="users" size={18} color="#6b7280" />
+                <Text style={tripstyle.detailLabel}>Consignee</Text>
+                <Text style={tripstyle.detailValue}>{currentTrip.consignee}</Text>
+              </View>
+
+              <View style={tripstyle.detailRow}>
+                <Icon name="dollar-sign" size={18} color="#6b7280" />
+                <Text style={tripstyle.detailLabel}>Cash Advance</Text>
+                <Text style={tripstyle.cashValue}>
+                  ₱
+                  {currentTrip.total_cash_advance ||
+                    currentTrip.cash_adv ||
+                    "5000.00"}
+                </Text>
+              </View>
+
+              <View style={tripstyle.detailRow}>
+                <Icon name="user-check" size={18} color="#6b7280" />
+                <Text style={tripstyle.detailLabel}>Helper</Text>
+                <Text style={tripstyle.detailValue}>
+                  {currentTrip.helper || "N/A"}
+                </Text>
+              </View>
+
+              <View style={tripstyle.detailRow}>
+                <Icon name="radio" size={18} color="#6b7280" />
+                <Text style={tripstyle.detailLabel}>Dispatcher</Text>
+                <Text style={tripstyle.detailValue}>{currentTrip.dispatcher}</Text>
+              </View>
+
+              <View style={tripstyle.detailRow}>
+                <Icon name="package" size={18} color="#6b7280" />
+                <Text style={tripstyle.detailLabel}>Size</Text>
+                <Text style={tripstyle.detailValue}>{currentTrip.size || "40"}</Text>
               </View>
             </View>
+          </View>
           ) : (
             <View style={tripstyle.emptyCard}>
               <Text style={tripstyle.emptyTitle}>No Active Trip</Text>
@@ -533,7 +599,7 @@ const triggerReassignment = async (tripId, driverId, reason, showAlert = true) =
                   disabled={updating}
                 >
                   <Text style={tripstyle.primaryButtonText}>
-                    {updating ? 'Updating...' : 'Update Status'}
+                    {updating ? 'Updating...' : 'Complete Trip'}
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
@@ -581,177 +647,190 @@ const triggerReassignment = async (tripId, driverId, reason, showAlert = true) =
           )}
         </View>
       </ScrollView>
-      <Modal 
-        visible={tripDetailModalVisible} 
-        transparent 
-        animationType="slide"
-        presentationStyle="pageSheet"
-      >
-        <View style={TripDetail.overlay}>
-          <View style={TripDetail.container}>
-            <View style={TripDetail.header}>
-              <TouchableOpacity 
-                style={TripDetail.closeButton}
-                onPress={() => setTripDetailModalVisible(false)}
-              >
-                <Text style={TripDetail.closeButtonText}>×</Text>
-              </TouchableOpacity>
-            </View>
-
-            <ScrollView 
-              style={{ flex: 1 }}
-              contentContainerStyle={TripDetail.scrollContent}
-              showsVerticalScrollIndicator={false}
-            >
-              {selectedTrip && (
-                <>
-                  <View style={TripDetail.destinationHeader}>
-                    <View style={TripDetail.destinationRow}>
-                      <Image 
-                        source={require("../assets/location.png")}
-                        style={TripDetail.locationIcon}
-                        resizeMode="contain"
-                      />
-                      <View style={{ flex: 1 }}>
-                        <Text style={TripDetail.destinationLabel}>Destination:</Text>
-                        <Text style={TripDetail.destinationText}>
-                          {selectedTrip.destination || "Manila Port"}
-                        </Text>
-                      </View>
-                      <View style={TripDetail.scheduledBadge}>
-                        <Text style={TripDetail.scheduledText}>Scheduled</Text>
-                      </View>
-                    </View>
-                  </View>
-                  <View style={TripDetail.timeGrid}>
-                    <View style={TripDetail.timeCard}>
-                      <Image source={dateIcon} style={TripDetail.timeIcon} />
-                      <Text style={TripDetail.timeLabel}>Date</Text>
-                      <Text style={TripDetail.timeValue}>
-                        {formatDate(selectedTrip.date) || "N/A"}
-                      </Text>
-                    </View>
-                    
-                    <View style={TripDetail.timeCard}>
-                      <Image source={clockIcon} style={TripDetail.timeIcon} />
-                      <Text style={TripDetail.timeLabel}>Departure</Text>
-                      <Text style={TripDetail.timeValue}>
-                        {formatTime(selectedTrip.date)}
-                      </Text>
-                    </View>
-                  </View>
-
-                  <View style={TripDetail.detailsList}>
-                    {[
-                      { 
-                        icon: docIcon, 
-                        label: "Container no.", 
-                        value: selectedTrip.container_no || "N/A" 
-                      },
-                      { 
-                        icon: peopleIcon, 
-                        label: "Client", 
-                        value: selectedTrip.client || "N/A" 
-                      },
-                      { 
-                        icon: groupIcon, 
-                        label: "Consignee", 
-                        value: selectedTrip.consignee || "N/A" 
-                      },
-                      { 
-                        icon: dollarIcon, 
-                        label: "Cash Advance", 
-                        value: `₱${selectedTrip.total_cash_advance || selectedTrip.cash_adv || "N/A"}`, 
-                        cash: true 
-                      },
-                      { 
-                        icon: helperIcon, 
-                        label: "Helper", 
-                        value: selectedTrip.helper || "N/A" 
-                      },
-                      { 
-                        icon: signalIcon, 
-                        label: "Dispatcher", 
-                        value: selectedTrip.dispatcher || "N/A" 
-                      },
-                      { 
-                        icon: boxIcon, 
-                        label: "Size", 
-                        value: selectedTrip.size || "N/A" 
-                      },
-                    ].map((item, idx) => (
-                      <View key={idx} style={TripDetail.detailItem}>
-                        <View style={TripDetail.detailLeft}>
-                          <Image source={item.icon} style={TripDetail.detailIcon} />
-                          <Text style={TripDetail.detailLabel}>{item.label}</Text>
-                        </View>
-                        <Text style={item.cash ? TripDetail.detailCashValue : TripDetail.detailValue}>
-                          {item.value}
-                        </Text>
-                      </View>
-                    ))}
-                  </View>
-                </>
-              )}
-            </ScrollView>
-
-            <View style={TripDetail.bottomActions}>
-              <TouchableOpacity 
-    style={[
-        TripDetail.startButton,
-        selectedTrip?.hasChecklist && TripDetail.startButtonCompleted,
-        // Pass the entire selectedTrip object now
-        !isChecklistAvailable(selectedTrip) && TripDetail.startButtonDisabled
-    ]}
-    onPress={() => {
-        // Update this check as well
-        if (selectedTrip?.hasChecklist || !isChecklistAvailable(selectedTrip)) return;
-
-        const tripDate = new Date(selectedTrip.date);
-        const now = new Date();
-        const threeHoursBefore = new Date(tripDate.getTime() - 3 * 60 * 60 * 1000);
-        const oneHourBefore = new Date(tripDate.getTime() - 1 * 60 * 60 * 1000);
-
-        // This alert logic remains mostly the same, as isChecklistAvailable already handles the grace period.
-        if (now < threeHoursBefore && !isChecklistAvailable(selectedTrip)) {
-            const formattedTime = threeHoursBefore.toLocaleTimeString('en-US', {
-                hour: '2-digit', minute: '2-digit', hour12: true
-            });
-            Alert.alert(
-                'Checklist Not Available Yet',
-                `Checklist will be available starting at ${formattedTime} (3 hours before the scheduled trip).`
-            );
-            return;
-        }
-
-        if (now > oneHourBefore && !isChecklistAvailable(selectedTrip)) {
-            Alert.alert(
-                'Checklist Submission Closed',
-                'Checklist submission closed 1 hour before the scheduled trip time.'
-            );
-            return;
-        }
-
-        setCurrentTripId(selectedTrip.trip_id);
-        resetChecklistData();
-        setTripDetailModalVisible(false);
-        setChecklistModalVisible(true);
-    }}
+      <Modal
+  visible={tripDetailModalVisible}
+  transparent
+  animationType="slide"
+  presentationStyle="pageSheet"
 >
-    <Text style={TripDetail.startButtonText}>
-        {selectedTrip?.hasChecklist 
-            ? 'Checklist Submitted' 
-            // And finally, update this check
-            : !isChecklistAvailable(selectedTrip)
-                ? 'Checklist Not Available'
-                : 'Start Trip'
-        }
-    </Text>
-</TouchableOpacity>
+  <View style={TripDetail.overlay}>
+    <View style={TripDetail.container}>
+      <View style={TripDetail.header}>
+        <TouchableOpacity
+          style={TripDetail.closeButton}
+          onPress={() => setTripDetailModalVisible(false)}
+        >
+          <Icon name="x" size={26} color="#374151" />
+        </TouchableOpacity>
+      </View>
+
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={TripDetail.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {selectedTrip && (
+          <>
+            {/* Destination Header */}
+            <View style={TripDetail.destinationHeader}>
+              <View style={TripDetail.destinationRow}>
+                <Icon name="map-pin" size={22} color="#dc2626" />
+                <View style={{ flex: 1 }}>
+                  <Text style={TripDetail.destinationLabel}>Destination:</Text>
+                  <Text style={TripDetail.destinationText}>
+                    {selectedTrip.destination || "Manila Port"}
+                  </Text>
+                </View>
+                <View style={TripDetail.scheduledBadge}>
+                  <Text style={TripDetail.scheduledText}>Scheduled</Text>
+                </View>
+              </View>
             </View>
-          </View>
-        </View>
-      </Modal>
+
+            {/* Date & Departure */}
+            <View style={TripDetail.timeGrid}>
+              <View style={TripDetail.timeCard}>
+                <Icon name="calendar" size={20} color="#374151" />
+                <Text style={TripDetail.timeLabel}>Date</Text>
+                <Text style={TripDetail.timeValue}>
+                  {formatDate(selectedTrip.date) || "N/A"}
+                </Text>
+              </View>
+
+              <View style={TripDetail.timeCard}>
+                <Icon name="clock" size={20} color="#374151" />
+                <Text style={TripDetail.timeLabel}>Departure</Text>
+                <Text style={TripDetail.timeValue}>
+                  {formatTime(selectedTrip.date)}
+                </Text>
+              </View>
+            </View>
+
+            {/* Details List */}
+            <View style={TripDetail.detailsList}>
+              {[
+                {
+                  icon: "file-text",
+                  label: "Container no.",
+                  value: selectedTrip.container_no || "N/A",
+                },
+                {
+                  icon: "user",
+                  label: "Client",
+                  value: selectedTrip.client || "N/A",
+                },
+                {
+                  icon: "users",
+                  label: "Consignee",
+                  value: selectedTrip.consignee || "N/A",
+                },
+                {
+                  icon: "dollar-sign",
+                  label: "Cash Advance",
+                  value: `₱${
+                    selectedTrip.total_cash_advance ||
+                    selectedTrip.cash_adv ||
+                    "N/A"
+                  }`,
+                  cash: true,
+                },
+                {
+                  icon: "user-check",
+                  label: "Helper",
+                  value: selectedTrip.helper || "N/A",
+                },
+                {
+                  icon: "radio",
+                  label: "Dispatcher",
+                  value: selectedTrip.dispatcher || "N/A",
+                },
+                {
+                  icon: "package",
+                  label: "Size",
+                  value: selectedTrip.size || "N/A",
+                },
+              ].map((item, idx) => (
+                <View key={idx} style={TripDetail.detailItem}>
+                  <View style={TripDetail.detailLeft}>
+                    <Icon name={item.icon} size={20} color="#6b7280" />
+                    <Text style={TripDetail.detailLabel}>{item.label}</Text>
+                  </View>
+                  <Text
+                    style={
+                      item.cash
+                        ? TripDetail.detailCashValue
+                        : TripDetail.detailValue
+                    }
+                  >
+                    {item.value}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          </>
+        )}
+      </ScrollView>
+
+      {/* Bottom Actions */}
+      <View style={TripDetail.bottomActions}>
+        <TouchableOpacity
+          style={[
+            TripDetail.startButton,
+            selectedTrip?.hasChecklist && TripDetail.startButtonCompleted,
+            !isChecklistAvailable(selectedTrip) && TripDetail.startButtonDisabled,
+          ]}
+          onPress={() => {
+            if (selectedTrip?.hasChecklist || !isChecklistAvailable(selectedTrip))
+              return;
+
+            const tripDate = new Date(selectedTrip.date);
+            const now = new Date();
+            const threeHoursBefore = new Date(
+              tripDate.getTime() - 3 * 60 * 60 * 1000
+            );
+            const oneHourBefore = new Date(
+              tripDate.getTime() - 1 * 60 * 60 * 1000
+            );
+
+            if (now < threeHoursBefore && !isChecklistAvailable(selectedTrip)) {
+              const formattedTime = threeHoursBefore.toLocaleTimeString("en-US", {
+                hour: "2-digit",
+                minute: "2-digit",
+                hour12: true,
+              });
+              Alert.alert(
+                "Checklist Not Available Yet",
+                `Checklist will be available starting at ${formattedTime} (3 hours before the scheduled trip).`
+              );
+              return;
+            }
+
+            if (now > oneHourBefore && !isChecklistAvailable(selectedTrip)) {
+              Alert.alert(
+                "Checklist Submission Closed",
+                "Checklist submission closed 1 hour before the scheduled trip time."
+              );
+              return;
+            }
+
+            setCurrentTripId(selectedTrip.trip_id);
+            resetChecklistData();
+            setTripDetailModalVisible(false);
+            setChecklistModalVisible(true);
+          }}
+        >
+          <Text style={TripDetail.startButtonText}>
+            {selectedTrip?.hasChecklist
+              ? "Checklist Submitted"
+              : !isChecklistAvailable(selectedTrip)
+              ? "Checklist Not Available"
+              : "Start Trip"}
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  </View>
+</Modal>
       <Modal visible={checklistModalVisible} transparent animationType="slide">
         <View style={tripstyle.modalOverlay}>
           <View style={tripstyle.modalContainer}>
@@ -847,145 +926,132 @@ const triggerReassignment = async (tripId, driverId, reason, showAlert = true) =
       </Modal>
 
       {/* Status Update Modal */}
-      <Modal visible={modalVisible} transparent animationType="slide">
-        <View style={tripstyle.modalOverlay}>
-          <View style={tripstyle.modalContainer}>
-            <View style={tripstyle.modalHeader}>
-              <Text style={tripstyle.modalTitle}>Update Trip Status</Text>
-              <Text style={tripstyle.modalSubtitle}>Choose the current status of your trip</Text>
-            </View>
-            
-            <View style={tripstyle.modalButtons}>
-              <TouchableOpacity 
-                style={[tripstyle.modalButton, tripstyle.enRouteButton]} 
-                onPress={() => handleStatusChange('En Route')}
-              >
-                <Text style={tripstyle.modalButtonIcon}>🚛</Text>
-                <Text style={tripstyle.modalButtonText}>En Route</Text>
-              </TouchableOpacity>
-              
-              <TouchableOpacity 
-                style={[tripstyle.modalButton, tripstyle.completedButton]} 
-                onPress={() => handleStatusChange('Completed')}
-              >
-                <Text style={tripstyle.modalButtonIcon}>✅</Text>
-                <Text style={tripstyle.modalButtonText}>Completed</Text>
-              </TouchableOpacity>
-              
-              <TouchableOpacity 
-                style={[tripstyle.modalButton, tripstyle.noShowButton]} 
-                onPress={() => handleStatusChange('No Show')}
-              >
-                <Text style={tripstyle.modalButtonIcon}>❌</Text>
-                <Text style={tripstyle.modalButtonText}>No Show</Text>
-              </TouchableOpacity>
-            </View>
-            
-            <TouchableOpacity 
-              style={tripstyle.modalCancelButton} 
-              onPress={() => setModalVisible(false)}
-            >
-              <Text style={tripstyle.modalCancelText}>Cancel</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
+{/* Status Update Modal */}
+<Modal visible={modalVisible} transparent animationType="fade">
+  <View style={tripstyle.modernModalOverlay}>
+    <View style={tripstyle.modernModalContainer}>
+      <TouchableOpacity 
+        style={tripstyle.modernModalClose}
+        onPress={() => setModalVisible(false)}
+      >
+        <Icon name="x" size={20} color="#9CA3AF" />
+      </TouchableOpacity>
 
+      <View style={tripstyle.modernModalIcon}>
+        <Icon name="check-circle" size={48} color="#dc2626" />
+      </View>
+
+      <Text style={tripstyle.modernModalTitle}>Complete Trip</Text>
+      <Text style={tripstyle.modernModalSubtitle}>
+        Mark this trip as completed
+      </Text>
+
+      <TouchableOpacity 
+        style={tripstyle.modernCompleteButton}
+        onPress={() => {
+          Alert.alert(
+            'Complete Trip',
+            'Are you sure you want to mark this trip as completed?',
+            [
+              {
+                text: 'Cancel',
+                style: 'cancel'
+              },
+              {
+                text: 'Complete',
+                onPress: () => handleStatusChange('Completed')
+              }
+            ]
+          );
+        }}
+        disabled={updating}
+      >
+        <Icon name="check" size={20} color="#fff" style={{ marginRight: 8 }} />
+        <Text style={tripstyle.modernCompleteButtonText}>
+          {updating ? 'Updating...' : 'Mark as Completed'}
+        </Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity 
+        style={tripstyle.modernCancelButton}
+        onPress={() => setModalVisible(false)}
+      >
+        <Text style={tripstyle.modernCancelText}>Cancel</Text>
+      </TouchableOpacity>
+    </View>
+  </View>
+</Modal>
 <View style={tripstyle.bottomNav}>
-                <TouchableOpacity
-                    style={[tripstyle.navButton, currentRoute === "Dashboard" && tripstyle.navButtonActive]}
-                    onPress={() => nav.navigate("Dashboard")}
-                >
-                    <View style={tripstyle.navIconContainer}>
-                        <Image
-                            source={require("../assets/Home.png")}
-                            style={[
-                                tripstyle.navIcon,
-                                { tintColor: currentRoute === "Dashboard" ? "#dc2626" : "#9ca3af" }
-                            ]}
-                        />
-                    </View>
-                    <Text
-                        style={[
-                            tripstyle.navLabel,
-                            { color: currentRoute === "Dashboard" ? "#dc2626" : "#9ca3af" }
-                        ]}
-                    >
-                        Home
-                    </Text>
-                </TouchableOpacity>
+            <TouchableOpacity
+                style={[tripstyle.navButton, currentRoute === "Dashboard" && tripstyle.navButtonActive]}
+                onPress={() => nav.navigate("Dashboard")}
+            >
+                <View style={tripstyle.navIconContainer}>
+                <Icon 
+                    name="home" 
+                    size={24} 
+                    color={currentRoute === "Dashboard" ? "#dc2626" : "#6B7280"} 
+                />
+                </View>
+                <Text style={[tripstyle.navLabel, { color: currentRoute === "Dashboard" ? "#dc2626" : "#6B7280" }]}>
+                Home
+                </Text>
+            </TouchableOpacity>
 
-                <TouchableOpacity
-                    style={[tripstyle.navButton, currentRoute === "Notifications" && tripstyle.navButtonActive]}
-                    onPress={() => nav.navigate("Notifications")}
-                >
-                    <View style={tripstyle.navIconContainer}>
-                    <Image
-                        source={require("../assets/bell.png")}
-                        style={[tripstyle.navIcon, { 
-                        tintColor: currentRoute === "Notifications" ? "#dc2626" : "#9ca3af" 
-                    }]}
-                    />
-                        {unreadCount > 0 && (
-                            <View style={tripstyle.navBadge}>
-                                <Text style={tripstyle.navBadgeText}>
-                                    {unreadCount > 9 ? '9+' : unreadCount}
-                                 </Text>
-                            </View>
-                        )}
-                            </View>
-                        <Text style={[tripstyle.navLabel, { 
-                        color: currentRoute === "Notifications" ? "#dc2626" : "#9ca3af" 
-                            }]}>
-                    Notifications
+            <TouchableOpacity
+                style={[tripstyle.navButton, currentRoute === "Notifications" && tripstyle.navButtonActive]}
+                onPress={() => nav.navigate("Notifications")}
+            >
+                <View style={tripstyle.navIconContainer}>
+                <Icon 
+                    name="bell" 
+                    size={24} 
+                    color={currentRoute === "Notifications" ? "#dc2626" : "#6B7280"} 
+                />
+                {unreadCount > 0 && (
+                    <View style={tripstyle.navBadge}>
+                    <Text style={tripstyle.navBadgeText}>
+                        {unreadCount > 9 ? '9+' : unreadCount}
                     </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                    style={[tripstyle.navButton, currentRoute === "Trips" && tripstyle.navButtonActive]}
-                    onPress={() => nav.navigate("Trips")}
-                >
-                    <View style={tripstyle.navIconContainer}>
-                        <Image
-                            source={require("../assets/location2.png")}
-                            style={[
-                                tripstyle.navIcon,
-                                { tintColor: currentRoute === "Trips" ? "#dc2626" : "#9ca3af" }
-                            ]}
-                        />
                     </View>
-                    <Text
-                        style={[
-                            tripstyle.navLabel,
-                            { color: currentRoute === "Trips" ? "#dc2626" : "#9ca3af" }
-                        ]}
-                    >
-                        Trips
-                    </Text>
-                </TouchableOpacity>
+                )}
+                </View>
+                <Text style={[tripstyle.navLabel, { color: currentRoute === "Notifications" ? "#dc2626" : "#6B7280" }]}>
+                Notifications
+                </Text>
+            </TouchableOpacity>
 
-                <TouchableOpacity
-                    style={[tripstyle.navButton, currentRoute === "Profile" && tripstyle.navButtonActive]}
-                    onPress={() => nav.navigate("Profile")}
-                >
-                    <View style={tripstyle.navIconContainer}>
-                        <Image
-                            source={require("../assets/user.png")}
-                            style={[
-                                tripstyle.navIcon,
-                                { tintColor: currentRoute === "Profile" ? "#dc2626" : "#9ca3af" }
-                            ]}
-                        />
-                    </View>
-                    <Text
-                        style={[
-                            tripstyle.navLabel,
-                            { color: currentRoute === "Profile" ? "#dc2626" : "#9ca3af" }
-                        ]}
-                    >
-                        Profile
-                    </Text>
-                </TouchableOpacity>
+            <TouchableOpacity
+                style={[tripstyle.navButton, currentRoute === "Trips" && tripstyle.navButtonActive]}
+                onPress={() => nav.navigate("Trips")}
+            >
+                <View style={tripstyle.navIconContainer}>
+                <Icon 
+                    name="map-pin" 
+                    size={24} 
+                    color={currentRoute === "Trips" ? "#dc2626" : "#6B7280"} 
+                />
+                </View>
+                <Text style={[tripstyle.navLabel, { color: currentRoute === "Trips" ? "#dc2626" : "#6B7280" }]}>
+                Trips
+                </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+                style={[tripstyle.navButton, currentRoute === "Profile" && tripstyle.navButtonActive]}
+                onPress={() => nav.navigate("Profile")}
+            >
+                <View style={tripstyle.navIconContainer}>
+                <Icon 
+                    name="user" 
+                    size={24} 
+                    color={currentRoute === "Profile" ? "#dc2626" : "#6B7280"} 
+                />
+                </View>
+                <Text style={[tripstyle.navLabel, { color: currentRoute === "Profile" ? "#dc2626" : "#6B7280" }]}>
+                Profile
+                </Text>
+            </TouchableOpacity>
             </View>
     </View>
   );

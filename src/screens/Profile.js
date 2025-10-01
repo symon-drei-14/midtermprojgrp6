@@ -7,6 +7,8 @@ import LocationService from "../services/LocationService";
 import { useNavigationState } from "@react-navigation/native";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { launchImageLibrary } from 'react-native-image-picker'; // Import the image picker
+import Icon from 'react-native-vector-icons/Feather';
+import NotificationService from '../services/NotificationService';
 
 const Profile = ({ route }) => {
     const nav = useNavigation();
@@ -67,31 +69,35 @@ const Profile = ({ route }) => {
         }
     }, []);
     
-    // Function to fetch the latest driver data from the server
-    const fetchDriverData = async () => {
-        try {
-            const sessionData = await AsyncStorage.getItem('userSession');
-            if (sessionData) {
-                const session = JSON.parse(sessionData);
-                const response = await fetch(`${API_BASE_URL}/include/handlers/get_mobile_driver.php`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ driver_id: session.userId }),
-                });
-                const data = await response.json();
-                if (data.success) {
-                    setDriverInfo(data.driver);
-                    // Also update async storage with the fresh data
-                    const updatedSession = { ...session, ...data.driver };
-                    await AsyncStorage.setItem('userSession', JSON.stringify(updatedSession));
-                } else {
-                    console.error('Failed to fetch driver data:', data.message);
-                }
+const fetchDriverData = async () => {
+    try {
+        const sessionData = await AsyncStorage.getItem('userSession');
+        if (sessionData) {
+            const session = JSON.parse(sessionData);
+            const response = await fetch(`${API_BASE_URL}/include/handlers/get_mobile_driver.php`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ driver_id: session.userId }),
+            });
+            const data = await response.json();
+            if (data.success) {
+                const driverData = {
+                    ...data.driver,
+                    driver_id: data.driver.driver_id || session.userId
+                };
+                console.log('Profile: Setting driver info:', driverData);
+                setDriverInfo(driverData);
+                
+                const updatedSession = { ...session, ...driverData };
+                await AsyncStorage.setItem('userSession', JSON.stringify(updatedSession));
+            } else {
+                console.error('Failed to fetch driver data:', data.message);
             }
-        } catch (error) {
-            console.error('Error in fetchDriverData:', error);
         }
-    };
+    } catch (error) {
+        console.error('Error in fetchDriverData:', error);
+    }
+};
     
     useEffect(() => {
         fetchDriverData(); // Fetch fresh data on component mount
@@ -279,6 +285,76 @@ const Profile = ({ route }) => {
             setIsUpdating(false);
         }
     };
+
+    const fetchUnreadCount = useCallback(async () => {
+    if (!driverInfo?.driver_id) return;
+    
+    try {
+        console.log('Profile: Fetching unread count for driver:', driverInfo.driver_id);
+        const count = await NotificationService.getUnreadCount(driverInfo.driver_id);
+        console.log('Profile: Unread count received:', count);
+        setUnreadCount(count);
+    } catch (error) {
+        console.error('Profile: Error fetching unread count:', error);
+    }
+}, [driverInfo?.driver_id]);
+
+const handleNotificationEvent = useCallback((event) => {
+    console.log('Profile: Notification event received:', event);
+    
+    switch (event.type) {
+        case 'foreground_message':
+        case 'notification_received':
+            if (driverInfo?.driver_id) {
+                console.log('Profile: Refreshing unread count...');
+                fetchUnreadCount();
+            }
+            break;
+            
+        case 'navigate_to_trip':
+            nav.navigate('Trips');
+            break;
+    }
+}, [driverInfo?.driver_id, nav, fetchUnreadCount]);
+
+useEffect(() => {
+    if (!driverInfo?.driver_id) return;
+    
+    const initializeNotifications = async () => {
+        try {
+            console.log('Profile: Initializing notifications for driver:', driverInfo.driver_id);
+            await NotificationService.initialize();
+            await NotificationService.registerTokenWithBackend(driverInfo.driver_id);
+            await fetchUnreadCount();
+            
+            NotificationService.addListener(handleNotificationEvent);
+        } catch (error) {
+            console.error('Profile: Error initializing notifications:', error);
+        }
+    };
+    
+    initializeNotifications();
+    
+    return () => {
+        console.log('Profile: Cleaning up notification listener');
+        NotificationService.removeListener(handleNotificationEvent);
+    };
+}, [driverInfo?.driver_id, handleNotificationEvent, fetchUnreadCount]);
+
+useEffect(() => {
+    if (!driverInfo?.driver_id) return;
+
+    console.log('Profile: Setting up polling interval');
+    const interval = setInterval(() => {
+        console.log('Profile: Polling unread count...');
+        fetchUnreadCount();
+    }, 30000);
+
+    return () => {
+        console.log('Profile: Clearing polling interval');
+        clearInterval(interval);
+    };
+}, [driverInfo?.driver_id, fetchUnreadCount]);
     
     // Helper to render the profile picture or a placeholder
     const renderProfileImage = (style) => {
@@ -303,29 +379,36 @@ const Profile = ({ route }) => {
                 </View>
 
                 {/* Info Card */}
+                {/* Info Card */}
                 <View style={profilestyle.infoCard}>
                     <View style={profilestyle.cardHeader}>
-                        <Text style={profilestyle.icon}>ℹ️</Text>
+                        <Icon name="info" size={20} color="#3B82F6" />
                         <Text style={profilestyle.cardTitle}>Driver Information</Text>
                     </View>
                     <View style={profilestyle.infoItem}>
-                        <Text style={profilestyle.icon}>📞</Text>
+                        <Icon name="phone" size={20} color="#6B7280" style={{ marginRight: 16, width: 24 }} />
                         <Text style={profilestyle.infoText}>{driverInfo.contact_no}</Text>
                     </View>
                     <View style={profilestyle.infoItem}>
-                        <Text style={profilestyle.icon}>🛡️</Text>
-                        <Text style={profilestyle.infoText}>Status: Active</Text>
+                        <Icon name="shield" size={20} color="#6B7280" style={{ marginRight: 16, width: 24 }} />
+                        <Text style={profilestyle.infoLabel}>Status:</Text>
+                        <View style={profilestyle.statusBadge}>
+                            <Text style={profilestyle.statusText}>Active</Text>
+                        </View>
                     </View>
                     <View style={profilestyle.infoItem}>
-                        <Text style={profilestyle.icon}>📍</Text>
-                        <Text style={profilestyle.infoText}>Location Tracking: </Text>
-                        <Text style={[profilestyle.infoText, { color: isLocationTracking ? '#4CAF50' : '#a11b1bff', fontWeight: 'bold' }]}>
-                            {isLocationTracking ? `ON (${locationStatus})` : 'OFF'}
-                        </Text>
+                        <Icon name="map-pin" size={20} color="#6B7280" style={{ marginRight: 16, width: 24 }} />
+                        <Text style={profilestyle.infoLabel}>Location Tracking:</Text>
+                        <View style={[profilestyle.trackingBadge, isLocationTracking ? profilestyle.trackingOnBadge : profilestyle.trackingOffBadge]}>
+                            <Text style={[profilestyle.trackingText, { color: isLocationTracking ? '#059669' : '#dc2626' }]}>
+                                {isLocationTracking ? 'ON' : 'OFF'}
+                            </Text>
+                        </View>
                     </View>
                     <View style={profilestyle.passwordItem}>
-                        <Text style={profilestyle.icon}>🔒</Text>
-                        <Text style={profilestyle.infoText}>Password: ••••••••</Text>
+                        <Icon name="lock" size={20} color="#6B7280" style={{ marginRight: 16, width: 24 }} />
+                        <Text style={profilestyle.infoLabel}>Password:</Text>
+                        <Text style={profilestyle.infoText}>••••••••</Text>
                     </View>
                 </View>
 
@@ -337,7 +420,7 @@ const Profile = ({ route }) => {
                             setConfirmPasswordError(""); setModalVisible(true);
                         }}
                         style={profilestyle.primaryButton}>
-                        <Text style={profilestyle.buttonIcon}>🔑</Text>
+                        <Icon name="key" color="#fff" /> 
                         <Text style={profilestyle.primaryButtonText}>Change Password</Text>
                     </TouchableOpacity>
                     
@@ -345,7 +428,7 @@ const Profile = ({ route }) => {
                         onPress={handleLogout}
                         style={[profilestyle.secondaryButton, isLoggingOut && { opacity: 0.6 }]}
                         disabled={isLoggingOut}>
-                        <Text style={profilestyle.buttonIcon}>🚪</Text>
+                        <Icon name="log-out" color="#fff" />
                         <Text style={profilestyle.secondaryButtonText}>
                             {isLoggingOut ? "Logging out..." : "Log Out"}
                         </Text>
@@ -465,101 +548,77 @@ const Profile = ({ route }) => {
                 </View>
             </Modal>
 
-            <View style={tripstyle.bottomNav}>
-                <TouchableOpacity
-                    style={[tripstyle.navButton, currentRoute === "Dashboard" && tripstyle.navButtonActive]}
-                    onPress={() => nav.navigate("Dashboard")}
-                >
-                    <View style={tripstyle.navIconContainer}>
-                        <Image
-                            source={require("../assets/Home.png")}
-                            style={[
-                                tripstyle.navIcon,
-                                { tintColor: currentRoute === "Dashboard" ? "#dc2626" : "#9ca3af" }
-                            ]}
-                        />
-                    </View>
-                    <Text
-                        style={[
-                            tripstyle.navLabel,
-                            { color: currentRoute === "Dashboard" ? "#dc2626" : "#9ca3af" }
-                        ]}
-                    >
-                        Home
-                    </Text>
-                </TouchableOpacity>
+<View style={tripstyle.bottomNav}>
+            <TouchableOpacity
+                style={[tripstyle.navButton, currentRoute === "Dashboard" && tripstyle.navButtonActive]}
+                onPress={() => nav.navigate("Dashboard")}
+            >
+                <View style={tripstyle.navIconContainer}>
+                <Icon 
+                    name="home" 
+                    size={24} 
+                    color={currentRoute === "Dashboard" ? "#dc2626" : "#6B7280"} 
+                />
+                </View>
+                <Text style={[tripstyle.navLabel, { color: currentRoute === "Dashboard" ? "#dc2626" : "#6B7280" }]}>
+                Home
+                </Text>
+            </TouchableOpacity>
 
-                <TouchableOpacity
-                    style={[tripstyle.navButton, currentRoute === "Notifications" && tripstyle.navButtonActive]}
-                    onPress={() => nav.navigate("Notifications")}
-                >
-                    <View style={tripstyle.navIconContainer}>
-                    <Image
-                        source={require("../assets/bell.png")}
-                        style={[tripstyle.navIcon, { 
-                        tintColor: currentRoute === "Notifications" ? "#dc2626" : "#9ca3af" 
-                    }]}
-                    />
-                        {unreadCount > 0 && (
-                            <View style={tripstyle.navBadge}>
-                                <Text style={tripstyle.navBadgeText}>
-                                    {unreadCount > 9 ? '9+' : unreadCount}
-                                 </Text>
-                            </View>
-                        )}
-                            </View>
-                        <Text style={[tripstyle.navLabel, { 
-                        color: currentRoute === "Notifications" ? "#dc2626" : "#9ca3af" 
-                            }]}>
-                    Notifications
+            <TouchableOpacity
+                style={[tripstyle.navButton, currentRoute === "Notifications" && tripstyle.navButtonActive]}
+                onPress={() => nav.navigate("Notifications")}
+            >
+                <View style={tripstyle.navIconContainer}>
+                <Icon 
+                    name="bell" 
+                    size={24} 
+                    color={currentRoute === "Notifications" ? "#dc2626" : "#6B7280"} 
+                />
+                {unreadCount > 0 && (
+                    <View style={tripstyle.navBadge}>
+                    <Text style={tripstyle.navBadgeText}>
+                        {unreadCount > 9 ? '9+' : unreadCount}
                     </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                    style={[tripstyle.navButton, currentRoute === "Trips" && tripstyle.navButtonActive]}
-                    onPress={() => nav.navigate("Trips")}
-                >
-                    <View style={tripstyle.navIconContainer}>
-                        <Image
-                            source={require("../assets/location2.png")}
-                            style={[
-                                tripstyle.navIcon,
-                                { tintColor: currentRoute === "Trips" ? "#dc2626" : "#9ca3af" }
-                            ]}
-                        />
                     </View>
-                    <Text
-                        style={[
-                            tripstyle.navLabel,
-                            { color: currentRoute === "Trips" ? "#dc2626" : "#9ca3af" }
-                        ]}
-                    >
-                        Trips
-                    </Text>
-                </TouchableOpacity>
+                )}
+                </View>
+                <Text style={[tripstyle.navLabel, { color: currentRoute === "Notifications" ? "#dc2626" : "#6B7280" }]}>
+                Notifications
+                </Text>
+            </TouchableOpacity>
 
-                <TouchableOpacity
-                    style={[tripstyle.navButton, currentRoute === "Profile" && tripstyle.navButtonActive]}
-                    onPress={() => nav.navigate("Profile")}
-                >
-                    <View style={tripstyle.navIconContainer}>
-                        <Image
-                            source={require("../assets/user.png")}
-                            style={[
-                                tripstyle.navIcon,
-                                { tintColor: currentRoute === "Profile" ? "#dc2626" : "#9ca3af" }
-                            ]}
-                        />
-                    </View>
-                    <Text
-                        style={[
-                            tripstyle.navLabel,
-                            { color: currentRoute === "Profile" ? "#dc2626" : "#9ca3af" }
-                        ]}
-                    >
-                        Profile
-                    </Text>
-                </TouchableOpacity>
+            <TouchableOpacity
+                style={[tripstyle.navButton, currentRoute === "Trips" && tripstyle.navButtonActive]}
+                onPress={() => nav.navigate("Trips")}
+            >
+                <View style={tripstyle.navIconContainer}>
+                <Icon 
+                    name="map-pin" 
+                    size={24} 
+                    color={currentRoute === "Trips" ? "#dc2626" : "#6B7280"} 
+                />
+                </View>
+                <Text style={[tripstyle.navLabel, { color: currentRoute === "Trips" ? "#dc2626" : "#6B7280" }]}>
+                Trips
+                </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+                style={[tripstyle.navButton, currentRoute === "Profile" && tripstyle.navButtonActive]}
+                onPress={() => nav.navigate("Profile")}
+            >
+                <View style={tripstyle.navIconContainer}>
+                <Icon 
+                    name="user" 
+                    size={24} 
+                    color={currentRoute === "Profile" ? "#dc2626" : "#6B7280"} 
+                />
+                </View>
+                <Text style={[tripstyle.navLabel, { color: currentRoute === "Profile" ? "#dc2626" : "#6B7280" }]}>
+                Profile
+                </Text>
+            </TouchableOpacity>
             </View>
         </View>
     );

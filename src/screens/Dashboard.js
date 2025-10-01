@@ -18,6 +18,8 @@ import { tripstyle } from "../styles/Tripcss";
 import LocationService from "../services/LocationService";
 import DashboardSkeleton from "../components/DashboardSkeleton";
 import NotificationService from '../services/NotificationService';
+import LinearGradient from 'react-native-linear-gradient';
+import Icon from 'react-native-vector-icons/Feather';
 
 function Dashboard({ route }) {
     const nav = useNavigation();
@@ -38,10 +40,10 @@ function Dashboard({ route }) {
     const [driverStatus, setDriverStatus] = useState('offline');
     const state = useNavigationState((state) => state);
     const currentRoute = state.routes[state.index].name;
-
+    const [weeklyTripsCount, setWeeklyTripsCount] = useState(0);
     const [notifications, setNotifications] = useState([]);
     const [unreadCount, setUnreadCount] = useState(0);
-
+    const [recentTrips, setRecentTrips] = useState([]);
     const [currentTrip, setCurrentTrip] = useState(null);
     const [balanceData, setBalanceData] = useState({
         remainingBalance: 0
@@ -55,11 +57,11 @@ function Dashboard({ route }) {
     const tripId = route.params?.tripId || `trip_${Date.now()}`;
     const truckId = route.params?.truckId || `truck_${Date.now()}`;
     const [queueStatus, setQueueStatus] = useState({
-    isCheckedIn: false,
-    penaltyUntil: null,
-    checkedInAt: null
-});
-const [isCheckInLoading, setIsCheckInLoading] = useState(false);
+        isCheckedIn: false,
+        penaltyUntil: null,
+        checkedInAt: null
+    });
+    const [isCheckInLoading, setIsCheckInLoading] = useState(false);
 
     const hasInitialized = useRef(false);
     const listenerAttached = useRef(false);
@@ -67,77 +69,54 @@ const [isCheckInLoading, setIsCheckInLoading] = useState(false);
     const API_BASE_URL = 'http://192.168.100.17/capstone-1-eb';
 
     const handleNotificationEvent = useCallback((event) => {
-    console.log('Notification event received:', event);
-    
-    switch (event.type) {
-        case 'foreground_message':
-        case 'notification_received':
-            if (driverInfo?.driver_id) {
-                fetchUnreadCount();
-                initializeTripData();
-            }
-            break;
-            
-        case 'navigate_to_trip':
-            nav.navigate('Trips');
-            break;
-    }
+        console.log('Notification event received:', event);
+        
+        switch (event.type) {
+            case 'foreground_message':
+            case 'notification_received':
+                if (driverInfo?.driver_id) {
+                    fetchUnreadCount();
+                    initializeTripData();
+                }
+                break;
+                
+            case 'navigate_to_trip':
+                nav.navigate('Trips');
+                break;
+        }
     }, [driverInfo?.driver_id, nav]);
 
     const fetchUnreadCount = useCallback(async () => {
-    if (driverInfo?.driver_id) {
-        try {
-            const count = await NotificationService.getUnreadCount(driverInfo.driver_id);
-            setUnreadCount(count);
-        } catch (error) {
-            console.error('Error fetching unread count:', error);
+        if (driverInfo?.driver_id) {
+            try {
+                const count = await NotificationService.getUnreadCount(driverInfo.driver_id);
+                setUnreadCount(count);
+            } catch (error) {
+                console.error('Error fetching unread count:', error);
+            }
         }
-    }
     }, [driverInfo?.driver_id]);
 
     useEffect(() => {
-    const initializeNotifications = async () => {
-        await NotificationService.initialize();
+        const initializeNotifications = async () => {
+            await NotificationService.initialize();
 
-        if (driverInfo?.driver_id) {
-            await NotificationService.registerTokenWithBackend(driverInfo.driver_id);
-            await fetchUnreadCount();
-        }
+            if (driverInfo?.driver_id) {
+                await NotificationService.registerTokenWithBackend(driverInfo.driver_id);
+                await fetchUnreadCount();
+            }
 
-        NotificationService.addListener(handleNotificationEvent);
-    };
-    
-    if (driverInfo?.driver_id) {
-        initializeNotifications();
-    }
-    
-    return () => {
-        NotificationService.removeListener(handleNotificationEvent);
-    };
-    }, [driverInfo?.driver_id, handleNotificationEvent, fetchUnreadCount]);
-
-    const NotificationBell = () => (
-        <TouchableOpacity 
-            style={dashboardstyles.notificationButton}
-            onPress={() => nav.navigate('Notifications')}
-        >
-            <View style={dashboardstyles.notificationIconContainer}>
-                <Image
-                    source={require("../assets/notification.png")}
-                    style={dashboardstyles.notificationIcon}
-                    resizeMode="contain"
-                />
-                {unreadCount > 0 && (
-                    <View style={dashboardstyles.notificationBadge}>
-                        <Text style={dashboardstyles.notificationBadgeText}>
-                            {unreadCount > 99 ? '99+' : unreadCount}
-                        </Text>
-                    </View>
-                )}
-            </View>
-        </TouchableOpacity>
-    );
+            NotificationService.addListener(handleNotificationEvent);
+        };
         
+        if (driverInfo?.driver_id) {
+            initializeNotifications();
+        }
+        
+        return () => {
+            NotificationService.removeListener(handleNotificationEvent);
+        };
+    }, [driverInfo?.driver_id, handleNotificationEvent, fetchUnreadCount]);
 
     const getDriverInfo = async () => {
         try {
@@ -148,7 +127,6 @@ const [isCheckInLoading, setIsCheckInLoading] = useState(false);
             const driverId = session?.userId;
             if (!driverId) return null;
 
-            // Fetch the latest driver data, including the picture
             const response = await fetch(`${API_BASE_URL}/include/handlers/get_mobile_driver.php`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -160,12 +138,11 @@ const [isCheckInLoading, setIsCheckInLoading] = useState(false);
                 const fullDriverInfo = {
                     driver_id: driverId,
                     name: data.driver.name,
-                    driver_pic: data.driver.driver_pic, // The base64 image string
+                    driver_pic: data.driver.driver_pic,
                 };
                 setDriverInfo(fullDriverInfo);
                 return fullDriverInfo;
             } else {
-                // Fallback to session data if the API call fails
                 const fallbackInfo = {
                     driver_id: driverId,
                     name: session.driverName || email.split('@')[0],
@@ -177,7 +154,6 @@ const [isCheckInLoading, setIsCheckInLoading] = useState(false);
             }
         } catch (error) {
             console.error('Error fetching driver info:', error);
-            // On network errors, also attempt to fall back to session data
             try {
                 const sessionData = await AsyncStorage.getItem('userSession');
                 if (sessionData) {
@@ -208,161 +184,254 @@ const [isCheckInLoading, setIsCheckInLoading] = useState(false);
     }, []);
 
     const fetchQueueStatus = useCallback(async () => {
-    // This depends on getDriverInfo() running first
-    if (!driverInfo?.driver_id) return;
+        if (!driverInfo?.driver_id) return;
 
-    try {
-        const response = await fetch(`${API_BASE_URL}/include/handlers/trip_handler.php`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                action: 'get_driver_queue_status',
-                driver_id: driverInfo.driver_id
-            }),
-        });
-        const data = await response.json();
-        if (data.success) {
-            setQueueStatus({
-                isCheckedIn: data.isCheckedIn,
-                penaltyUntil: data.penaltyUntil,
-                checkedInAt: data.checkedInAt,
-            });
-        }
-    } catch (error) {
-        console.error('Error fetching queue status:', error);
-    }
-}, [driverInfo?.driver_id]);
-
-// Add this useFocusEffect hook to fetch the status when the screen is focused
-useFocusEffect(
-    useCallback(() => {
-        fetchQueueStatus();
-    }, [fetchQueueStatus])
-);
-
-const handleCheckIn = async () => {
-    const now = new Date();
-    const currentHour = now.getHours();
-
-    // Check-in is only available between 6 AM and 10 PM (22:00)
-    if (currentHour < 6 || currentHour >= 22) {
-        Alert.alert("Check-In Window Closed", "You can only check-in between 6:00 AM and 10:00 PM.");
-        return;
-    }
-
-    setIsCheckInLoading(true);
-    try {
-        const response = await fetch(`${API_BASE_URL}/include/handlers/trip_handler.php`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                action: 'check_in_driver',
-                driver_id: driverInfo.driver_id,
-            }),
-        });
-        const data = await response.json();
-        if (data.success) {
-            Alert.alert("Check-In Successful", "You are now in the queue. Your check-in is valid for 16 hours.");
-            await fetchQueueStatus(); // Refresh the UI
-        } else {
-            Alert.alert("Check-In Failed", data.message || "An unknown error occurred.");
-        }
-    } catch (error) {
-        console.error('Error during check-in:', error);
-        Alert.alert("Error", "A network error occurred. Please try again.");
-    } finally {
-        setIsCheckInLoading(false);
-    }
-};
-
-// This helper determines the button's appearance and state
-const getCheckInButtonState = () => {
-    const now = new Date();
-    if (queueStatus.penaltyUntil) {
-        const penaltyTime = new Date(queueStatus.penaltyUntil);
-        if (now < penaltyTime) {
-            return {
-                disabled: true,
-                title: `PENALIZED UNTIL ${penaltyTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
-                color: '#9CA3AF'
-            };
-        }
-    }
-
-    if (queueStatus.isCheckedIn) {
-        const checkedInTime = new Date(queueStatus.checkedInAt);
-        const expiryTime = new Date(checkedInTime.getTime() + 16 * 60 * 60 * 1000);
-        return {
-            disabled: true,
-            title: `CHECKED IN (EXPIRES ${expiryTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})`,
-            color: '#10B981' // Green for active
-        };
-    }
-    
-    const currentHour = now.getHours();
-    if (currentHour < 6 || currentHour >= 22) {
-         return {
-            disabled: true,
-            title: 'CHECK-IN OPENS AT 6 AM',
-            color: '#9CA3AF' // Gray for unavailable
-        };
-    }
-
-    return { disabled: isCheckInLoading, title: 'CHECK-IN TO QUEUE', color: '#3B82F6' }; // Blue for ready
-};
-
-const checkInButtonState = getCheckInButtonState();
-
-    const fetchCurrentTrip = async (driver) => {
         try {
             const response = await fetch(`${API_BASE_URL}/include/handlers/trip_handler.php`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    action: 'get_driver_current_trip',
-                    driver_id: driver.driver_id,
-                    driver_name: driver.name,
+                    action: 'get_driver_queue_status',
+                    driver_id: driverInfo.driver_id
                 }),
             });
-
             const data = await response.json();
-
-            if (data.success && data.trip) {
-                setCurrentTrip(data.trip);
-                return data.trip;
-            } else {
-                setCurrentTrip(null);
-                return null;
+            if (data.success) {
+                setQueueStatus({
+                    isCheckedIn: data.isCheckedIn,
+                    penaltyUntil: data.penaltyUntil,
+                    checkedInAt: data.checkedInAt,
+                });
             }
         } catch (error) {
-            console.error('Error fetching current trip:', error);
-            setCurrentTrip(null);
-            return null;
+            console.error('Error fetching queue status:', error);
         }
+    }, [driverInfo?.driver_id]);
+
+    useFocusEffect(
+        useCallback(() => {
+            fetchQueueStatus();
+        }, [fetchQueueStatus])
+    );
+
+const getWeeklyTripsCount = (trips) => {
+  const now = new Date();
+  const startOfWeek = new Date(now);
+  startOfWeek.setDate(now.getDate() - now.getDay());
+  startOfWeek.setHours(0, 0, 0, 0);
+
+  const endOfWeek = new Date(startOfWeek);
+  endOfWeek.setDate(startOfWeek.getDate() + 7);
+
+  return trips.filter(trip => {
+    const tripDate = new Date(trip.date);
+    return tripDate >= startOfWeek && 
+           tripDate < endOfWeek && 
+           trip.status === 'Completed';
+  }).length;
+};
+
+const fetchTripsData = useCallback(async () => {
+  if (!driverInfo?.driver_id) return;
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/include/handlers/trip_handler.php`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'get_trips_with_drivers',
+        driver_id: driverInfo.driver_id,
+      }),
+    });
+
+    const data = await response.json();
+    if (data.success) {
+      const allTrips = data.trips || [];
+
+      setWeeklyTripsCount(getWeeklyTripsCount(allTrips));
+
+      const completedTrips = allTrips
+        .filter(trip => trip.status === 'Completed')
+        .slice(0, 5);
+      setRecentTrips(completedTrips);
+    }
+  } catch (error) {
+    console.error('Error fetching trips data:', error);
+  }
+}, [driverInfo?.driver_id]);
+
+const handleCheckIn = async () => {
+  setIsCheckInLoading(true);
+  try {
+    const response = await fetch(`${API_BASE_URL}/include/handlers/trip_handler.php`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'check_in_driver',
+        driver_id: driverInfo.driver_id,
+      }),
+    });
+
+    const data = await response.json();
+    if (data.success) {
+      setQueueStatus({
+        ...queueStatus,
+        isCheckedIn: true,
+        penaltyUntil: null,
+      });
+      Alert.alert("Check-In Successful", "You are now checked in.");
+    } else {
+      Alert.alert("Check-In Failed", data.message || "An unknown error occurred.");
+    }
+  } catch (error) {
+    console.error("Error during check-in:", error);
+    Alert.alert("Error", "A network error occurred. Please try again.");
+  } finally {
+    setIsCheckInLoading(false);
+  }
+};
+
+
+
+    const getCheckInButtonState = () => {
+  if (queueStatus?.penaltyUntil) {
+    return {
+      disabled: true,
+      title: 'PENALIZED',
+      color: '#9CA3AF',
     };
+  }
+
+  if (queueStatus?.isCheckedIn) {
+    return {
+      disabled: true,
+      title: 'CHECKED IN',
+      color: '#10B981',
+    };
+  }
+
+  return {
+    disabled: isCheckInLoading,
+    title: 'CHECK IN',
+    color: '#F43F5E',
+  };
+};
+
+
+    const checkInButtonState = getCheckInButtonState();
+
+ const fetchTrips = async () => {
+    try {
+      setLoading(true);
+      let driver = driverInfo;
+      if (!driver) {
+        driver = await getDriverInfo();
+        if (!driver) { setLoading(false); return; }
+      }
+  
+      const response = await fetch(`${API_BASE_URL}/include/handlers/trip_handler.php`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'get_trips_with_drivers',
+          driver_id: driver.driver_id,
+        }),
+      });
+  
+      const data = await response.json();
+      if (!data.success) {
+        throw new Error(data.message || "Failed to fetch trip data.");
+      }
+  
+      const allTrips = data.trips || [];
+      setWeeklyTripsCount(getWeeklyTripsCount(allTrips));
+      const activeTrip = allTrips.find(trip => trip.status === 'En Route');
+      const pendingTrips = allTrips.filter(trip => trip.status === 'Pending');
+  
+      let reassignmentTriggered = false;
+      const processedPendingTrips = [];
+  
+      // This loop checks each pending trip for its checklist status and deadline.
+      for (const trip of pendingTrips) {
+        const checklistResponse = await fetch(`${API_BASE_URL}/include/handlers/trip_handler.php`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'get_checklist', trip_id: trip.trip_id }),
+        });
+        const checklistData = await checklistResponse.json();
+        const hasChecklist = checklistData.success && checklistData.checklist;
+  
+        const now = new Date();
+        const tripDate = new Date(trip.date);
+        const oneHourBefore = new Date(tripDate.getTime() - (1 * 60 * 60 * 1000));
+        
+        let wasRecentlyReassigned = false;
+        // Check if the trip was recently reassigned to give the new driver a grace period.
+        if (trip.last_modified_at && trip.edit_reason?.includes('reassigned')) {
+            const modifiedDate = new Date(trip.last_modified_at);
+            // We give the new driver a 1-hour grace period to submit their checklist.
+            const gracePeriod = 1 * 60 * 60 * 1000;
+            if (now.getTime() - modifiedDate.getTime() < gracePeriod) {
+                wasRecentlyReassigned = true;
+            }
+        }
+  
+        // If the deadline has passed, there's no checklist, AND it wasn't just reassigned, then we trigger a reassignment.
+        if (now > oneHourBefore && !hasChecklist && !wasRecentlyReassigned) {
+          console.log(`Trip ID ${trip.trip_id} missed deadline. Reassigning...`);
+          const reassigned = await triggerReassignment(trip.trip_id, driver.driver_id, 'missed_deadline', false);
+          if (reassigned) {
+            reassignmentTriggered = true;
+          }
+          continue; // Don't add this trip to the UI list as it's being removed from the driver.
+        }
+        
+        // If the trip is fine, add it to our list for display.
+        processedPendingTrips.push({ ...trip, hasChecklist });
+      }
+  
+      // If a reassignment happened, we refresh the entire screen to get the latest data.
+      if (reassignmentTriggered) {
+        Alert.alert("Schedule Updated", "One or more trips were reassigned due to a missed checklist deadline.");
+        await fetchTrips(); // Simple recursive call to refresh all data.
+        return;
+      }
+  
+      // If everything is normal, update the state with the trips.
+      setCurrentTrip(activeTrip);
+      setScheduledTrips(processedPendingTrips);
+      if (activeTrip) setStatus(activeTrip.status);
+  
+    } catch (error) {
+      console.error('Error fetching trips:', error);
+      Alert.alert("Error", "Could not load trip data. Please pull down to refresh.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
     const getCheckInStatusText = () => {
-    const now = new Date();
-    if (queueStatus.penaltyUntil) {
-        const penaltyTime = new Date(queueStatus.penaltyUntil);
-        if (now < penaltyTime) {
-            return `On penalty cooldown until ${penaltyTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+        const now = new Date();
+        if (queueStatus.penaltyUntil) {
+            const penaltyTime = new Date(queueStatus.penaltyUntil);
+            if (now < penaltyTime) {
+                return `On penalty cooldown until ${penaltyTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+            }
         }
-    }
 
-    if (queueStatus.isCheckedIn) {
-         const checkedInTime = new Date(queueStatus.checkedInAt);
-         const expiryTime = new Date(checkedInTime.getTime() + 16 * 60 * 60 * 1000);
-         return `Checked in, valid until ${expiryTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
-    }
-    
-    const currentHour = now.getHours();
-    if (currentHour < 6 || currentHour >= 22) {
-        return 'Check-in is available from 6 AM to 10 PM';
-    }
+        if (queueStatus.isCheckedIn) {
+            const checkedInTime = new Date(queueStatus.checkedInAt);
+            const expiryTime = new Date(checkedInTime.getTime() + 16 * 60 * 60 * 1000);
+            return `Checked in, valid until ${expiryTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+        }
+        
+        const currentHour = now.getHours();
+        if (currentHour < 6 || currentHour >= 22) {
+            return 'Check-in is available from 6 AM to 10 PM';
+        }
 
-    return 'Ready to check-in for a trip';
-};
+        return 'Check-in to receive trips';
+    };
 
     const fetchBalanceData = async (tripId) => {
         try {
@@ -400,21 +469,110 @@ const checkInButtonState = getCheckInButtonState();
         }
     };
 
-    const initializeTripData = async () => {
-        try {
-            const driver = await getDriverInfo();
-            if (driver) {
-                const trip = await fetchCurrentTrip(driver);
-                if (trip && trip.trip_id) {
-                    await fetchBalanceData(trip.trip_id);
-                }
-            }
-        } catch (error) {
-            console.error("Initialization error:", error);
-        } finally {
-            setIsLoading(false);
-        }
-    };
+const fetchCurrentTrip = async (driver) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/include/handlers/trip_handler.php`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'get_trips_with_drivers',
+        driver_id: driver.driver_id,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!data.success) {
+      return null; // don’t overwrite currentTrip
+    }
+
+    const allTrips = data.trips || [];
+    const activeTrip = allTrips.find(trip => trip.status === 'En Route');
+
+    if (activeTrip) {
+      setCurrentTrip(activeTrip);
+      return activeTrip;
+    }
+
+    return null; // keep whatever LocationService already has
+  } catch (error) {
+    console.error("Error fetching current trip:", error);
+    return null;
+  }
+};
+
+const initializeTripData = async () => {
+  try {
+    const driver = await getDriverInfo();
+    if (!driver) return;
+
+    // 🔑 Prefer LocationService’s trip if available
+    const status = LocationService.getTrackingStatus();
+    if (status?.activeTrip) {
+      setCurrentTrip(status.activeTrip);
+      if (status.activeTrip.trip_id) {
+        await fetchBalanceData(status.activeTrip.trip_id);
+      }
+      return;
+    }
+
+    // fallback → fetch from API
+    const trip = await fetchCurrentTrip(driver);
+    if (trip?.trip_id) {
+      await fetchBalanceData(trip.trip_id);
+    }
+  } catch (error) {
+    console.error("Initialization error:", error);
+  } finally {
+    setIsLoading(false);
+  }
+};
+
+
+    const formatDate = (dateString) => {
+        if (!dateString) return 'N/A';
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-US', {
+            year: 'numeric', 
+            month: 'short', 
+            day: 'numeric',
+        });
+        };
+
+    const formatTime = (dateString) => {
+        if (!dateString) return "N/A";
+        const date = new Date(dateString);
+        return date.toLocaleTimeString("en-US", {
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: true,
+        });
+        };
+
+const getTimeAgo = (trip) => {
+    // Use last_modified_at for completed trips, fall back to trip date
+    const dateString = trip.status === 'Completed' && trip.last_modified_at 
+        ? trip.last_modified_at 
+        : trip.date;
+    
+    if (!dateString) return "N/A";
+    const tripDate = new Date(dateString);
+    const now = new Date();
+    const diffMs = now - tripDate;
+    const diffMins = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffMins < 60) {
+        return `${diffMins} minute${diffMins !== 1 ? 's' : ''} ago`;
+    } else if (diffHours < 24) {
+        return `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`;
+    } else if (diffDays < 7) {
+        return `${diffDays} day${diffDays !== 1 ? 's' : ''} ago`;
+    } else {
+        return formatDate(dateString);
+    }
+};
 
     const listenToDriverStatus = useCallback(() => {
         if (userId !== 'guest_user') {
@@ -451,47 +609,47 @@ const checkInButtonState = getCheckInButtonState();
         setDriverStatus(status.isTracking ? 'online' : 'offline');
     }, []);
 
-const handleLocationUpdate = useCallback((data) => {
-    if (data.status === 'Updated' || data.activeTrip || data.location) {
-        console.log('Location update received:', data);
-        
-        if (data.status) {
-            setLocationUpdateStatus(data.status);
-            if (data.status === 'Online' || data.status === 'Updated') {
-                setDriverStatus('online');
-                setLocationEnabled(true);
-            } else if (data.status === 'Offline') {
-                setDriverStatus('offline');
-                setLocationEnabled(false);
+    const handleLocationUpdate = useCallback((data) => {
+        if (data.status === 'Updated' || data.activeTrip || data.location) {
+            console.log('Location update received:', data);
+            
+            if (data.status) {
+                setLocationUpdateStatus(data.status);
+                if (data.status === 'Online' || data.status === 'Updated') {
+                    setDriverStatus('online');
+                    setLocationEnabled(true);
+                } else if (data.status === 'Offline') {
+                    setDriverStatus('offline');
+                    setLocationEnabled(false);
+                }
+            }
+
+            if (data.location) {
+                setCurrentLocation(data.location);
+                setHeading(data.location.heading || 0);
+            }
+            if (data.lastUpdated) {
+                setLastUpdated(data.lastUpdated);
+            }
+            if (data.address) {
+                setAddress(data.address);
+            }
+            if (data.error) {
+                setDatabaseStatus(`Error: ${data.error}`);
+            } else if (data.status === 'Updated') {
+                setDatabaseStatus("Location updated successfully");
+            }
+
+            if (data.activeTrip && !currentTrip) {
+                setCurrentTrip(data.activeTrip);
+                if (data.activeTrip.trip_id) {
+                    fetchBalanceData(data.activeTrip.trip_id);
+                }
             }
         }
+    }, [currentTrip]);
 
-        if (data.location) {
-            setCurrentLocation(data.location);
-            setHeading(data.location.heading || 0);
-        }
-        if (data.lastUpdated) {
-            setLastUpdated(data.lastUpdated);
-        }
-        if (data.address) {
-            setAddress(data.address);
-        }
-        if (data.error) {
-            setDatabaseStatus(`Error: ${data.error}`);
-        } else if (data.status === 'Updated') {
-            setDatabaseStatus("Location updated successfully");
-        }
-
-        if (data.activeTrip && !currentTrip) {
-            setCurrentTrip(data.activeTrip);
-            if (data.activeTrip.trip_id) {
-                fetchBalanceData(data.activeTrip.trip_id);
-            }
-        }
-    }
-}, [currentTrip]);
-
-   useEffect(() => {
+    useEffect(() => {
         if (hasInitialized.current) {
             console.log('Dashboard: Already initialized, skipping');
             return;
@@ -503,7 +661,7 @@ const handleLocationUpdate = useCallback((data) => {
         const initialize = async () => {
             if (!listenerAttached.current) {
                 console.log('Dashboard: Adding LocationService listener');
-                LocationService.removeListener(handleLocationUpdate); // Remove any existing
+                LocationService.removeListener(handleLocationUpdate);
                 LocationService.addListener(handleLocationUpdate);
                 listenerAttached.current = true;
             }
@@ -513,6 +671,7 @@ const handleLocationUpdate = useCallback((data) => {
             setDriverStatus(status.isTracking ? 'online' : 'offline');
 
             await initializeTripData();
+            await fetchTripsData();
             const unsubscribeStatus = listenToDriverStatus();
 
             return unsubscribeStatus;
@@ -530,36 +689,34 @@ const handleLocationUpdate = useCallback((data) => {
                 LocationService.removeListener(handleLocationUpdate);
                 listenerAttached.current = false;
             }
-
         };
     }, []);
 
-  useFocusEffect(
-    useCallback(() => {
-      console.log('Dashboard focused - syncing UI state from service');
+useFocusEffect(
+  useCallback(() => {
+    const refreshData = async () => {
+      try {
+        const driver = await getDriverInfo();
+        if (!driver) return;
 
-      const status = LocationService.getTrackingStatus();
+        const status = LocationService.getTrackingStatus();
 
-      setLocationEnabled(status.isTracking);
-      setDriverStatus(status.isTracking ? 'online' : 'offline');
-
-      if (status.activeTrip && (!currentTrip || currentTrip.trip_id !== status.activeTrip.trip_id)) {
-        console.log('Syncing UI with the service\'s active trip');
-        setCurrentTrip(status.activeTrip);
-
-        if (status.activeTrip.trip_id) {
-          fetchBalanceData(status.activeTrip.trip_id);
+        if (status?.activeTrip) {
+          console.log("Using service trip:", status.activeTrip.trip_id);
+          setCurrentTrip(status.activeTrip);
+          await fetchBalanceData(status.activeTrip.trip_id);
+        } else {
+          console.log("No active trip from service, leaving UI as is.");
         }
+        await fetchTripsData();
+      } catch (error) {
+        console.error("Focus effect error:", error);
       }
+    };
 
-      else if (!status.activeTrip && currentTrip) {
-        console.log('Service has no trip, clearing UI');
-        setCurrentTrip(null);
-      }
-      
-    }, [currentTrip?.trip_id])
-  );
-
+    refreshData();
+  }, [fetchTripsData])
+);
 
     useEffect(() => {
         if (userId !== 'guest_user') {
@@ -615,7 +772,7 @@ const handleLocationUpdate = useCallback((data) => {
         }
     }, [sensorEnabled, updateInterval, locationEnabled]);
 
- const handleLocationToggle = async (value) => {
+    const handleLocationToggle = async (value) => {
         console.log(`Location toggle requested: ${value}`);
         
         if (value) {
@@ -656,298 +813,271 @@ const handleLocationUpdate = useCallback((data) => {
         }
     };
 
-
     if (isLoading) {
         return <DashboardSkeleton />;
     }
 
-    return (
-        <View style={dashboardstyles.container}>
-            <View style={dashboardstyles.header}>
+
+return (
+    <View style={dashboardstyles.container}>
+            <View style={dashboardstyles.redHeader}>
+                <View style={dashboardstyles.headerCard}>
                 <View style={dashboardstyles.headerTop}>
                     <View style={dashboardstyles.profileSection}>
                         <TouchableOpacity
                             onPress={() => nav.navigate("Profile", { userId, email })}
-                            style={dashboardstyles.avatar}
+                            style={dashboardstyles.smallAvatar}
                         >
                             {driverInfo?.driver_pic ? (
                                 <Image
                                     source={{ uri: `data:image/jpeg;base64,${driverInfo.driver_pic}` }}
-                                    style={{ width: '100%', height: '100%', borderRadius: 25 }} // Match avatar style
+                                    style={{ width: '100%', height: '100%', borderRadius: 20 }}
                                 />
                             ) : (
-                                <Text style={dashboardstyles.avatarText}>
-                                    {driverInfo?.name ? driverInfo.name.charAt(0).toUpperCase() : ''}
+                                <Text style={dashboardstyles.smallAvatarText}>
+                                    {driverInfo?.name ? driverInfo.name.charAt(0).toUpperCase() : 'S'}
                                 </Text>
                             )}
                         </TouchableOpacity>
-                        <View style={dashboardstyles.welcomeSection}>
-                            <Text style={dashboardstyles.welcomeText}>Welcome back,</Text>
-                            <Text style={dashboardstyles.userName}>{driverInfo?.name || email.split('@')[0]}</Text>
+                        <View style={dashboardstyles.welcomeColumn}>
+                            <Text style={dashboardstyles.userNameWhite}>{driverInfo?.name || 'symons'}</Text>
                         </View>
                     </View>
-                        <NotificationBell />    
+
+                    <View style={dashboardstyles.headerRight}>
+                        <View style={[
+                            dashboardstyles.statusBadgeCompact,
+                            locationEnabled ? dashboardstyles.statusOnline : dashboardstyles.statusOffline
+                                ]}>
+                            <View style={[dashboardstyles.statusDot, { backgroundColor: locationEnabled ? '#10B981' : '#EF4444' }]} />
+                            <Text style={dashboardstyles.statusText}>{locationEnabled ? 'ONLINE' : 'OFFLINE'}</Text>
+                        </View>
+                    </View>
+                </View>
+                </View>
+            </View>
+        <ScrollView
+            style={dashboardstyles.scrollView}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={dashboardstyles.scrollContent}
+        >
+            <View style={dashboardstyles.statsContainer}>
+                <View style={dashboardstyles.statCard}>
+                    <Icon name="calendar" size={22} color="#EC4899" />
+                    <Text style={dashboardstyles.statLabel}>Trips by Week</Text>
+                    <Text style={dashboardstyles.statValue}>{weeklyTripsCount}</Text>
+                </View>
+                <View style={dashboardstyles.statCard}>
+                    <Icon name="credit-card" size={22} color="#EC4899" />
+                    <Text style={dashboardstyles.statLabel}>Available Balance</Text>
+                    <Text style={dashboardstyles.statValue}>₱{formatCurrency(balanceData.remainingBalance)}</Text>
+                </View>
+            </View>
+            <View style={dashboardstyles.contentArea}>
+                <Text style={dashboardstyles.sectionTitle}>Quick Actions</Text>
+
+
+                <View style={dashboardstyles.quickActionsContainer}>
+                <TouchableOpacity
+                    style={dashboardstyles.generateReportButton}
+                    onPress={() => nav.navigate('Expenses', { tripId: currentTrip?.trip_id })}
+                >
+                    <LinearGradient colors={["#FF6680", "#F43F5E"]} style={{ position:'absolute', left:0, right:0, top:0, bottom:0 }} />
+                    <Icon name="file-text" size={16} color="#FFFFFF" style={dashboardstyles.actionIcon} />
+                    <Text style={dashboardstyles.generateReportText}>Generate Report</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                    style={[dashboardstyles.checkInButton, { backgroundColor: checkInButtonState.color }]}
+                    onPress={handleCheckIn}
+                    disabled={checkInButtonState.disabled || isCheckInLoading}
+                >
+                    <Text style={dashboardstyles.checkInButtonText}>
+                    {isCheckInLoading ? 'PROCESSING...' : checkInButtonState.title}
+                    </Text>
+                </TouchableOpacity>
                 </View>
 
-                <View style={dashboardstyles.headerBottom}>
-                    <View style={[dashboardstyles.statusBadge,
-                    locationEnabled ? dashboardstyles.statusOnline : dashboardstyles.statusOffline
-                    ]}>
-                        <View style={[dashboardstyles.statusDot, {
-                            backgroundColor: locationEnabled ? '#10B981' : '#EF4444'
-                        }]} />
-                        <Text style={dashboardstyles.statusText}>
-                            {locationEnabled ? 'ONLINE' : 'OFFLINE'}
-                        </Text>
+                <View style={dashboardstyles.locationCard}>
+                    <View style={dashboardstyles.locationLeft}>
+                        <View style={dashboardstyles.locationIconWrap}>
+                            <Icon name="navigation" size={16} color="#6B7280" />
+                        </View>
+                        <View>
+                            <Text style={dashboardstyles.locationTitle}>Location Updates</Text>
+                            <Text style={dashboardstyles.locationSub}>Share real-time location during trips</Text>
+                        </View>
                     </View>
-
-                    <View style={dashboardstyles.timeSection}>
-                        <Text style={dashboardstyles.todayText}>Today</Text>
-                        <Text style={dashboardstyles.timeText}>
-                            {currentTime.toLocaleDateString('en-US', {
-                                month: 'short',
-                                day: 'numeric'
-                            })}, {currentTime.toLocaleTimeString('en-US', {
-                                hour: '2-digit',
-                                minute: '2-digit',
-                                hour12: true
-                            })}
+                    <TouchableOpacity
+                        onPress={() => handleLocationToggle(!locationEnabled)}
+                        style={[dashboardstyles.locationPill, locationEnabled ? dashboardstyles.pillOn : dashboardstyles.pillOff]}
+                        activeOpacity={0.8}
+                    >
+                        <Text style={[dashboardstyles.locationPillText, locationEnabled ? dashboardstyles.pillTextOn : dashboardstyles.pillTextOff]}>
+                            {locationEnabled ? 'ON' : 'OFF'}
                         </Text>
+                    </TouchableOpacity>
+                </View>
+                <View style={dashboardstyles.sectionContainer}>
+                    {currentTrip ? (
+                        <>
+                            <Text style={dashboardstyles.sectionTitle}>Current Trip</Text>
+
+                            <View style={dashboardstyles.tripCard}> 
+                                
+                                <View style={dashboardstyles.currentTripItem}>
+                                    <View style={dashboardstyles.iconContainer}>
+                                        <Icon name="map-pin" size={20} color="#dc2626" />
+                                    </View>
+                                    <View style={dashboardstyles.tripInfo}>
+                                        <Text style={dashboardstyles.tripDestination}>
+                                            {currentTrip.destination || "N/A"}
+                                        </Text>
+                                        <Text style={dashboardstyles.tripSubInfo}>
+                                            {currentTrip.client || "N/A"} • {currentTrip.container_no || "N/A"}
+                                        </Text>
+                                    </View>
+                                    <View style={[dashboardstyles.statusBadgeSolid, (currentTrip.status === 'En Route') ? dashboardstyles.statusEnRoute : null]}>
+                                        <Text style={[dashboardstyles.statusBadgeText, (currentTrip.status === 'En Route') ? dashboardstyles.statusBadgeTextLight : null]}>
+                                            {currentTrip.status || "Standby"}
+                                        </Text>
+                                    </View>
+                                </View>
+
+                                <View style={dashboardstyles.timeRow}>
+                                    <View style={dashboardstyles.timeColumn}>
+                                        <Text style={dashboardstyles.timeLabel}>Departure</Text>
+                                        <Text style={dashboardstyles.timeValue}>
+                                            {formatTime(currentTrip.date)}
+                                        </Text>
+                                    </View>
+                                    <View style={dashboardstyles.timeColumnRight}>
+                                        <Text style={dashboardstyles.timeLabel}>Date</Text>
+                                        <Text style={dashboardstyles.timeValue}>
+                                            {formatDate(currentTrip.date)}
+                                        </Text>
+                                    </View>
+                                </View>
+                            </View>
+                        </>
+                    ) : (
+                        <View style={dashboardstyles.emptyState}>
+                            <Text style={dashboardstyles.emptyTitle}>No Active Trip</Text>
+                            <Text style={dashboardstyles.emptySubtitle}>
+                                You don't have any active trips at the moment
+                            </Text>
+                        </View>
+                    )}
+                </View>
+                <View style={dashboardstyles.sectionContainer}>
+                <Text style={dashboardstyles.sectionTitle}>Recent Trips</Text>
+                    <View style={dashboardstyles.tripCard}>
+                        {recentTrips.length > 0 ? (
+                            recentTrips.map((trip, index) => {
+                                const timeAgo = getTimeAgo(trip);
+                                const isLast = index === recentTrips.length - 1;
+                                return (
+                                    <View key={trip.trip_id} style={[dashboardstyles.recentTripItem, isLast && { borderBottomWidth: 0 }] }>
+                                        <View style={dashboardstyles.recentIconCircle}>
+                                            <Icon name="check" size={16} color="#10B981" />
+                                        </View>
+                                        <View style={dashboardstyles.recentTripInfo}>
+                                            <Text style={dashboardstyles.recentTripTitle}>{trip.destination || 'Unknown Destination'}</Text>
+                                            <Text style={dashboardstyles.recentTripSub}>Completed • {timeAgo}</Text>
+                                        </View>
+                                    </View>
+                                );
+                            })
+                        ) : (
+                            <View style={dashboardstyles.recentTripItem}>
+                                <View style={dashboardstyles.recentIconCircle}>
+                                    <Icon name="info" size={16} color="#9CA3AF" />
+                                </View>
+                                <View style={dashboardstyles.recentTripInfo}>
+                                    <Text style={dashboardstyles.recentTripTitle}>No Recent Trips</Text>
+                                    <Text style={dashboardstyles.recentTripSub}>Completed trips will appear here</Text>
+                                </View>
+                            </View>
+                        )}
                     </View>
                 </View>
             </View>
+        </ScrollView>
 
-            <ScrollView
-                style={dashboardstyles.content}
-                showsVerticalScrollIndicator={false}
-                contentContainerStyle={dashboardstyles.contentContainer}
+<View style={tripstyle.bottomNav}>
+            <TouchableOpacity
+                style={[tripstyle.navButton, currentRoute === "Dashboard" && tripstyle.navButtonActive]}
+                onPress={() => nav.navigate("Dashboard")}
             >
-                <TouchableOpacity style={dashboardstyles.card} activeOpacity={0.98}>
-                    <View style={dashboardstyles.cardHeader}>
-                        <View style={dashboardstyles.cardTitleSection}>
-                            <View style={dashboardstyles.walletIconContainer}>
-                                <Image
-                                    source={require("../assets/wallet.png")}
-                                    style={dashboardstyles.walletIcon}
-                                    resizeMode="contain"
-                                />
-                            </View>
-                            <Text style={dashboardstyles.cardTitle}>Available Balance</Text>
-                        </View>
-                        <TouchableOpacity style={dashboardstyles.chevronButton}>
-                            <Text style={dashboardstyles.chevronText}>›</Text>
-                        </TouchableOpacity>
-                    </View>
-
-                    <View style={dashboardstyles.balanceSection}>
-                        <Text style={dashboardstyles.balanceAmount}>
-                            {isBalanceVisible
-                                ? `₱ ${formatCurrency(balanceData.remainingBalance)}`
-                                : '₱ *.**'
-                            }
-                        </Text>
-                    </View>
-
-                    <TouchableOpacity
-                        style={dashboardstyles.generateButton}
-                        onPress={() => nav.navigate('Expenses', { tripId: currentTrip?.trip_id })}
-                    >
-                        <Text style={dashboardstyles.generateButtonText}>Generate Report</Text>
-                    </TouchableOpacity>
-                </TouchableOpacity>
-
-                <TouchableOpacity style={dashboardstyles.card} activeOpacity={0.98}>
-                    <View style={dashboardstyles.cardHeader}>
-                        <View style={dashboardstyles.cardTitleSection}>
-                            <View style={dashboardstyles.navigationIconContainer}>
-                                <Image
-                                    source={require("../assets/trip.png")}
-                                    style={dashboardstyles.walletIcon}
-                                    resizeMode="contain"
-                                />
-                            </View>
-                            <Text style={dashboardstyles.cardTitle}>Current Trip</Text>
-                        </View>
-                        <TouchableOpacity style={dashboardstyles.chevronButton}>
-                            <Text style={dashboardstyles.chevronText}>›</Text>
-                        </TouchableOpacity>
-                    </View>
-
-                    <View style={dashboardstyles.tripInfo}>
-                        <View style={dashboardstyles.truckIconContainer}>
-                            <View style={dashboardstyles.truckIcon} />
-                        </View>
-                        <View style={dashboardstyles.tripDetails}>
-                            <Text style={dashboardstyles.tripDestination}>
-                                {currentTrip?.destination || 'No active trip'}
-                            </Text>
-                            <Text style={dashboardstyles.tripSubtext}>
-                                {currentTrip ? `${currentTrip.client} - ${currentTrip.plate_no}` : 'Please wait for dispatch'}
-                            </Text>
-                        </View>
-                        {currentTrip && (
-                            <View style={dashboardstyles.activeBadge}>
-                                <Text style={dashboardstyles.activeBadgeText}>Active</Text>
-                            </View>
-                        )}
-                    </View>
-                </TouchableOpacity>
-
-                <View style={dashboardstyles.sectionHeader}>
-                    <Text style={dashboardstyles.sectionTitle}>Tracking Settings</Text>
+                <View style={tripstyle.navIconContainer}>
+                <Icon 
+                    name="home" 
+                    size={24} 
+                    color={currentRoute === "Dashboard" ? "#dc2626" : "#6B7280"} 
+                />
                 </View>
-                  <View style={dashboardstyles.card}>
-                    <View style={dashboardstyles.trackingRow}>
-                        <View style={dashboardstyles.trackingInfo}>
-                            <View style={dashboardstyles.queueIconContainer}>
-                                <Text style={dashboardstyles.queueIcon}>🕒</Text>
-                            </View>
-                            <View style={dashboardstyles.trackingText}>
-                                <Text style={dashboardstyles.trackingLabel}>Driver Queue Check In</Text>
-                                {/* <Text style={dashboardstyles.trackingStatus}>
-                                    {getCheckInStatusText()}
-                                </Text> */}
-                            </View>
-                        </View>
+                <Text style={[tripstyle.navLabel, { color: currentRoute === "Dashboard" ? "#dc2626" : "#6B7280" }]}>
+                Home
+                </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+                style={[tripstyle.navButton, currentRoute === "Notifications" && tripstyle.navButtonActive]}
+                onPress={() => nav.navigate("Notifications")}
+            >
+                <View style={tripstyle.navIconContainer}>
+                <Icon 
+                    name="bell" 
+                    size={24} 
+                    color={currentRoute === "Notifications" ? "#dc2626" : "#6B7280"} 
+                />
+                {unreadCount > 0 && (
+                    <View style={tripstyle.navBadge}>
+                    <Text style={tripstyle.navBadgeText}>
+                        {unreadCount > 9 ? '9+' : unreadCount}
+                    </Text>
                     </View>
-                     <TouchableOpacity
-                        style={[dashboardstyles.checkInButton, { backgroundColor: checkInButtonState.color, marginTop: 16 }]}
-                        onPress={handleCheckIn}
-                        disabled={checkInButtonState.disabled || isCheckInLoading}
-                    >
-                        <Text style={dashboardstyles.checkInButtonText}>
-                            {isCheckInLoading ? 'PROCESSING...' : checkInButtonState.title}
-                        </Text>
-                    </TouchableOpacity>
+                )}
                 </View>
+                <Text style={[tripstyle.navLabel, { color: currentRoute === "Notifications" ? "#dc2626" : "#6B7280" }]}>
+                Notifications
+                </Text>
+            </TouchableOpacity>
 
-                <View style={dashboardstyles.card}>
-                    <View style={dashboardstyles.trackingRow}>
-                        <View style={dashboardstyles.trackingInfo}>
-                            <View style={dashboardstyles.locationIconContainer}>
-                                <Image
-                                    source={require("../assets/location.png")}
-                                    style={dashboardstyles.walletIcon}
-                                    resizeMode="contain"
-                                />
-                            </View>
-                            <View style={dashboardstyles.trackingText}>
-                                <Text style={dashboardstyles.trackingLabel}>Location Updates</Text>
-                                <Text style={dashboardstyles.trackingStatus}>
-                                    Currently {locationEnabled ? 'online' : 'offline'}
-                                </Text>
-                            </View>
-                        </View>
-
-                        <Switch
-                            value={locationEnabled}
-                            onValueChange={handleLocationToggle}
-                            trackColor={{ false: "#E5E7EB", true: "#3B82F6" }}
-                            thumbColor={locationEnabled ? "#FFFFFF" : "#9CA3AF"}
-                            style={dashboardstyles.switch}
-                        />
-                    </View>
+            <TouchableOpacity
+                style={[tripstyle.navButton, currentRoute === "Trips" && tripstyle.navButtonActive]}
+                onPress={() => nav.navigate("Trips")}
+            >
+                <View style={tripstyle.navIconContainer}>
+                <Icon 
+                    name="map-pin" 
+                    size={24} 
+                    color={currentRoute === "Trips" ? "#dc2626" : "#6B7280"} 
+                />
                 </View>
-            </ScrollView>
+                <Text style={[tripstyle.navLabel, { color: currentRoute === "Trips" ? "#dc2626" : "#6B7280" }]}>
+                Trips
+                </Text>
+            </TouchableOpacity>
 
-            <View style={tripstyle.bottomNav}>
-                <TouchableOpacity
-                    style={[tripstyle.navButton, currentRoute === "Dashboard" && tripstyle.navButtonActive]}
-                    onPress={() => nav.navigate("Dashboard")}
-                >
-                    <View style={tripstyle.navIconContainer}>
-                        <Image
-                            source={require("../assets/Home.png")}
-                            style={[
-                                tripstyle.navIcon,
-                                { tintColor: currentRoute === "Dashboard" ? "#dc2626" : "#9ca3af" }
-                            ]}
-                        />
-                    </View>
-                    <Text
-                        style={[
-                            tripstyle.navLabel,
-                            { color: currentRoute === "Dashboard" ? "#dc2626" : "#9ca3af" }
-                        ]}
-                    >
-                        Home
-                    </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                    style={[tripstyle.navButton, currentRoute === "Notifications" && tripstyle.navButtonActive]}
-                    onPress={() => nav.navigate("Notifications")}
-                >
-                    <View style={tripstyle.navIconContainer}>
-                    <Image
-                        source={require("../assets/bell.png")}
-                        style={[tripstyle.navIcon, { 
-                        tintColor: currentRoute === "Notifications" ? "#dc2626" : "#9ca3af" 
-                    }]}
-                    />
-                        {unreadCount > 0 && (
-                            <View style={tripstyle.navBadge}>
-                                <Text style={tripstyle.navBadgeText}>
-                                    {unreadCount > 9 ? '9+' : unreadCount}
-                                 </Text>
-                            </View>
-                        )}
-                            </View>
-                        <Text style={[tripstyle.navLabel, { 
-                        color: currentRoute === "Notifications" ? "#dc2626" : "#9ca3af" 
-                            }]}>
-                    Notifications
-                    </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                    style={[tripstyle.navButton, currentRoute === "Trips" && tripstyle.navButtonActive]}
-                    onPress={() => nav.navigate("Trips")}
-                >
-                    <View style={tripstyle.navIconContainer}>
-                        <Image
-                            source={require("../assets/location2.png")}
-                            style={[
-                                tripstyle.navIcon,
-                                { tintColor: currentRoute === "Trips" ? "#dc2626" : "#9ca3af" }
-                            ]}
-                        />
-                    </View>
-                    <Text
-                        style={[
-                            tripstyle.navLabel,
-                            { color: currentRoute === "Trips" ? "#dc2626" : "#9ca3af" }
-                        ]}
-                    >
-                        Trips
-                    </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                    style={[tripstyle.navButton, currentRoute === "Profile" && tripstyle.navButtonActive]}
-                    onPress={() => nav.navigate("Profile")}
-                >
-                    <View style={tripstyle.navIconContainer}>
-                        <Image
-                            source={require("../assets/user.png")}
-                            style={[
-                                tripstyle.navIcon,
-                                { tintColor: currentRoute === "Profile" ? "#dc2626" : "#9ca3af" }
-                            ]}
-                        />
-                    </View>
-                    <Text
-                        style={[
-                            tripstyle.navLabel,
-                            { color: currentRoute === "Profile" ? "#dc2626" : "#9ca3af" }
-                        ]}
-                    >
-                        Profile
-                    </Text>
-                </TouchableOpacity>
+            <TouchableOpacity
+                style={[tripstyle.navButton, currentRoute === "Profile" && tripstyle.navButtonActive]}
+                onPress={() => nav.navigate("Profile")}
+            >
+                <View style={tripstyle.navIconContainer}>
+                <Icon 
+                    name="user" 
+                    size={24} 
+                    color={currentRoute === "Profile" ? "#dc2626" : "#6B7280"} 
+                />
+                </View>
+                <Text style={[tripstyle.navLabel, { color: currentRoute === "Profile" ? "#dc2626" : "#6B7280" }]}>
+                Profile
+                </Text>
+            </TouchableOpacity>
             </View>
         </View>
-    );
+);
 }
 
 export default Dashboard;

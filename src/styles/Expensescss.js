@@ -23,17 +23,22 @@ export const expensestyle = StyleSheet.create({
   header: {
     background: "linear-gradient(135deg, #7a0f0fff 0%, #7a0f0fff 100%)",
     backgroundColor: "#7a0f0fff",
-    paddingTop: 50,
+    paddingTop: 10,
     paddingBottom: 20,
     paddingHorizontal: 20,
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
     shadowColor: "#7a0f0fff",
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.3,
     shadowRadius: 16,
     elevation: 10,
   },
+
+  dropdownTextWrapper: {
+  flexDirection: "row",
+  alignItems: "center",
+  gap: 6,
+},
+
 
   headerContent: {
     flexDirection: "row",
@@ -374,7 +379,7 @@ export const expensestyle = StyleSheet.create({
   },
 
   modalContent: {
-    paddingHorizontal: 20, // Only horizontal padding
+    paddingHorizontal: 20,
   },
 
   balanceAlert: {
@@ -384,7 +389,7 @@ export const expensestyle = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     marginBottom: 24,
-    marginTop: 20, // Add margin top
+    marginTop: 20,
     borderWidth: 1,
     borderColor: "#0ea5e9",
   },
@@ -822,26 +827,18 @@ export const expensestyle = StyleSheet.create({
     fontSize: 12,
     color: '#666',
   },
-  
-  // ===============================================
-  // === NEW AND MODIFIED STYLES ARE ADDED BELOW ===
-  // ===============================================
 
-  // For the KeyboardAvoidingView wrapper
   keyboardAvoidingView: {
     flex: 1,
   },
-  
-  // MODIFIED for better scrolling behavior
+
   modalContainer: {
     backgroundColor: "#ffffff",
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     maxHeight: "90%",
-    // minHeight has been removed to allow the modal to shrink for the keyboard
   },
 
-  // MODIFIED for scrollability
   dropdownList: {
     position: "absolute",
     top: "100%",
@@ -853,7 +850,7 @@ export const expensestyle = StyleSheet.create({
     borderTopWidth: 0,
     borderBottomLeftRadius: 12,
     borderBottomRightRadius: 12,
-    maxHeight: 200, // This is the key change that makes the list scroll
+    maxHeight: 200,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
@@ -862,7 +859,6 @@ export const expensestyle = StyleSheet.create({
     zIndex: 1001,
   },
 
-  // NEW styles for the full-screen receipt viewer
   receiptModalContainer: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.85)',
@@ -892,10 +888,9 @@ export const expensestyle = StyleSheet.create({
     fontWeight: 'bold',
   },
 
-  // MODIFIED for consistency
   changeImageText: {
     fontSize: 14,
-    color: "#667eea", // Changed to a more vibrant color
+    color: "#667eea",
     fontWeight: "600",
   },
 

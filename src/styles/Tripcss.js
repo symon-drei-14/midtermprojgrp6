@@ -36,28 +36,24 @@ export const tripstyle = StyleSheet.create({
   headerSection: {
     backgroundColor: '#7a0f0fff',
     paddingHorizontal: 24,
-    paddingTop: 50,
-    paddingBottom: 25,
-    borderBottomLeftRadius: 35,
-    borderBottomRightRadius: 35,
+    paddingTop: 10,
+    paddingBottom: 10,
     shadowColor: '#7a0f0fff',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.3,
     shadowRadius: 16,
     elevation: 12,
-    marginBottom: 10,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
 
-  headerTitle: {
-    fontSize: 28,
-    color: '#FFFFFF',
-    fontWeight: '700',
-    marginBottom: 4,
-  },
-
+ headerTitle: {
+   fontSize: 26,
+   color: '#E0E0E0',
+   fontWeight: 'bold',
+   fontFamily: 'Helvetica Neue',
+ },
   dateText: {
     color: 'rgba(255, 255, 255, 0.9)',
     fontSize: 12,
@@ -77,9 +73,10 @@ export const tripstyle = StyleSheet.create({
     paddingBottom: 100,
   },
 
-  sectionContainer: {
-    marginBottom: 5,
-  },
+sectionContainer: {
+  paddingHorizontal: 0,
+  marginBottom: 20,
+},
 
   sectionHeader: {
     flexDirection: 'row',
@@ -123,17 +120,19 @@ export const tripstyle = StyleSheet.create({
     fontWeight: '700',
   },
 
-  activeCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 15,
-    padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 8,
-    marginBottom: 20,
-  },
+activeCard: {
+  width: '110%',
+  marginTop: 10,
+  marginLeft: -16,
+  backgroundColor: '#FFFFFF',
+  borderRadius: 18,
+  padding: 10,
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: 4 },
+  shadowOpacity: 0.1,
+  shadowRadius: 12,
+  elevation: 8,
+},
 
   cardHeader: {
     marginBottom: 20,
@@ -205,6 +204,7 @@ export const tripstyle = StyleSheet.create({
   },
 
   actionButtons: {
+    marginTop: 0,
     flexDirection: 'row',
     gap: 12,
   },
@@ -250,10 +250,11 @@ export const tripstyle = StyleSheet.create({
   },
 
   scheduledTripCard: {
+    width: '110%',
     backgroundColor: '#FFFFFF',
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 8,
+    borderRadius: 12,
+    padding: 20,
+    marginBottom: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
@@ -261,6 +262,8 @@ export const tripstyle = StyleSheet.create({
     elevation: 2,
     borderWidth: 1,
     borderColor: '#f3f4f6',
+    marginHorizontal: 0,
+    marginLeft: -16,
   },
 
   scheduledTripRow: {
@@ -357,9 +360,9 @@ export const tripstyle = StyleSheet.create({
 
   emptyCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 40,
-    marginBottom: 20,
+    borderRadius: 20,
+    padding: 48,
+    marginBottom: 24,
     alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -428,10 +431,90 @@ export const tripstyle = StyleSheet.create({
     textAlign: 'center',
   },
 
-  modalButtons: {
-    gap: 12,
-    marginBottom: 20,
-  },
+  modernModalOverlay: {
+  flex: 1,
+  backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  justifyContent: 'center',
+  alignItems: 'center',
+  padding: 20,
+},
+modernModalContainer: {
+  backgroundColor: '#fff',
+  borderRadius: 20,
+  padding: 24,
+  width: '90%',
+  maxWidth: 340,
+  alignItems: 'center',
+  position: 'relative',
+},
+modernModalClose: {
+  position: 'absolute',
+  top: 16,
+  right: 16,
+  width: 32,
+  height: 32,
+  borderRadius: 16,
+  backgroundColor: '#F3F4F6',
+  justifyContent: 'center',
+  alignItems: 'center',
+  zIndex: 1,
+},
+modernModalIcon: {
+  width: 80,
+  height: 80,
+  borderRadius: 40,
+  backgroundColor: '#FEE2E2',
+  justifyContent: 'center',
+  alignItems: 'center',
+  marginBottom: 20,
+  marginTop: 8,
+},
+modernModalTitle: {
+  fontSize: 20,
+  fontWeight: '700',
+  color: '#1F2937',
+  marginBottom: 8,
+  textAlign: 'center',
+},
+modernModalSubtitle: {
+  fontSize: 14,
+  color: '#6B7280',
+  marginBottom: 24,
+  textAlign: 'center',
+},
+modernCompleteButton: {
+  backgroundColor: '#10B981',
+  borderRadius: 12,
+  paddingVertical: 14,
+  paddingHorizontal: 24,
+  width: '100%',
+  flexDirection: 'row',
+  alignItems: 'center',
+  justifyContent: 'center',
+  marginBottom: 12,
+},
+modernCompleteButtonText: {
+  color: '#fff',
+  fontSize: 16,
+  fontWeight: '600',
+},
+modernCancelButton: {
+  paddingVertical: 12,
+},
+modernCancelText: {
+  color: '#6B7280',
+  fontSize: 15,
+  fontWeight: '500',
+},
+
+modalButton: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  justifyContent: 'center',
+  padding: 16,
+  borderRadius: 12,
+  marginBottom: 12,
+},
 
   modalButton: {
     flexDirection: 'row',
@@ -546,47 +629,54 @@ export const tripstyle = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
-    paddingVertical: 12,
+    paddingVertical: 0,
     paddingHorizontal: 20,
-    borderTopWidth: 1,
-    borderTopColor: '#f3f4f6',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 10,
   },
 
-  navButton: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 8,
-    paddingVertical: 6,
-  },
-
-
-  navButtonActive: {
-    backgroundColor: "rgba(220, 38, 38, 0.1)",
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-  },
-
-
+navButton: {
+  flex: 1,
+  alignItems: 'center',
+  justifyContent: 'center',
+  paddingVertical: 10,
+},
+navButtonActive: {
+},
   navIconContainer: {
-    marginBottom: 4,
-  },
-
-  navIcon: {
-    width: 24,
-    height: 24,
-    resizeMode: 'contain',
-  },
-
-  navLabel: {
-    fontSize: 12,
-    fontWeight: '500',
-  },
+  position: 'relative',
+  width: 34,
+  height: 34,
+  alignItems: 'center',
+  justifyContent: 'center',
+  marginBottom: 4,
+},
+navIconActiveBg: {
+  backgroundColor: '#FFE4E8',
+  borderRadius: 10,
+},
+navBadge: {
+  position: 'absolute',
+  top: -4,
+  right: -6,
+  backgroundColor: '#dc2626',
+  borderRadius: 10,
+  minWidth: 18,
+  height: 18,
+  paddingHorizontal: 4,
+  justifyContent: 'center',
+  alignItems: 'center',
+  borderWidth: 2,
+  borderColor: '#fff',
+},
+navBadgeText: {
+  color: '#fff',
+  fontSize: 10,
+  fontWeight: 'bold',
+  textAlign: 'center',
+},
+navLabel: {
+  fontSize: 12,
+  fontWeight: '500',
+},
 
   detailIcon: {
   width: 16,
@@ -599,8 +689,8 @@ export const tripstyle = StyleSheet.create({
   scheduledCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
-    padding: 20,
-    marginBottom: 12,
+    padding: 24,
+    marginBottom: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
@@ -695,6 +785,114 @@ export const tripstyle = StyleSheet.create({
     fontWeight: '600',
     textTransform: 'uppercase',
   },
+
+    section: {
+    paddingHorizontal: 16,
+    paddingTop: 14,
+    paddingBottom: 6,
+    backgroundColor: '#FFFFFF',
+  },
+
+  sectionTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#111827',
+    marginBottom: 8,
+  },
+    sectionContainer: {
+        paddingHorizontal: 16,
+        marginBottom: 24,
+    },
+tripCard: {
+    backgroundColor: '#fff',
+    borderRadius: 18,
+    padding: 20,
+    
+    shadowColor: "#000",
+    shadowOffset: {
+        width: 0,
+        height: 2,
+    },
+    shadowOpacity: 0.08,
+    shadowRadius: 3.84,
+    elevation: 4,
+},
+    currentTripItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    iconContainer: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: '#FEE2E2',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    tripInfo: {
+        flex: 1,
+        marginLeft: 16,
+    },
+tripDestination: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#111827',
+    textTransform: 'uppercase',
+},
+tripSubInfo: {
+    fontSize: 13,
+    color: '#6B7280',
+    marginTop: 4,
+    textTransform: 'uppercase',
+},
+    statusOutlineBadge: {
+        borderWidth: 1,
+        borderColor: '#2563EB',
+        paddingVertical: 6,
+        paddingHorizontal: 12,
+        borderRadius: 20,
+    },
+    statusOutlineText: {
+        color: '#2563EB',
+        fontSize: 12,
+        fontWeight: '500',
+    },
+    timeRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginTop: 24,
+    },
+    timeColumn: {},
+    timeColumnRight: {
+        alignItems: 'flex-end',
+    },
+    timeLabel: {
+        fontSize: 12,
+        color: '#6B7280',
+        marginBottom: 4,
+    },
+    timeValue: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#111827',
+    },
+    emptyState: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 40,
+        backgroundColor: '#F9FAFB',
+        borderRadius: 12,
+    },
+    emptyTitle: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#111827',
+    },
+    emptySubtitle: {
+        fontSize: 14,
+        color: '#6B7280',
+        marginTop: 4,
+    }
 });
 
 export const TripDetail = {
@@ -729,10 +927,10 @@ export const TripDetail = {
     color: '#666',
     fontWeight: '300',
   },
-  scrollContent: {
-    paddingHorizontal: 20,
-    paddingBottom: 200,
-  },
+scrollContent: {
+  paddingHorizontal: 20,
+  paddingBottom: 100,
+},
   destinationHeader: {
     marginBottom: 24,
     paddingBottom: 20,
