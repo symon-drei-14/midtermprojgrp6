@@ -4,7 +4,7 @@ import Geolocation from '@react-native-community/geolocation';
 
 const db = firestore();
 
-export const registerUser = async (email, password, name = "") => {
+export const registerUser = async (email, name = "") => {
     try {
         const userRef = db.collection('Drivers_table').doc();
         const userId = userRef.id;
@@ -21,7 +21,6 @@ export const registerUser = async (email, password, name = "") => {
         await userRef.set({
             userId,
             email,
-            password,
             name,
             createdAt: firestore.FieldValue.serverTimestamp(),
         });
