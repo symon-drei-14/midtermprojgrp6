@@ -347,7 +347,7 @@ const resetChecklistData = () => {
 };
 
 const submitChecklist = async () => {
-    // Let's define what it means to fail the checklist.
+ 
     const hoursSlept = parseFloat(checklistData.hoursSleep) || 0;
     const alcoholReading = parseFloat(checklistData.alcoholTest) || 0;
 
@@ -360,11 +360,11 @@ const submitChecklist = async () => {
         checklistData.noDistractions &&
         checklistData.noIllness;
 
-    // A driver fails if they aren't fit, aren't sober, didn't pass all the checks, or didn't get enough sleep.
+    
     const didFailChecklist = !isFit || !isSober || !passedAllChecks || !hasEnoughSleep;
 
     if (didFailChecklist) {
-        // If any part of the checklist is failed, we don't save it. Instead, we trigger the reassignment.
+      
         Alert.alert(
             "Checklist Failed",
             "You have not met the fitness requirements for this trip (e.g., 6-9 hours of sleep, zero alcohol, fit to work). The trip will be reassigned, and a 16-hour penalty will apply.",
@@ -374,15 +374,15 @@ const submitChecklist = async () => {
                     setUpdating(true);
                     setChecklistModalVisible(false);
                     await triggerReassignment(currentTripId, driverInfo.driver_id, 'failed_checklist');
-                    await fetchTrips(); // Refresh the screen to show the trip is gone.
+                    await fetchTrips(); 
                     setUpdating(false);
                 }
             }]
         );
-        return; // Stop right here.
+        return; 
     }
 
-    // If the checklist passed, we proceed with the normal submission.
+    
     try {
         setUpdating(true);
         const response = await fetch(`${API_BASE_URL}/include/handlers/trip_handler.php`, {
@@ -408,7 +408,7 @@ const submitChecklist = async () => {
         if (data.success) {
             Alert.alert('Success', 'Checklist submitted successfully!');
             setChecklistModalVisible(false);
-            fetchTrips(); // Refresh to show the updated status.
+            fetchTrips(); 
         } else {
             Alert.alert('Error', data.message || 'Failed to submit checklist');
         }
@@ -421,10 +421,10 @@ const submitChecklist = async () => {
 };
 
 const triggerReassignment = async (tripId, driverId, reason, showAlert = true) => {
-    // A helper function to call our new backend endpoint.
+    
     console.log(`Triggering reassignment for trip ${tripId} due to: ${reason}`);
     
-    // We set the updating state in the component that calls this function.
+    
     try {
       const response = await fetch(`${API_BASE_URL}/include/handlers/trip_operations.php`, {
         method: 'POST',
