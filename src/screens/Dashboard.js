@@ -66,7 +66,7 @@ function Dashboard({ route }) {
     const hasInitialized = useRef(false);
     const listenerAttached = useRef(false);
 
-    const API_BASE_URL = 'http://192.168.100.17/capstone-1-eb';
+    const API_BASE_URL = 'http://192.168.1.4/capstone-1-eb';
 
     const handleNotificationEvent = useCallback((event) => {
         console.log('Notification event received:', event);
@@ -294,29 +294,46 @@ const handleCheckIn = async () => {
 
 
     const getCheckInButtonState = () => {
-  if (queueStatus?.penaltyUntil) {
-    return {
-      disabled: true,
-      title: 'PENALIZED',
-      color: '#9CA3AF',
-    };
-  }
+    const now = new Date();
 
-  if (queueStatus?.isCheckedIn) {
-    return {
-      disabled: true,
-      title: 'CHECKED IN',
-      color: '#10B981',
-    };
-  }
+    // First, let's see if the driver is currently penalized.
+    if (queueStatus?.penaltyUntil) {
+        const penaltyTime = new Date(queueStatus.penaltyUntil);
+        if (now < penaltyTime) {
+            return {
+                disabled: true,
+                title: 'PENALIZED',
+                color: '#9CA3AF',
+            };
+        }
+    }
 
-  return {
-    disabled: isCheckInLoading,
-    title: 'CHECK IN',
-    color: '#F43F5E',
-  };
+    // If the driver is already checked in, that's the most important status to show.
+    if (queueStatus?.isCheckedIn) {
+        return {
+            disabled: true,
+            title: 'CHECKED IN',
+            color: '#10B981',
+        };
+    }
+
+    // Now, if they aren't checked in, let's see if the check-in window is open.
+    const currentHour = now.getHours();
+    if (currentHour < 6 || currentHour >= 22) { // 6 AM is hour 6, 10 PM is hour 22
+        return {
+            disabled: true,
+            title: 'CHECK-IN CLOSED',
+            color: '#9CA3AF',
+        };
+    }
+
+    // If none of the above, the button is ready for check-in.
+    return {
+        disabled: isCheckInLoading,
+        title: 'CHECK IN',
+        color: '#F43F5E',
+    };
 };
-
 
     const checkInButtonState = getCheckInButtonState();
 
