@@ -348,68 +348,77 @@ const resetChecklistData = () => {
 
 const submitChecklist = async () => {
     // Let's define what it means to fail the checklist.
-    const isFit = checklistData.fitToWork;
-    const isSober = parseFloat(checklistData.alcoholTest) === 0;
-    const passedAllChecks = 
-      checklistData.noFatigue &&
-      checklistData.noDrugs &&
-      checklistData.noDistractions &&
-      checklistData.noIllness;
+    const hoursSlept = parseFloat(checklistData.hoursSleep) || 0;
+    const alcoholReading = parseFloat(checklistData.alcoholTest) || 0;
 
-    // A driver fails if they are not fit, not sober, or didn't pass all the yes/no checks.
-    const didFailChecklist = !isFit || !isSober || !passedAllChecks;
+    const hasEnoughSleep = hoursSlept >= 6 && hoursSlept <= 9;
+    const isSober = alcoholReading === 0;
+    const isFit = checklistData.fitToWork;
+    const passedAllChecks =
+        checklistData.noFatigue &&
+        checklistData.noDrugs &&
+        checklistData.noDistractions &&
+        checklistData.noIllness;
+
+    // A driver fails if they aren't fit, aren't sober, didn't pass all the checks, or didn't get enough sleep.
+    const didFailChecklist = !isFit || !isSober || !passedAllChecks || !hasEnoughSleep;
 
     if (didFailChecklist) {
-      // If the checklist is failed, we don't save it. Instead, we trigger the reassignment.
-      Alert.alert(
-        "Checklist Failed",
-        "You've indicated that you are not fit for this trip. The trip will be reassigned, and a 16-hour penalty will apply.",
-        [{ text: "OK", onPress: async () => {
-            setUpdating(true);
-            setChecklistModalVisible(false);
-            await triggerReassignment(currentTripId, driverInfo.driver_id, 'failed_checklist');
-            await fetchTrips(); // Refresh the screen
-            setUpdating(false);
-        }}]
-      );
-      return; // Stop right here.
+        // If any part of the checklist is failed, we don't save it. Instead, we trigger the reassignment.
+        Alert.alert(
+            "Checklist Failed",
+            "You have not met the fitness requirements for this trip (e.g., 6-9 hours of sleep, zero alcohol, fit to work). The trip will be reassigned, and a 16-hour penalty will apply.",
+            [{
+                text: "OK",
+                onPress: async () => {
+                    setUpdating(true);
+                    setChecklistModalVisible(false);
+                    await triggerReassignment(currentTripId, driverInfo.driver_id, 'failed_checklist');
+                    await fetchTrips(); // Refresh the screen to show the trip is gone.
+                    setUpdating(false);
+                }
+            }]
+        );
+        return; // Stop right here.
     }
 
     // If the checklist passed, we proceed with the normal submission.
     try {
-      setUpdating(true);
-      const response = await fetch(`${API_BASE_URL}/include/handlers/trip_handler.php`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'save_checklist',
-          trip_id: currentTripId,
-          driver_id: driverInfo.driver_id, // Important: send the driver's ID for the bypass logic
-          no_fatigue: checklistData.noFatigue,
-          no_drugs: checklistData.noDrugs,
-          no_distractions: checklistData.noDistractions,
-          no_illness: checklistData.noIllness,
-          fit_to_work: checklistData.fitToWork,
-          alcohol_test: parseFloat(checklistData.alcoholTest) || 0,
-          hours_sleep: parseFloat(checklistData.hoursSleep) || 0
-        }),
-      });
+        setUpdating(true);
+        const response = await fetch(`${API_BASE_URL}/include/handlers/trip_handler.php`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                action: 'save_checklist',
+                trip_id: currentTripId,
+                driver_id: driverInfo.driver_id,
+                no_fatigue: checklistData.noFatigue,
+                no_drugs: checklistData.noDrugs,
+                no_distractions: checklistData.noDistractions,
+                no_illness: checklistData.noIllness,
+                fit_to_work: checklistData.fitToWork,
+                alcohol_test: alcoholReading,
+                hours_sleep: hoursSlept
+            }),
+        });
 
-      const data = await response.json();
-      if (data.success) {
-        Alert.alert('Success', 'Checklist submitted successfully!');
-        setChecklistModalVisible(false);
-        fetchTrips(); // Refresh to show the updated status.
-      } else {
-        Alert.alert('Error', data.message || 'Failed to submit checklist');
-      }
+        const data = await response.json();
+        if (data.success) {
+            Alert.alert('Success', 'Checklist submitted successfully!');
+            setChecklistModalVisible(false);
+            fetchTrips(); // Refresh to show the updated status.
+        } else {
+            Alert.alert('Error', data.message || 'Failed to submit checklist');
+        }
     } catch (error) {
-      console.error('Error submitting checklist:', error);
-      Alert.alert('Error', 'An unexpected error occurred while submitting.');
+        console.error('Error submitting checklist:', error);
+        Alert.alert('Error', 'An unexpected error occurred while submitting.');
     } finally {
-      setUpdating(false);
+        setUpdating(false);
     }
-  };
+};
 
 const triggerReassignment = async (tripId, driverId, reason, showAlert = true) => {
     // A helper function to call our new backend endpoint.
