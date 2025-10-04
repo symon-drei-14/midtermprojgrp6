@@ -1,10 +1,10 @@
 import "react-native-gesture-handler";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator, CardStyleInterpolators } from "@react-navigation/stack";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { View, ActivityIndicator, Text, Platform } from "react-native";
+import { View, ActivityIndicator, Text } from "react-native";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import auth from '@react-native-firebase/auth';
 import NotificationService from './src/services/NotificationService';
@@ -19,116 +19,125 @@ import Notifications from "./src/screens/Notifications";
 
 const Stack = createStackNavigator();
 
+const SESSION_DURATION = 7 * 24 * 60 * 60 * 1000;
+
+const SCREEN_OPTIONS = {
+  headerShown: false,
+  cardStyleInterpolator: CardStyleInterpolators.forFadeFromBottomAndroid,
+  cardStyle: { backgroundColor: '#FFFAF3' },
+  transitionSpec: {
+    open: {
+      animation: 'timing',
+      config: { duration: 400, useNativeDriver: true },
+    },
+    close: {
+      animation: 'timing',
+      config: { duration: 20, useNativeDriver: true },
+    },
+  },
+  gestureEnabled: false,
+};
+
+const createUserData = (firebaseUser) => ({
+  userId: firebaseUser.uid,
+  email: firebaseUser.email,
+  driverName: firebaseUser.displayName || firebaseUser.email.split('@')[0],
+  tripId: `trip_${Date.now()}`,
+  truckId: `truck_${Date.now()}`,
+});
+
 const App = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [userSession, setUserSession] = useState(null);
-  const navigationRef = React.useRef();
+  const navigationRef = useRef();
 
-  useEffect(() => {
-    initializeApp();
+  const registerNotificationToken = useCallback(async (userId) => {
+    if (userId) {
+      try {
+        await NotificationService.registerTokenWithBackend(userId);
+      } catch (error) {
+        console.error('Error registering notification token:', error);
+      }
+    }
   }, []);
 
-  const initializeApp = async () => {
+  const setAuthenticatedUser = useCallback(async (userData) => {
+    setUserSession(userData);
+    setIsAuthenticated(true);
+    await registerNotificationToken(userData.userId);
+  }, [registerNotificationToken]);
+
+  const handleNotificationEvent = useCallback((data) => {
+    console.log('Notification event received:', data);
+    
+    if (data.type === 'navigate_to_trip' && navigationRef.current) {
+      navigationRef.current.navigate('Trips', { 
+        tripId: data.tripId,
+        focusTrip: true 
+      });
+    }
+  }, []);
+
+  const checkStoredSession = useCallback(async () => {
+    const storedSession = await AsyncStorage.getItem('userSession');
+    
+    if (!storedSession) return false;
+
+    const userData = JSON.parse(storedSession);
+    const sessionTimestamp = userData.loginTimestamp || 0;
+    const currentTime = Date.now();
+    
+    if (currentTime - sessionTimestamp < SESSION_DURATION) {
+      await setAuthenticatedUser(userData);
+      return true;
+    }
+    
+    await AsyncStorage.removeItem('userSession');
+    return false;
+  }, [setAuthenticatedUser]);
+
+  const initializeApp = useCallback(async () => {
     try {
-      await checkAuthState();
+      const firebaseUser = auth().currentUser;
+      
+      if (firebaseUser) {
+        await setAuthenticatedUser(createUserData(firebaseUser));
+      } else {
+        await checkStoredSession();
+      }
 
       const initialized = await NotificationService.initialize();
       console.log('Notification service initialized:', initialized);
 
       if (initialized) {
-        NotificationService.addListener((data) => {
-          handleNotificationEvent(data);
-        });
+        NotificationService.addListener(handleNotificationEvent);
       }
     } catch (error) {
       console.error('Error initializing app:', error);
-    }
-  };
-
-  const handleNotificationEvent = (data) => {
-    console.log('Notification event received:', data);
-
-    if (data.type === 'navigate_to_trip' && navigationRef.current) {
-      navigationRef.current?.navigate('Trips', { 
-        tripId: data.tripId,
-        focusTrip: true 
-      });
-    }
-  };
-
-  const checkAuthState = async () => {
-    try {
-      const firebaseUser = auth().currentUser;
-      
-      if (firebaseUser) {
-        const userData = {
-          userId: firebaseUser.uid,
-          email: firebaseUser.email,
-          driverName: firebaseUser.displayName || firebaseUser.email.split('@')[0],
-          tripId: `trip_${Date.now()}`,
-          truckId: `truck_${Date.now()}`
-        };
-        
-        setUserSession(userData);
-        setIsAuthenticated(true);
-
-        await NotificationService.registerTokenWithBackend(userData.userId);
-      } else {
-        const storedSession = await AsyncStorage.getItem('userSession');
-        
-        if (storedSession) {
-          const userData = JSON.parse(storedSession);
-
-          const sessionTimestamp = userData.loginTimestamp || 0;
-          const currentTime = Date.now();
-          const sessionDuration = 7 * 24 * 60 * 60 * 1000; 
-          
-          if (currentTime - sessionTimestamp < sessionDuration) {
-            setUserSession(userData);
-            setIsAuthenticated(true);
-
-            await NotificationService.registerTokenWithBackend(userData.userId);
-          } else {
-            await AsyncStorage.removeItem('userSession');
-            setIsAuthenticated(false);
-          }
-        } else {
-          setIsAuthenticated(false);
-        }
-      }
-    } catch (error) {
-      console.error("Error checking auth state:", error);
       setIsAuthenticated(false);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [checkStoredSession, handleNotificationEvent, setAuthenticatedUser]);
 
   useEffect(() => {
-    const subscriber = auth().onAuthStateChanged(async (user) => {
-      if (user) {
-        const userData = {
-          userId: user.uid,
-          email: user.email,
-          driverName: user.displayName || user.email.split('@')[0],
-          tripId: `trip_${Date.now()}`,
-          truckId: `truck_${Date.now()}`
-        };
-        
-        setUserSession(userData);
-        setIsAuthenticated(true);
+    initializeApp();
+  }, [initializeApp]);
 
-        await NotificationService.registerTokenWithBackend(userData.userId);
+  useEffect(() => {
+    const unsubscribe = auth().onAuthStateChanged(async (user) => {
+      if (user) {
+        await setAuthenticatedUser(createUserData(user));
       } else if (!userSession) {
         setIsAuthenticated(false);
       }
     });
 
-    return subscriber;
-  }, [userSession]);
+    return unsubscribe;
+  }, [userSession, setAuthenticatedUser]);
 
-  const handleLogout = async () => {
+  const handleLogout = useCallback(async () => {
     try {
       setIsLoading(true);
 
@@ -137,8 +146,7 @@ const App = () => {
         await auth().signOut();
       }
 
-      await AsyncStorage.removeItem('userSession');
-      await AsyncStorage.removeItem('fcm_token');
+      await AsyncStorage.multiRemove(['userSession', 'fcm_token']);
 
       setIsAuthenticated(false);
       setUserSession(null);
@@ -149,39 +157,26 @@ const App = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const handleLoginSuccess = async (userData) => {
-    setIsAuthenticated(true);
-    setUserSession(userData);
+  const handleLoginSuccess = useCallback(async (userData) => {
+    await setAuthenticatedUser(userData);
+  }, [setAuthenticatedUser]);
 
-    await NotificationService.registerTokenWithBackend(userData.userId);
-  };
-
-  const screenOptions = {
-    headerShown: false,
-    cardStyleInterpolator: CardStyleInterpolators.forFadeFromBottomAndroid,
-    cardStyle: {
-      backgroundColor: '#FFFAF3',
-    },
-    transitionSpec: {
-      open: {
-        animation: 'timing',
-        config: {
-          duration: 400, 
-          useNativeDriver: true,
-        },
-      },
-      close: {
-        animation: 'timing',
-        config: {
-          duration: 20, 
-          useNativeDriver: true,
-        },
-      },
-    },
-    gestureEnabled: false,
-  };
+  const renderScreen = useCallback((Component, additionalProps = {}) => (props) => (
+    <Component 
+      {...props} 
+      route={{
+        ...props.route,
+        params: {
+          ...props.route.params,
+          ...userSession,
+          onLogout: handleLogout,
+          ...additionalProps
+        }
+      }} 
+    />
+  ), [userSession, handleLogout]);
 
   if (isLoading) {
     return (
@@ -198,65 +193,26 @@ const App = () => {
         <NavigationContainer ref={navigationRef}>
           <Stack.Navigator
             initialRouteName={isAuthenticated ? "Dashboard" : "Login"}
-            screenOptions={screenOptions} 
+            screenOptions={SCREEN_OPTIONS}
           >
             {isAuthenticated ? (
               <>
-                <Stack.Screen name="Dashboard">
-                  {(props) => <Dashboard {...props} route={{
-                    ...props.route,
-                    params: {
-                      ...props.route.params,
-                      ...userSession,
-                      onLogout: handleLogout 
-                    }
-                  }} />}
-                </Stack.Screen>
-                <Stack.Screen name="Trips">
-                  {(props) => <Trips {...props} route={{
-                    ...props.route,
-                    params: {
-                      ...props.route.params,
-                      ...userSession,
-                      onLogout: handleLogout 
-                    }
-                  }} />}
-                </Stack.Screen>
-                <Stack.Screen name="Expenses">
-                  {(props) => <Expenses {...props} route={{
-                    ...props.route,
-                    params: {
-                      ...props.route.params,
-                      ...userSession,
-                      onLogout: handleLogout 
-                    }
-                  }} />}
-                </Stack.Screen>
-                <Stack.Screen name="Profile">
-                  {(props) => <Profile {...props} route={{
-                    ...props.route,
-                    params: {
-                      ...props.route.params,
-                      ...userSession,
-                      onLogout: handleLogout 
-                    }
-                  }} />}
-                </Stack.Screen>
-                <Stack.Screen name="Notifications">
-                  {(props) => <Notifications {...props} route={{
-                    ...props.route,
-                    params: {
-                      ...props.route.params,
-                      ...userSession,
-                      onLogout: handleLogout 
-                    }
-                  }} />}
-                </Stack.Screen>
+                <Stack.Screen name="Dashboard" children={renderScreen(Dashboard)} />
+                <Stack.Screen name="Trips" children={renderScreen(Trips)} />
+                <Stack.Screen name="Expenses" children={renderScreen(Expenses)} />
+                <Stack.Screen name="Profile" children={renderScreen(Profile)} />
+                <Stack.Screen name="Notifications" children={renderScreen(Notifications)} />
               </>
             ) : (
               <>
                 <Stack.Screen name="Login">
-                  {(props) => <Login {...props} onLoginSuccess={handleLoginSuccess} setUserSession={setUserSession} />}
+                  {(props) => (
+                    <Login 
+                      {...props} 
+                      onLoginSuccess={handleLoginSuccess}
+                      setUserSession={setUserSession}
+                    />
+                  )}
                 </Stack.Screen>
                 <Stack.Screen name="Register" component={Register} />
               </>

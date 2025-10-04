@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Geolocation from '@react-native-community/geolocation';
 import { getDatabase, ref, set, serverTimestamp, get } from '@react-native-firebase/database';
 import { Alert, Platform, Linking, PermissionsAndroid } from 'react-native';
+import BackgroundService from 'react-native-background-actions';
 
 class LocationService {
   constructor() {
@@ -26,6 +27,7 @@ class LocationService {
     this.STORAGE_KEY = 'locationService_routeTimer';
 
     this.isStarting = false;
+    this.backgroundFetchConfigured = false;
   }
 
 debugListeners() {
@@ -301,7 +303,7 @@ debugListeners() {
     }
     
     try {
-      const granted = await PermissionsAndroid.request(
+      const fineGranted = await PermissionsAndroid.request(
         PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
         {
           title: "Location Permission",
@@ -312,7 +314,26 @@ debugListeners() {
         }
       );
       
-      return granted === PermissionsAndroid.RESULTS.GRANTED;
+      if (fineGranted !== PermissionsAndroid.RESULTS.GRANTED) {
+        return false;
+      }
+
+      if (Platform.Version >= 29) {
+        const backgroundGranted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.ACCESS_BACKGROUND_LOCATION,
+          {
+            title: "Background Location Permission",
+            message: "To track your location while the app is in the background, please allow 'Allow all the time'.",
+            buttonNeutral: "Ask Me Later",
+            buttonNegative: "Cancel",
+            buttonPositive: "OK"
+          }
+        );
+        
+        return backgroundGranted === PermissionsAndroid.RESULTS.GRANTED;
+      }
+      
+      return true;
     } catch (err) {
       console.warn(err);
       return false;
@@ -435,6 +456,57 @@ debugListeners() {
     }
   }
 
+  async configureBackgroundFetch() {
+    if (this.backgroundFetchConfigured) return;
+    try {
+      const BackgroundFetch = require('react-native-background-fetch').default;
+      await BackgroundFetch.configure(
+        {
+          minimumFetchInterval: 15,
+          stopOnTerminate: false,
+          startOnBoot: true,
+          enableHeadless: true,
+          requiredNetworkType: BackgroundFetch.NETWORK_TYPE_ANY,
+        },
+        async (taskId) => {
+          try {
+            const hasPermission = await this.requestLocationPermission();
+            if (hasPermission) {
+              await this.updateLocation();
+            }
+          } catch (e) {
+            console.warn('BackgroundFetch task error', e);
+          } finally {
+            BackgroundFetch.finish(taskId);
+          }
+        },
+        (error) => console.warn('[BackgroundFetch] configure error:', error)
+      );
+      try {
+        await BackgroundFetch.start();
+      } catch (e) {
+        console.warn('BackgroundFetch.start error', e);
+      }
+      try {
+        await BackgroundFetch.scheduleTask({
+          taskId: 'location-fetch',
+          delay: 0,
+          periodic: true,
+          forceAlarmManager: true,
+          stopOnTerminate: false,
+          startOnBoot: true,
+          requiredNetworkType: BackgroundFetch.NETWORK_TYPE_ANY,
+        });
+      } catch (e) {
+        console.warn('BackgroundFetch.scheduleTask error', e);
+      }
+      this.backgroundFetchConfigured = true;
+      console.log('[BackgroundFetch] configured');
+    } catch (e) {
+      console.warn('Failed to configure BackgroundFetch', e);
+    }
+  }
+
 
   async storeLocationToFirebase(latitude, longitude, heading = 0) {
     if (!this.userId) {
@@ -457,42 +529,35 @@ debugListeners() {
     }
   }
 
- async startTracking(userId, updateInterval = 10, sensorEnabled = false) {
-    console.log(`START TRACKING REQUEST - Current state: tracking=${this.isTracking}, timer=${!!this.locationTimer}`);
-
-        if (this.locationTimer) {
-        console.log(`Force clearing existing timer ${this.locationTimer}`);
-        clearInterval(this.locationTimer);
-        this.locationTimer = null;
-        await new Promise(resolve => setTimeout(resolve, 200));
-    }
+async startTracking(userId, updateInterval = 10, sensorEnabled = false) {
+    console.log(`START TRACKING REQUEST - Current state: tracking=${this.isTracking}`);
 
     if (this.isStarting) {
       console.log('Start tracking already in progress, ignoring request');
       return;
     }
 
-    if (this.isTracking && this.userId === userId && this.updateInterval === updateInterval * 1000) {
-      console.log('Already tracking with same parameters, no restart needed');
-      this.notifyListeners({ 
-        status: 'Online', 
-        isTracking: true,
-        activeTrip: this.activeTrip,
-        timerId: this.locationTimer
-      });
+    if (this.isTracking && this.userId === userId) {
+      console.log('Already tracking with same parameters');
       return;
     }
 
     this.isStarting = true;
 
     try {
-      if (this.locationTimer) {
-        console.log(`Clearing existing timer ${this.locationTimer}`);
-        clearInterval(this.locationTimer);
-        this.locationTimer = null;
+      const hasPermission = await this.requestLocationPermission();
+      if (!hasPermission) {
+        Alert.alert(
+          'Permission Required',
+          'Background location permission is required for continuous tracking.',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Open Settings', onPress: () => Linking.openSettings() }
+          ]
+        );
+        this.isStarting = false;
+        return;
       }
-
-      await new Promise(resolve => setTimeout(resolve, 100));
 
       this.userId = userId;
       this.updateInterval = updateInterval * 1000;
@@ -505,60 +570,92 @@ debugListeners() {
       await this.updateDriverStatus('online');
       await this.checkForActiveTrip();
 
-      this.updateLocation();
-
-      const timerId = Math.floor(Math.random() * 100000);
-      this.locationTimer = setInterval(async () => {
-        console.log(`Update interval triggered (${updateInterval}s) - Timer ID: ${this.locationTimer} (${timerId})`);
-
-        if (Math.random() < 0.01) {
-          await this.checkForActiveTrip();
-        }
+      const veryIntensiveTask = async (taskDataArguments) => {
+        const { delay } = taskDataArguments;
         
-        this.updateLocation();
-      }, this.updateInterval);
+        await new Promise(async (resolve) => {
+          console.log('[Background] Starting location tracking task');
+          
+          while (BackgroundService.isRunning()) {
+            console.log('[Background] Updating location...');
+            
+            try {
+              await this.updateLocation();
 
-      console.log(`NEW TIMER CREATED: ID ${this.locationTimer} (${timerId})`);
+              if (Math.random() < 0.01) {
+                await this.checkForActiveTrip();
+              }
+            } catch (error) {
+              console.error('[Background] Update error:', error);
+            }
+
+            await new Promise(r => setTimeout(r, delay));
+          }
+        });
+      };
+
+      const options = {
+        taskName: 'Location Tracking',
+        taskTitle: 'Trip Tracking Active',
+        taskDesc: 'Your location is being tracked',
+        taskIcon: {
+          name: 'ic_launcher',
+          type: 'mipmap',
+        },
+        color: '#ff00ff',
+        linkingURI: 'yourapp://home',
+        parameters: {
+          delay: this.updateInterval,
+        },
+        progressBar: {
+          max: 100,
+          value: 0,
+          indeterminate: true
+        }
+      };
+
+      await BackgroundService.start(veryIntensiveTask, options);
+      console.log('Background service started successfully');
 
       this.notifyListeners({ 
         status: 'Online', 
         isTracking: true,
         activeTrip: this.activeTrip,
-        timerId: this.locationTimer
       });
 
+    } catch (error) {
+      console.error('Error starting tracking:', error);
+      this.isTracking = false;
     } finally {
       this.isStarting = false;
     }
   }
-
-
-stopTracking() {
+  async stopTracking() {
     console.log("Stopping location tracking");
-    
-    if (this.locationTimer) {
-        clearInterval(this.locationTimer);
-        this.locationTimer = null;
-        console.log('Location timer cleared');
-    }
     
     this.isTracking = false;
     this.lastLocation = null;
     this.lastNotifiedStatus = null;
     
-    this.updateDriverStatus('offline');
-    
+    await this.updateDriverStatus('offline');
+
+    try {
+      await BackgroundService.stop();
+      console.log('Background service stopped');
+    } catch (error) {
+      console.error('Error stopping background service:', error);
+    }
     
     this.notifyListeners({ status: 'Offline', isTracking: false }); 
-}
+  }
 
-  updateSettings(updateInterval, sensorEnabled) {
-    this.updateInterval = updateInterval;
+async updateSettings(updateInterval, sensorEnabled) {
+    this.updateInterval = updateInterval * 1000;
     this.sensorEnabled = sensorEnabled;
 
-    if (this.isTracking && this.locationTimer) {
-      this.stopTracking();
-      this.startTracking(this.userId, updateInterval, sensorEnabled);
+    if (this.isTracking) {
+      await this.stopTracking();
+      await this.startTracking(this.userId, updateInterval, sensorEnabled);
     }
   }
 

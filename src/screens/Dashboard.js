@@ -20,6 +20,7 @@ import DashboardSkeleton from "../components/DashboardSkeleton";
 import NotificationService from '../services/NotificationService';
 import LinearGradient from 'react-native-linear-gradient';
 import Icon from 'react-native-vector-icons/Feather';
+import BackgroundFetch from 'react-native-background-fetch';
 
 function Dashboard({ route }) {
     const nav = useNavigation();
@@ -96,6 +97,11 @@ function Dashboard({ route }) {
             }
         }
     }, [driverInfo?.driver_id]);
+
+    useEffect(() => {
+        LocationService.configureBackgroundFetch().catch(() => {});
+        BackgroundFetch.start().catch(() => {});
+    }, []);
 
     useEffect(() => {
         const initializeNotifications = async () => {
