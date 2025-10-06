@@ -14,7 +14,7 @@ class LocationService {
     this.listeners = new Set();
     this.activeTrip = null;
     this.routeTrackingEnabled = true;
-    this.backendUrl = 'http://192.168.100.17/capstone-1-eb';
+    this.backendUrl = 'http://192.168.1.3/capstone-1-eb';
     this.lastRoutePointTime = null;
     this.routePointInterval = 30 * 60 * 1000;
     

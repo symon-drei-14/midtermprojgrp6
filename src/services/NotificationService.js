@@ -5,7 +5,7 @@ import notifee, { AndroidImportance, AndroidStyle, EventType } from '@notifee/re
 
 class NotificationService {
     constructor() {
-        this.backendUrl = 'http://192.168.1.4/capstone-1-eb';
+        this.backendUrl = 'http://192.168.1.3/capstone-1-eb';
         this.listeners = new Set();
         this.isInitialized = false;
         this.projectId = 'mansartrucking1';
