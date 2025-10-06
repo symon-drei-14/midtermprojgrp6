@@ -3,6 +3,7 @@ import { Text, View, TextInput, TouchableOpacity, Image, ImageBackground, Alert,
 import { loginstyle } from "../styles/Styles";
 import loginbackground from "../assets/loginbg.png";
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { API_BASE_URL } from '@env';
 
 const Login = ({ navigation, onLoginSuccess, setUserSession }) => {
   const [email, setEmail] = useState("");
@@ -75,7 +76,7 @@ const Login = ({ navigation, onLoginSuccess, setUserSession }) => {
     setLoading(true);
     
     try {
-      const response = await fetch('http://192.168.1.3/capstone-1-eb/include/handlers/login_handler.php', {
+      const response = await fetch(`${API_BASE_URL}/include/handlers/login_handler.php`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

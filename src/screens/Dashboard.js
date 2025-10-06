@@ -21,6 +21,7 @@ import NotificationService from '../services/NotificationService';
 import LinearGradient from 'react-native-linear-gradient';
 import Icon from 'react-native-vector-icons/Feather';
 import BackgroundFetch from 'react-native-background-fetch';
+import { API_BASE_URL } from '@env';
 
 function Dashboard({ route }) {
     const nav = useNavigation();
@@ -67,7 +68,6 @@ function Dashboard({ route }) {
     const hasInitialized = useRef(false);
     const listenerAttached = useRef(false);
 
-    const API_BASE_URL = 'http://192.168.1.3/capstone-1-eb';
 
     const handleNotificationEvent = useCallback((event) => {
         console.log('Notification event received:', event);
@@ -132,7 +132,7 @@ function Dashboard({ route }) {
             const session = JSON.parse(sessionData);
             const driverId = session?.userId;
             if (!driverId) return null;
-
+            
             const response = await fetch(`${API_BASE_URL}/include/handlers/get_mobile_driver.php`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },

@@ -9,6 +9,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { launchImageLibrary } from 'react-native-image-picker'; // Import the image picker
 import Icon from 'react-native-vector-icons/Feather';
 import NotificationService from '../services/NotificationService';
+import { API_BASE_URL } from '@env';
 
 const Profile = ({ route }) => {
     const nav = useNavigation();
@@ -56,7 +57,6 @@ const Profile = ({ route }) => {
     const [selectedImage, setSelectedImage] = useState(null); // To hold the newly selected image file
     const [isChangingPassword, setIsChangingPassword] = useState(false);
 
-    const API_BASE_URL = 'http://192.168.1.3/capstone-1-eb';
 
     const { onLogout } = route.params || {};
 

@@ -3,6 +3,7 @@ import Geolocation from '@react-native-community/geolocation';
 import { getDatabase, ref, set, serverTimestamp, get } from '@react-native-firebase/database';
 import { Alert, Platform, Linking, PermissionsAndroid } from 'react-native';
 import BackgroundService from 'react-native-background-actions';
+import { API_BASE_URL } from '@env';
 
 class LocationService {
   constructor() {
@@ -14,7 +15,7 @@ class LocationService {
     this.listeners = new Set();
     this.activeTrip = null;
     this.routeTrackingEnabled = true;
-    this.backendUrl = 'http://192.168.1.3/capstone-1-eb';
+    this.backendUrl = API_BASE_URL;
     this.lastRoutePointTime = null;
     this.routePointInterval = 30 * 60 * 1000;
     

@@ -32,6 +32,8 @@ import ExpensesSkeleton from "../components/ExpensesSkeleton";
 import Icon from 'react-native-vector-icons/Feather';
 import NotificationService from '../services/NotificationService';
 import MaterialIcon from "react-native-vector-icons/MaterialCommunityIcons";
+import { API_BASE_URL } from '@env';
+
 export default function Expenses({ navigation, route }) {
   const [expenses, setExpenses] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -71,7 +73,6 @@ const handleOpenModal = () => {
   loadExpenseTypes();
 };
 
-  const API_BASE_URL = 'http://192.168.1.3/capstone-1-eb';
 
   const quickAmounts = [100, 500, 1000, 5000];
 

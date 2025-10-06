@@ -2,11 +2,11 @@ import database from '@react-native-firebase/database';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import CryptoJS from 'crypto-js';
-
+import { API_BASE_URL } from '@env';
 // const API_BASE_URL = 'http://192.168.0.100/capstone-1-eb';
 //const API_BASE_URL = 'http://192.168.1.6/Capstone-1-eb';
 // const API_BASE_URL = 'http://192.168.0.100/Capstone-1-eb';
-const API_BASE_URL = 'http://192.168.1.3/Capstone-1-eb';
+
 
 const hashPassword = (password) => {
   return CryptoJS.SHA256(password).toString(CryptoJS.enc.Hex);

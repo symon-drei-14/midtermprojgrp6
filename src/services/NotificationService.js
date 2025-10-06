@@ -2,10 +2,11 @@ import messaging from '@react-native-firebase/messaging';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Alert, Platform, AppState } from 'react-native';
 import notifee, { AndroidImportance, AndroidStyle, EventType } from '@notifee/react-native';
+import { API_BASE_URL } from '@env';
 
 class NotificationService {
     constructor() {
-        this.backendUrl = 'http://192.168.1.3/capstone-1-eb';
+        this.backendUrl = API_BASE_URL;
         this.listeners = new Set();
         this.isInitialized = false;
         this.projectId = 'mansartrucking1';
