@@ -193,12 +193,6 @@ const Login = ({ navigation, onLoginSuccess, setUserSession }) => {
               <Text style={loginstyle.buttonText}>Login</Text>
             )}
           </TouchableOpacity>
-
-          <TouchableOpacity onPress={() => navigation.navigate("Register")} disabled={loading}>
-            <Text style={{ color: "#478843", marginTop: 10, textAlign: "center" }}>
-              Don't have an account? Register here
-            </Text>
-          </TouchableOpacity>
         </View>
       </View>
     </ImageBackground>
