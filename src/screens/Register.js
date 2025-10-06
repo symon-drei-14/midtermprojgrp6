@@ -67,7 +67,7 @@ const Register = ({ navigation }) => {
 
         //  const response = await fetch('http://192.168.100.17/Capstone-1-eb/include/handlers/drivers.php', {
 
-        const response = await fetch('http://192.168.1.4/Capstone-1-eb/include/handlers/drivers.php', {
+        const response = await fetch('http://192.168.1.3/Capstone-1-eb/include/handlers/drivers.php', {
         // const response = await fetch('http://192.168.100.17/Capstone-1-eb/include/handlers/drivers.php', {
           method: 'POST',
           headers: {

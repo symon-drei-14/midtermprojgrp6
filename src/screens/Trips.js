@@ -50,7 +50,7 @@ const TripScreen = () => {
   const [selectedTrip, setSelectedTrip] = useState(null);
   const [unreadCount, setUnreadCount] = useState(0);
   
-  const API_BASE_URL = 'http://192.168.1.4/capstone-1-eb';
+  const API_BASE_URL = 'http://192.168.1.3/capstone-1-eb';
   
   const getDriverInfo = async () => {
     try {
