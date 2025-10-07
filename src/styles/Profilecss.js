@@ -199,15 +199,13 @@ export const profilestyle = StyleSheet.create({
     modalTitle: {
         fontSize: 22,
         fontWeight: "700",
-        marginBottom: 24,
+        marginBottom: 16,
         color: '#1F2937',
+        textAlign: 'center',
     },
     input: {
-        width: "100%",
-        borderWidth: 1,
-        borderColor: "#D1D5DB",
-        padding: 14,
-        borderRadius: 10,
+        flex: 1,
+        height: 50,
         fontSize: 15,
         color: '#374151',
     },
@@ -230,6 +228,7 @@ export const profilestyle = StyleSheet.create({
         borderRadius: 10,
         paddingLeft: 14,
         marginBottom: 4,
+        height: 50,
     },
     errorText: {
         color: "#dc2626",
@@ -265,12 +264,6 @@ export const profilestyle = StyleSheet.create({
     },
     toggleButton: {
         padding: 10,
-        paddingRight: 14,
-    },
-    toggleText: {
-        color: '#dc2626',
-        fontWeight: '600',
-        fontSize: 14,
     },
     modalAvatarPreview: {
         width: 100,
@@ -294,5 +287,24 @@ export const profilestyle = StyleSheet.create({
         color: '#374151',
         fontSize: 14,
         fontWeight: '600',
+    },
+    // Styles for the OTP Modal
+    otpSubtitle: {
+        fontSize: 15,
+        color: '#6B7280',
+        textAlign: 'center',
+        marginBottom: 24,
+    },
+    otpInput: {
+        width: '80%',
+        borderWidth: 1,
+        borderColor: '#D1D5DB',
+        padding: 14,
+        borderRadius: 10,
+        fontSize: 18,
+        color: '#374151',
+        textAlign: 'center',
+        letterSpacing: 8,
+        marginBottom: 16,
     },
 });

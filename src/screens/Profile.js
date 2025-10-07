@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { View, Text, TextInput, TouchableOpacity, Image, Modal, Alert, ScrollView, ActivityIndicator } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, Image, Modal, Alert, ScrollView, ActivityIndicator, Keyboard } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { profilestyle } from "../styles/Profilecss";
 import { tripstyle } from "../styles/Tripcss";
@@ -31,6 +31,12 @@ const Profile = ({ route }) => {
     const [oldPasswordError, setOldPasswordError] = useState("");
     const [showOldPassword, setShowOldPassword] = useState(false);
     const [unreadCount, setUnreadCount] = useState(0);
+
+    // New states for OTP flow
+    const [otp, setOtp] = useState("");
+    const [otpModalVisible, setOtpModalVisible] = useState(false);
+    const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
+
     const [driverInfo, setDriverInfo] = useState({
         name: "",
         email: "",
@@ -83,9 +89,8 @@ const fetchDriverData = async () => {
             if (data.success) {
                 const driverData = {
                     ...data.driver,
-                    driver_id: data.driver.driver_id || session.userId
+                    driver_id: session.userId // Ensure driver_id is present
                 };
-                console.log('Profile: Setting driver info:', driverData);
                 setDriverInfo(driverData);
                 
                 const updatedSession = { ...session, ...driverData };
@@ -164,57 +169,62 @@ const fetchDriverData = async () => {
     };
 
     const handleSavePassword = async () => {
-    // Re-run all validations on submit attempt
-    validateOldPassword(oldPassword);
-    validatePassword(password);
-    validateConfirmPassword(password2);
+        // Re-run all validations on submit attempt
+        validateOldPassword(oldPassword);
+        validatePassword(password);
+        validateConfirmPassword(password2);
 
-    // Check for any validation errors before proceeding
-    if (!oldPassword.trim() || !password.trim() || password.length < 8 || password !== password2) {
-        return; // Stop if any validation fails
-    }
-
-    setIsChangingPassword(true);
-    try {
-        const sessionData = await AsyncStorage.getItem('userSession');
-        if (!sessionData) throw new Error("No session data found");
-
-        const session = JSON.parse(sessionData);
-        const driverId = session.userId;
-        
-        const formData = new FormData();
-        formData.append('driver_id', driverId);
-        formData.append('old_password', oldPassword); // Send the current password
-        formData.append('password', password);       // This is the new password
-
-        const response = await fetch(`${API_BASE_URL}/include/handlers/update_mobile_driver.php`, {
-            method: 'POST',
-            body: formData,
-        });
-
-        const data = await response.json();
-
-        if (data.success) {
-            setModalVisible(false);
-            setOldPassword("");
-            setPassword("");
-            setPassword2("");
-            Alert.alert("Success", "Password updated successfully!");
-        } else {
-            // Display the specific error from the server (e.g., "Incorrect current password")
-            Alert.alert("Error", data.message || "Failed to update password.");
+        // Check for any validation errors before proceeding
+        if (!oldPassword.trim() || !password.trim() || password.length < 8 || password !== password2) {
+            return; // Stop if any validation fails
         }
-    } catch (error) {
-        console.error('Error updating password:', error);
-        Alert.alert("Error", "An unexpected error occurred. Please try again.");
-    } finally {
-        setIsChangingPassword(false);
-    }
-};
+
+        setIsChangingPassword(true);
+        try {
+            const sessionData = await AsyncStorage.getItem('userSession');
+            if (!sessionData) throw new Error("No session data found");
+
+            const session = JSON.parse(sessionData);
+            const driverId = session.userId;
+            
+            const formData = new FormData();
+            formData.append('driver_id', driverId);
+            formData.append('old_password', oldPassword);
+            formData.append('password', password);
+
+            const response = await fetch(`${API_BASE_URL}/include/handlers/update_mobile_driver.php`, {
+                method: 'POST',
+                body: formData,
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                if (data.otp_required) {
+                    setModalVisible(false);
+                    setOtpModalVisible(true);
+                    Alert.alert("Verification Required", data.message);
+                } else {
+                    setModalVisible(false);
+                    setOldPassword("");
+                    setPassword("");
+                    setPassword2("");
+                    Alert.alert("Success", "Password updated successfully!");
+                }
+            } else {
+                Alert.alert("Error", data.message || "Failed to update password.");
+            }
+        } catch (error) {
+            console.error('Error updating password:', error);
+            Alert.alert("Error", "An unexpected error occurred. Please try again.");
+        } finally {
+            setIsChangingPassword(false);
+        }
+    };
 
     const openEditModal = () => {
         setTempDriverInfo(driverInfo);
-        setSelectedImage(null); // Reset selected image when opening modal
+        setSelectedImage(null);
         setEditModalVisible(true);
     };
     
@@ -266,15 +276,20 @@ const fetchDriverData = async () => {
             const data = await response.json();
 
             if (data.success) {
-                const updatedDriver = data.updated_driver;
-                setDriverInfo(updatedDriver); // Update local state
-                
-                // Update AsyncStorage session
-                const updatedSession = { ...session, ...updatedDriver };
-                await AsyncStorage.setItem('userSession', JSON.stringify(updatedSession));
-                
-                setEditModalVisible(false);
-                Alert.alert("Success", "Profile updated successfully!");
+                if (data.otp_required) {
+                    setEditModalVisible(false);
+                    setOtpModalVisible(true);
+                    Alert.alert("Verification Required", data.message);
+                } else {
+                    const updatedDriver = data.updated_driver;
+                    setDriverInfo(updatedDriver); 
+                    
+                    const updatedSession = { ...session, ...updatedDriver };
+                    await AsyncStorage.setItem('userSession', JSON.stringify(updatedSession));
+                    
+                    setEditModalVisible(false);
+                    Alert.alert("Success", "Profile updated successfully!");
+                }
             } else {
                 Alert.alert("Error", data.message || "Failed to update profile.");
             }
@@ -285,6 +300,51 @@ const fetchDriverData = async () => {
             setIsUpdating(false);
         }
     };
+    
+    // This function is called when the user submits the OTP
+    const handleFinalizeUpdateWithOtp = async () => {
+        Keyboard.dismiss();
+        if (!otp.trim() || otp.length !== 6) {
+            Alert.alert("Invalid OTP", "Please enter the 6-digit code sent to your email.");
+            return;
+        }
+
+        setIsVerifyingOtp(true);
+        try {
+            const sessionData = await AsyncStorage.getItem('userSession');
+            if (!sessionData) throw new Error("No session found");
+            
+            const session = JSON.parse(sessionData);
+            const driverId = session.userId;
+
+            const formData = new FormData();
+            formData.append('driver_id', driverId);
+            formData.append('otp', otp);
+
+            const response = await fetch(`${API_BASE_URL}/include/handlers/update_mobile_driver.php`, {
+                method: 'POST',
+                body: formData,
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                setOtpModalVisible(false);
+                setOtp("");
+                Alert.alert("Success", "Your information has been updated successfully!");
+                // Refresh all driver data from the server
+                await fetchDriverData(); 
+            } else {
+                Alert.alert("Error", data.message || "Invalid OTP or request failed.");
+            }
+        } catch (error) {
+            console.error('OTP verification error:', error);
+            Alert.alert("Error", "An unexpected error occurred during OTP verification.");
+        } finally {
+            setIsVerifyingOtp(false);
+        }
+    };
+
 
     const fetchUnreadCount = useCallback(async () => {
     if (!driverInfo?.driver_id) return;
@@ -356,7 +416,6 @@ useEffect(() => {
     };
 }, [driverInfo?.driver_id, fetchUnreadCount]);
     
-    // Helper to render the profile picture or a placeholder
     const renderProfileImage = (style) => {
         if (driverInfo.driver_pic) {
             return <Image source={{ uri: `data:image/jpeg;base64,${driverInfo.driver_pic}` }} style={style} />;
@@ -378,8 +437,6 @@ useEffect(() => {
                     <Text style={profilestyle.email}>{driverInfo.email}</Text>
                 </View>
 
-                {/* Info Card */}
-                {/* Info Card */}
                 <View style={profilestyle.infoCard}>
                     <View style={profilestyle.cardHeader}>
                         <Icon name="info" size={20} color="#3B82F6" />
@@ -412,7 +469,6 @@ useEffect(() => {
                     </View>
                 </View>
 
-                {/* Action Buttons */}
                 <View style={profilestyle.actionButtons}>
                     <TouchableOpacity
                         onPress={() => {
@@ -420,7 +476,7 @@ useEffect(() => {
                             setConfirmPasswordError(""); setModalVisible(true);
                         }}
                         style={profilestyle.primaryButton}>
-                        <Icon name="key" color="#fff" /> 
+                        <Icon name="key" size={16} color="#fff" /> 
                         <Text style={profilestyle.primaryButtonText}>Change Password</Text>
                     </TouchableOpacity>
                     
@@ -428,7 +484,7 @@ useEffect(() => {
                         onPress={handleLogout}
                         style={[profilestyle.secondaryButton, isLoggingOut && { opacity: 0.6 }]}
                         disabled={isLoggingOut}>
-                        <Icon name="log-out" color="#fff" />
+                        <Icon name="log-out" size={16} color="#fff" />
                         <Text style={profilestyle.secondaryButtonText}>
                             {isLoggingOut ? "Logging out..." : "Log Out"}
                         </Text>
@@ -436,80 +492,111 @@ useEffect(() => {
                 </View>
             </ScrollView>
 
-            {/* Password Change Modal */}
             <Modal visible={modalVisible} transparent animationType="slide">
-    <View style={profilestyle.modalContainer}>
-        <View style={profilestyle.modalContent}>
-            <Text style={profilestyle.modalTitle}>Change Password</Text>
-            
-            {/* Current Password Input */}
-            <View style={[profilestyle.passwordInputContainer, { flexDirection: "row", alignItems: "center" }]}>
-                <TextInput 
-                    style={[profilestyle.input, { flex: 1 }]} 
-                    placeholder="Enter current password" 
-                    secureTextEntry={!showOldPassword} 
-                    value={oldPassword} 
-                    onChangeText={validateOldPassword} 
-                />
-                <TouchableOpacity onPress={() => setShowOldPassword(!showOldPassword)} style={profilestyle.toggleButton}>
-                    <Text style={profilestyle.toggleText}>{showOldPassword ? "Hide" : "Show"}</Text>
-                </TouchableOpacity>
-            </View>
-            {oldPasswordError ? <Text style={profilestyle.errorText}>{oldPasswordError}</Text> : null}
+                <View style={profilestyle.modalContainer}>
+                    <View style={profilestyle.modalContent}>
+                        <Text style={profilestyle.modalTitle}>Change Password</Text>
+                        
+                        <View style={profilestyle.passwordInputContainer}>
+                            <TextInput 
+                                style={profilestyle.input} 
+                                placeholder="Enter current password" 
+                                secureTextEntry={!showOldPassword} 
+                                value={oldPassword} 
+                                onChangeText={validateOldPassword} 
+                            />
+                            <TouchableOpacity onPress={() => setShowOldPassword(!showOldPassword)} style={profilestyle.toggleButton}>
+                               <Icon name={showOldPassword ? "eye-off" : "eye"} size={20} color="#6B7280" />
+                            </TouchableOpacity>
+                        </View>
+                        {oldPasswordError ? <Text style={profilestyle.errorText}>{oldPasswordError}</Text> : null}
 
-            {/* New Password Input */}
-            <View style={[profilestyle.passwordInputContainer, { flexDirection: "row", alignItems: "center" }]}>
-                <TextInput 
-                    style={[profilestyle.input, { flex: 1 }]} 
-                    placeholder="Enter new password" 
-                    secureTextEntry={!showNewPassword} 
-                    value={password} 
-                    onChangeText={validatePassword} 
-                />
-                <TouchableOpacity onPress={() => setShowNewPassword(!showNewPassword)} style={profilestyle.toggleButton}>
-                    <Text style={profilestyle.toggleText}>{showNewPassword ? "Hide" : "Show"}</Text>
-                </TouchableOpacity>
-            </View>
-            {passwordError ? <Text style={profilestyle.errorText}>{passwordError}</Text> : null}
+                        <View style={profilestyle.passwordInputContainer}>
+                            <TextInput 
+                                style={profilestyle.input} 
+                                placeholder="Enter new password" 
+                                secureTextEntry={!showNewPassword} 
+                                value={password} 
+                                onChangeText={validatePassword} 
+                            />
+                            <TouchableOpacity onPress={() => setShowNewPassword(!showNewPassword)} style={profilestyle.toggleButton}>
+                                <Icon name={showNewPassword ? "eye-off" : "eye"} size={20} color="#6B7280" />
+                            </TouchableOpacity>
+                        </View>
+                        {passwordError ? <Text style={profilestyle.errorText}>{passwordError}</Text> : null}
+                        
+                        <View style={profilestyle.passwordInputContainer}>
+                            <TextInput 
+                                style={profilestyle.input}
+                                placeholder="Confirm New Password" 
+                                secureTextEntry={!showNewPassword2} 
+                                value={password2} 
+                                onChangeText={(text) => validateConfirmPassword(text)} 
+                            />
+                            <TouchableOpacity onPress={() => setShowNewPassword2(!showNewPassword2)} style={profilestyle.toggleButton}>
+                                <Icon name={showNewPassword2 ? "eye-off" : "eye"} size={20} color="#6B7280" />
+                            </TouchableOpacity>
+                        </View>
+                        {confirmPasswordError ? <Text style={profilestyle.errorText}>{confirmPasswordError}</Text> : null}
+                        
+                        <View style={profilestyle.modalButtonContainer}>
+                            <TouchableOpacity 
+                                onPress={handleSavePassword} 
+                                style={[profilestyle.saveButton, isChangingPassword && { opacity: 0.6 }]} 
+                                disabled={isChangingPassword}
+                            >
+                                <Text style={profilestyle.buttonText}>{isChangingPassword ? "Saving..." : "Save"}</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity 
+                                onPress={() => setModalVisible(false)} 
+                                style={profilestyle.cancelButton} 
+                                disabled={isChangingPassword}
+                            >
+                                <Text style={profilestyle.buttonText}>Cancel</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
             
-            {/* Confirm New Password Input */}
-            <View style={[profilestyle.passwordInputContainer, { flexDirection: "row", alignItems: "center" }]}>
-                <TextInput 
-                    style={[profilestyle.input, { flex: 1 }]} 
-                    placeholder="Confirm New Password" 
-                    secureTextEntry={!showNewPassword2} 
-                    value={password2} 
-                    onChangeText={(text) => validateConfirmPassword(text)} 
-                />
-                <TouchableOpacity onPress={() => setShowNewPassword2(!showNewPassword2)} style={profilestyle.toggleButton}>
-                    <Text style={profilestyle.toggleText}>{showNewPassword2 ? "Hide" : "Show"}</Text>
-                </TouchableOpacity>
-            </View>
-            {confirmPasswordError ? <Text style={profilestyle.errorText}>{confirmPasswordError}</Text> : null}
-            
-            <View style={profilestyle.modalButtonContainer}>
-                <TouchableOpacity 
-                    onPress={handleSavePassword} 
-                    style={[profilestyle.saveButton, isChangingPassword && { opacity: 0.6 }]} 
-                    disabled={isChangingPassword}
-                >
-                    <Text style={profilestyle.buttonText}>{isChangingPassword ? "Saving..." : "Save"}</Text>
-                </TouchableOpacity>
-                <TouchableOpacity 
-                    onPress={() => setModalVisible(false)} 
-                    style={profilestyle.cancelButton} 
-                    disabled={isChangingPassword}
-                >
-                    <Text style={profilestyle.buttonText}>Cancel</Text>
-                </TouchableOpacity>
-            </View>
-        </View>
-    </View>
-</Modal>
+            <Modal visible={otpModalVisible} transparent animationType="slide">
+                <View style={profilestyle.modalContainer}>
+                    <View style={profilestyle.modalContent}>
+                        <Text style={profilestyle.modalTitle}>Enter Verification Code</Text>
+                        <Text style={profilestyle.otpSubtitle}>A 6-digit code has been sent to your email address.</Text>
 
-            {/* Edit Profile Modal */}
+                        <TextInput
+                            style={profilestyle.otpInput}
+                            placeholder="Enter OTP"
+                            keyboardType="number-pad"
+                            maxLength={6}
+                            value={otp}
+                            onChangeText={setOtp}
+                        />
+
+                        <View style={profilestyle.modalButtonContainer}>
+                            <TouchableOpacity
+                                onPress={handleFinalizeUpdateWithOtp}
+                                style={[profilestyle.saveButton, isVerifyingOtp && { opacity: 0.6 }]}
+                                disabled={isVerifyingOtp}
+                            >
+                                {isVerifyingOtp ? <ActivityIndicator color="#fff" /> : <Text style={profilestyle.buttonText}>Verify & Save</Text>}
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                onPress={() => { setOtpModalVisible(false); setOtp(""); }}
+                                style={profilestyle.cancelButton}
+                                disabled={isVerifyingOtp}
+                            >
+                                <Text style={profilestyle.buttonText}>Cancel</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
+
             <Modal visible={editModalVisible} transparent animationType="slide">
                 <View style={profilestyle.modalContainer}>
+                    <ScrollView style={{width: '90%'}} contentContainerStyle={{ justifyContent: 'center', alignItems: 'center', flexGrow: 1 }}>
                     <View style={profilestyle.modalContent}>
                         <Text style={profilestyle.modalTitle}>Edit Profile</Text>
                         
@@ -545,80 +632,81 @@ useEffect(() => {
                             </TouchableOpacity>
                         </View>
                     </View>
+                    </ScrollView>
                 </View>
             </Modal>
 
-<View style={tripstyle.bottomNav}>
-            <TouchableOpacity
-                style={[tripstyle.navButton, currentRoute === "Dashboard" && tripstyle.navButtonActive]}
-                onPress={() => nav.navigate("Dashboard")}
-            >
-                <View style={tripstyle.navIconContainer}>
-                <Icon 
-                    name="home" 
-                    size={24} 
-                    color={currentRoute === "Dashboard" ? "#dc2626" : "#6B7280"} 
-                />
-                </View>
-                <Text style={[tripstyle.navLabel, { color: currentRoute === "Dashboard" ? "#dc2626" : "#6B7280" }]}>
-                Home
-                </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-                style={[tripstyle.navButton, currentRoute === "Notifications" && tripstyle.navButtonActive]}
-                onPress={() => nav.navigate("Notifications")}
-            >
-                <View style={tripstyle.navIconContainer}>
-                <Icon 
-                    name="bell" 
-                    size={24} 
-                    color={currentRoute === "Notifications" ? "#dc2626" : "#6B7280"} 
-                />
-                {unreadCount > 0 && (
-                    <View style={tripstyle.navBadge}>
-                    <Text style={tripstyle.navBadgeText}>
-                        {unreadCount > 9 ? '9+' : unreadCount}
-                    </Text>
+            <View style={tripstyle.bottomNav}>
+                <TouchableOpacity
+                    style={[tripstyle.navButton, currentRoute === "Dashboard" && tripstyle.navButtonActive]}
+                    onPress={() => nav.navigate("Dashboard")}
+                >
+                    <View style={tripstyle.navIconContainer}>
+                    <Icon 
+                        name="home" 
+                        size={24} 
+                        color={currentRoute === "Dashboard" ? "#dc2626" : "#6B7280"} 
+                    />
                     </View>
-                )}
-                </View>
-                <Text style={[tripstyle.navLabel, { color: currentRoute === "Notifications" ? "#dc2626" : "#6B7280" }]}>
-                Notifications
-                </Text>
-            </TouchableOpacity>
+                    <Text style={[tripstyle.navLabel, { color: currentRoute === "Dashboard" ? "#dc2626" : "#6B7280" }]}>
+                    Home
+                    </Text>
+                </TouchableOpacity>
 
-            <TouchableOpacity
-                style={[tripstyle.navButton, currentRoute === "Trips" && tripstyle.navButtonActive]}
-                onPress={() => nav.navigate("Trips")}
-            >
-                <View style={tripstyle.navIconContainer}>
-                <Icon 
-                    name="map-pin" 
-                    size={24} 
-                    color={currentRoute === "Trips" ? "#dc2626" : "#6B7280"} 
-                />
-                </View>
-                <Text style={[tripstyle.navLabel, { color: currentRoute === "Trips" ? "#dc2626" : "#6B7280" }]}>
-                Trips
-                </Text>
-            </TouchableOpacity>
+                <TouchableOpacity
+                    style={[tripstyle.navButton, currentRoute === "Notifications" && tripstyle.navButtonActive]}
+                    onPress={() => nav.navigate("Notifications")}
+                >
+                    <View style={tripstyle.navIconContainer}>
+                    <Icon 
+                        name="bell" 
+                        size={24} 
+                        color={currentRoute === "Notifications" ? "#dc2626" : "#6B7280"} 
+                    />
+                    {unreadCount > 0 && (
+                        <View style={tripstyle.navBadge}>
+                        <Text style={tripstyle.navBadgeText}>
+                            {unreadCount > 9 ? '9+' : unreadCount}
+                        </Text>
+                        </View>
+                    )}
+                    </View>
+                    <Text style={[tripstyle.navLabel, { color: currentRoute === "Notifications" ? "#dc2626" : "#6B7280" }]}>
+                    Notifications
+                    </Text>
+                </TouchableOpacity>
 
-            <TouchableOpacity
-                style={[tripstyle.navButton, currentRoute === "Profile" && tripstyle.navButtonActive]}
-                onPress={() => nav.navigate("Profile")}
-            >
-                <View style={tripstyle.navIconContainer}>
-                <Icon 
-                    name="user" 
-                    size={24} 
-                    color={currentRoute === "Profile" ? "#dc2626" : "#6B7280"} 
-                />
-                </View>
-                <Text style={[tripstyle.navLabel, { color: currentRoute === "Profile" ? "#dc2626" : "#6B7280" }]}>
-                Profile
-                </Text>
-            </TouchableOpacity>
+                <TouchableOpacity
+                    style={[tripstyle.navButton, currentRoute === "Trips" && tripstyle.navButtonActive]}
+                    onPress={() => nav.navigate("Trips")}
+                >
+                    <View style={tripstyle.navIconContainer}>
+                    <Icon 
+                        name="map-pin" 
+                        size={24} 
+                        color={currentRoute === "Trips" ? "#dc2626" : "#6B7280"} 
+                    />
+                    </View>
+                    <Text style={[tripstyle.navLabel, { color: currentRoute === "Trips" ? "#dc2626" : "#6B7280" }]}>
+                    Trips
+                    </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                    style={[tripstyle.navButton, currentRoute === "Profile" && tripstyle.navButtonActive]}
+                    onPress={() => nav.navigate("Profile")}
+                >
+                    <View style={tripstyle.navIconContainer}>
+                    <Icon 
+                        name="user" 
+                        size={24} 
+                        color={currentRoute === "Profile" ? "#dc2626" : "#6B7280"} 
+                    />
+                    </View>
+                    <Text style={[tripstyle.navLabel, { color: currentRoute === "Profile" ? "#dc2626" : "#6B7280" }]}>
+                    Profile
+                    </Text>
+                </TouchableOpacity>
             </View>
         </View>
     );
