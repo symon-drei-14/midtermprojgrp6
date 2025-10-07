@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Text, View, TextInput, TouchableOpacity, Image, ImageBackground, Alert, ActivityIndicator } from "react-native";
+import { Text, View, TextInput, TouchableOpacity, Image, ImageBackground, Alert, ActivityIndicator, Modal, Keyboard } from "react-native";
 import { loginstyle } from "../styles/Styles";
 import loginbackground from "../assets/loginbg.png";
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -13,6 +13,11 @@ const Login = ({ navigation, onLoginSuccess, setUserSession }) => {
   const [isPressed, setIsPressed] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
   const [loading, setLoading] = useState(false);
+  
+  // States for OTP flow
+  const [otp, setOtp] = useState("");
+  const [otpModalVisible, setOtpModalVisible] = useState(false);
+  const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
 
   useEffect(() => {
     const splashTimer = setTimeout(() => {
@@ -78,75 +83,86 @@ const Login = ({ navigation, onLoginSuccess, setUserSession }) => {
     try {
       const response = await fetch(`${API_BASE_URL}/include/handlers/login_handler.php`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: JSON.stringify({
-          email: email,
-          password: password
-        }),
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({ email: email, password: password }),
       });
 
-      const rawResponse = await response.text();
-      console.log("Raw API response:", rawResponse);
-      
-      let result;
-      try {
-        result = JSON.parse(rawResponse);
-      } catch (parseError) {
-        console.error("JSON parse error:", parseError);
-        throw new Error(`Invalid JSON response: ${rawResponse.substring(0, 100)}...`);
-      }
+      const result = await response.json();
       
       if (result.success) {
-        const userData = {
-          userId: result.user.driver_id,
-          email: result.user.email,
-          driverName: result.user.name || email.split('@')[0],
-          tripId: `trip_${Date.now()}`,
-          truckId: `truck_${Date.now()}`
-        };
-        
-        await storeUserSession(userData);
-        
-        setLoading(false);
-        
-        onLoginSuccess(true);
-        
-        Alert.alert(
-          "Login Successful",
-          "Welcome back!",
-          [
-            {
-              text: "Continue",
-              onPress: () => {
-                console.log("Login successful, navigation handled by App.js");
-              }
-            }
-          ]
-        );
+        if (result.otp_required) {
+            // OTP is needed, so we show the modal.
+            setLoading(false);
+            setOtpModalVisible(true);
+            Alert.alert("Verification Required", result.message);
+        } else {
+            // This case would be for logins that don't need OTP, which isn't our current flow
+            // but is good to have.
+            console.warn("Login succeeded without OTP, which is not the expected flow.");
+        }
       } else {
         setLoading(false);
-        
         if (result.error === "invalid_email") {
-          setEmailError("Account not found. Please check your email or register.");
+          setEmailError("Account not found. Please check your email.");
         } else if (result.error === "invalid_password") {
           setPasswordError("Incorrect password. Please try again.");
         } else {
-          Alert.alert("Login Error", result.message || "Authentication failed. Please try again.");
+          Alert.alert("Login Error", result.message || "Authentication failed.");
         }
       }
     } catch (error) {
       console.error("Login Error:", error);
       setLoading(false);
-      
-      Alert.alert(
-        "Connection Error", 
-        "Unable to connect to the server. Please check your internet connection and try again."
-      );
+      Alert.alert("Connection Error", "Unable to connect to the server. Please check your internet connection.");
     }
   };
+
+  const handleVerifyOtp = async () => {
+    Keyboard.dismiss();
+    if (!otp.trim() || otp.length !== 6) {
+        Alert.alert("Invalid OTP", "Please enter the 6-digit code sent to your email.");
+        return;
+    }
+
+    setIsVerifyingOtp(true);
+    try {
+        const response = await fetch(`${API_BASE_URL}/include/handlers/login_handler.php`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            body: JSON.stringify({ email: email, otp: otp }),
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            const userData = {
+                userId: result.user.driver_id,
+                email: result.user.email,
+                driverName: result.user.name || email.split('@')[0],
+                // You might get more data from the response here
+            };
+            
+            await storeUserSession(userData);
+            
+            setIsVerifyingOtp(false);
+            setOtpModalVisible(false);
+            onLoginSuccess(true);
+            
+            Alert.alert("Login Successful", "Welcome back!", [{
+                text: "Continue",
+                onPress: () => console.log("OTP login successful.")
+            }]);
+        } else {
+            setIsVerifyingOtp(false);
+            Alert.alert("Verification Failed", result.message || "An unknown error occurred.");
+        }
+    } catch (error) {
+        console.error("OTP Verification Error:", error);
+        setIsVerifyingOtp(false);
+        Alert.alert("Connection Error", "Could not verify OTP. Please check your connection and try again.");
+    }
+  };
+
 
   return (
     <ImageBackground source={loginbackground} style={loginstyle.background}>
@@ -162,7 +178,7 @@ const Login = ({ navigation, onLoginSuccess, setUserSession }) => {
             placeholder="Enter your email"
             keyboardType="email-address"
             autoCapitalize="none"
-            editable={!loading}
+            editable={!loading && !isVerifyingOtp}
           />
           {emailError ? <Text style={loginstyle.errorText}>{emailError}</Text> : null}
 
@@ -173,29 +189,57 @@ const Login = ({ navigation, onLoginSuccess, setUserSession }) => {
             onChangeText={(text) => setPassword(text)}
             secureTextEntry={true}
             placeholder="Enter your password"
-            editable={!loading}
+            editable={!loading && !isVerifyingOtp}
           />
           {passwordError ? <Text style={loginstyle.errorText}>{passwordError}</Text> : null}
 
           <TouchableOpacity
-            style={[
-              loginstyle.button, 
-              { backgroundColor: isPressed ? "#6A0DAD" : "#478843" },
-              loading && { opacity: 0.7 }
-            ]}
+            style={[ loginstyle.button, { backgroundColor: isPressed ? "#6A0DAD" : "#478843" }, (loading || isVerifyingOtp) && { opacity: 0.7 }]}
             onPressIn={() => setIsPressed(true)}
             onPressOut={() => setIsPressed(false)}
             onPress={handleLogin}
-            disabled={loading}
+            disabled={loading || isVerifyingOtp}
           >
-            {loading ? (
-              <ActivityIndicator color="#FFFFFF" size="small" />
-            ) : (
-              <Text style={loginstyle.buttonText}>Login</Text>
-            )}
+            {loading ? <ActivityIndicator color="#FFFFFF" size="small" /> : <Text style={loginstyle.buttonText}>Login</Text>}
           </TouchableOpacity>
         </View>
       </View>
+      
+      {/* --- OTP MODAL --- */}
+      <Modal visible={otpModalVisible} transparent animationType="slide">
+        <View style={loginstyle.container}>
+            <View style={loginstyle.innerContainer}>
+                <Text style={loginstyle.title}>Enter Verification Code</Text>
+                <Text style={{textAlign: 'center', marginBottom: 20, color: '#555'}}>A 6-digit code was sent to your email address.</Text>
+
+                <TextInput
+                    style={loginstyle.textinput}
+                    placeholder="Enter OTP"
+                    keyboardType="number-pad"
+                    maxLength={6}
+                    value={otp}
+                    onChangeText={setOtp}
+                    editable={!isVerifyingOtp}
+                />
+
+                <TouchableOpacity
+                    onPress={handleVerifyOtp}
+                    style={[loginstyle.button, { backgroundColor: '#478843' }, isVerifyingOtp && { opacity: 0.6 }]}
+                    disabled={isVerifyingOtp}
+                >
+                    {isVerifyingOtp ? <ActivityIndicator color="#fff" /> : <Text style={loginstyle.buttonText}>Verify & Login</Text>}
+                </TouchableOpacity>
+                <TouchableOpacity
+                    onPress={() => { setOtpModalVisible(false); setOtp(""); }}
+                    style={[loginstyle.button, { backgroundColor: '#888', marginTop: 10 }]}
+                    disabled={isVerifyingOtp}
+                >
+                    <Text style={loginstyle.buttonText}>Cancel</Text>
+                </TouchableOpacity>
+            </View>
+        </View>
+      </Modal>
+
     </ImageBackground>
   );
 };
