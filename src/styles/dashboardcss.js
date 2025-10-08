@@ -21,11 +21,13 @@ export const dashboardstyles = StyleSheet.create({
   headerCard: {
     backgroundColor: "#7a0f0fff",
     paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingVertical: 20,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 6,
+    borderBottomLeftRadius:20,
+    borderBottomRightRadius:20,
   },
 
   headerTop: {
@@ -46,7 +48,8 @@ export const dashboardstyles = StyleSheet.create({
     backgroundColor: "#F43F5E",
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 12,
+    marginRight: 15,
+    marginLeft:5,
   },
 
   smallAvatarText: {

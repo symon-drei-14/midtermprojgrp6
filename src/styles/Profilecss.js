@@ -199,9 +199,16 @@ export const profilestyle = StyleSheet.create({
     modalTitle: {
         fontSize: 22,
         fontWeight: "700",
-        marginBottom: 16,
+        marginBottom: 8,
         color: '#1F2937',
         textAlign: 'center',
+    },
+     modalSubtitle: {
+        fontSize: 14,
+        color: '#6B7280',
+        textAlign: 'center',
+        marginBottom: 24,
+        paddingHorizontal: 10,
     },
     input: {
         flex: 1,
@@ -227,41 +234,57 @@ export const profilestyle = StyleSheet.create({
         borderColor: '#D1D5DB',
         borderRadius: 10,
         paddingLeft: 14,
-        marginBottom: 4,
         height: 50,
+        backgroundColor: '#F9FAFB'
+    },
+
+    inputError: {
+        borderColor: '#dc2626', 
     },
     errorText: {
         color: "#dc2626",
         fontSize: 12,
         alignSelf: 'flex-start',
         marginTop: 4,
-        marginBottom: 8,
+        marginBottom: 12,
     },
     modalButtonContainer: {
         flexDirection: "row",
         marginTop: 24,
         width: "100%",
-        gap: 10,
+        gap: 12,
     },
     saveButton: {
-        backgroundColor: "#10B981",
+        backgroundColor: "#219352ff",
         padding: 14,
         borderRadius: 10,
         flex: 1,
         alignItems: "center",
+        justifyContent: 'center',
+    },
+     disabledButton: {
+        opacity: 0.7,
     },
     cancelButton: {
         backgroundColor: "#dc2626",
         padding: 14,
         borderRadius: 10,
         flex: 1,
-        alignItems: "center",
+         alignItems: "center",
+        justifyContent: 'center',
+        borderColor: '#D1D5DB'
+    },
+    cancelButtonText: {
+        color: '#ffffffff',
+        fontWeight: '600',
+        fontSize: 15,
     },
     buttonText: {
         color: 'white',
         fontWeight: '600',
         fontSize: 15,
     },
+    
     toggleButton: {
         padding: 10,
     },
@@ -288,7 +311,6 @@ export const profilestyle = StyleSheet.create({
         fontSize: 14,
         fontWeight: '600',
     },
-    // Styles for the OTP Modal
     otpSubtitle: {
         fontSize: 15,
         color: '#6B7280',
@@ -306,5 +328,13 @@ export const profilestyle = StyleSheet.create({
         textAlign: 'center',
         letterSpacing: 8,
         marginBottom: 16,
+    },
+
+    inputLabel: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#374151',      
+        marginBottom: 8,      
+        alignSelf: 'flex-start', 
     },
 });

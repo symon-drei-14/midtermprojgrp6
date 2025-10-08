@@ -492,72 +492,84 @@ useEffect(() => {
                 </View>
             </ScrollView>
 
-            <Modal visible={modalVisible} transparent animationType="slide">
-                <View style={profilestyle.modalContainer}>
-                    <View style={profilestyle.modalContent}>
-                        <Text style={profilestyle.modalTitle}>Change Password</Text>
-                        
-                        <View style={profilestyle.passwordInputContainer}>
-                            <TextInput 
-                                style={profilestyle.input} 
-                                placeholder="Enter current password" 
-                                secureTextEntry={!showOldPassword} 
-                                value={oldPassword} 
-                                onChangeText={validateOldPassword} 
-                            />
-                            <TouchableOpacity onPress={() => setShowOldPassword(!showOldPassword)} style={profilestyle.toggleButton}>
-                               <Icon name={showOldPassword ? "eye-off" : "eye"} size={20} color="#6B7280" />
-                            </TouchableOpacity>
-                        </View>
-                        {oldPasswordError ? <Text style={profilestyle.errorText}>{oldPasswordError}</Text> : null}
-
-                        <View style={profilestyle.passwordInputContainer}>
-                            <TextInput 
-                                style={profilestyle.input} 
-                                placeholder="Enter new password" 
-                                secureTextEntry={!showNewPassword} 
-                                value={password} 
-                                onChangeText={validatePassword} 
-                            />
-                            <TouchableOpacity onPress={() => setShowNewPassword(!showNewPassword)} style={profilestyle.toggleButton}>
-                                <Icon name={showNewPassword ? "eye-off" : "eye"} size={20} color="#6B7280" />
-                            </TouchableOpacity>
-                        </View>
-                        {passwordError ? <Text style={profilestyle.errorText}>{passwordError}</Text> : null}
-                        
-                        <View style={profilestyle.passwordInputContainer}>
-                            <TextInput 
-                                style={profilestyle.input}
-                                placeholder="Confirm New Password" 
-                                secureTextEntry={!showNewPassword2} 
-                                value={password2} 
-                                onChangeText={(text) => validateConfirmPassword(text)} 
-                            />
-                            <TouchableOpacity onPress={() => setShowNewPassword2(!showNewPassword2)} style={profilestyle.toggleButton}>
-                                <Icon name={showNewPassword2 ? "eye-off" : "eye"} size={20} color="#6B7280" />
-                            </TouchableOpacity>
-                        </View>
-                        {confirmPasswordError ? <Text style={profilestyle.errorText}>{confirmPasswordError}</Text> : null}
-                        
-                        <View style={profilestyle.modalButtonContainer}>
-                            <TouchableOpacity 
-                                onPress={handleSavePassword} 
-                                style={[profilestyle.saveButton, isChangingPassword && { opacity: 0.6 }]} 
-                                disabled={isChangingPassword}
-                            >
-                                <Text style={profilestyle.buttonText}>{isChangingPassword ? "Saving..." : "Save"}</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity 
-                                onPress={() => setModalVisible(false)} 
-                                style={profilestyle.cancelButton} 
-                                disabled={isChangingPassword}
-                            >
-                                <Text style={profilestyle.buttonText}>Cancel</Text>
-                            </TouchableOpacity>
-                        </View>
-                    </View>
+        <Modal visible={modalVisible} transparent animationType="slide">
+        <View style={profilestyle.modalContainer}>
+            <View style={profilestyle.modalContent}>
+                <Text style={profilestyle.modalTitle}>Change Password</Text>
+            
+                <Text style={profilestyle.modalSubtitle}>
+                    Please enter your current password to set a new one.
+                </Text>
+                
+                <Text style={profilestyle.inputLabel}>Current Password</Text>
+                <View style={[profilestyle.passwordInputContainer, oldPasswordError && profilestyle.inputError]}>
+                    <TextInput 
+                        style={profilestyle.input} 
+                        placeholder="Enter current password" 
+                        secureTextEntry={!showOldPassword} 
+                        value={oldPassword} 
+                        onChangeText={validateOldPassword} 
+                    />
+                    <TouchableOpacity onPress={() => setShowOldPassword(!showOldPassword)} style={profilestyle.toggleButton}>
+                        <Icon name={showOldPassword ? "eye-off" : "eye"} size={20} color="#6B7280" />
+                    </TouchableOpacity>
                 </View>
-            </Modal>
+                {oldPasswordError ? <Text style={profilestyle.errorText}>{oldPasswordError}</Text> : <View style={{ marginBottom: 12 }} />}
+
+                <Text style={profilestyle.inputLabel}>New Password</Text>
+                <View style={[profilestyle.passwordInputContainer, passwordError && profilestyle.inputError]}>
+                    <TextInput 
+                        style={profilestyle.input} 
+                        placeholder="Enter new password" 
+                        secureTextEntry={!showNewPassword} 
+                        value={password} 
+                        onChangeText={validatePassword} 
+                    />
+                    <TouchableOpacity onPress={() => setShowNewPassword(!showNewPassword)} style={profilestyle.toggleButton}>
+                        <Icon name={showNewPassword ? "eye-off" : "eye"} size={20} color="#6B7280" />
+                    </TouchableOpacity>
+                </View>
+                {passwordError ? <Text style={profilestyle.errorText}>{passwordError}</Text> : <View style={{ marginBottom: 12 }} />}
+                
+                <Text style={profilestyle.inputLabel}>Confirm New Password</Text>
+                <View style={[profilestyle.passwordInputContainer, confirmPasswordError && profilestyle.inputError]}>
+                    <TextInput 
+                        style={profilestyle.input}
+                        placeholder="Confirm New Password" 
+                        secureTextEntry={!showNewPassword2} 
+                        value={password2} 
+                        onChangeText={(text) => validateConfirmPassword(text)} 
+                    />
+                    <TouchableOpacity onPress={() => setShowNewPassword2(!showNewPassword2)} style={profilestyle.toggleButton}>
+                        <Icon name={showNewPassword2 ? "eye-off" : "eye"} size={20} color="#6B7280" />
+                    </TouchableOpacity>
+                </View>
+                {confirmPasswordError ? <Text style={profilestyle.errorText}>{confirmPasswordError}</Text> : null}
+                
+                <View style={profilestyle.modalButtonContainer}>
+                    <TouchableOpacity 
+                        onPress={() => setModalVisible(false)} 
+                        style={profilestyle.cancelButton} 
+                        disabled={isChangingPassword}
+                    >
+                        <Text style={profilestyle.cancelButtonText}>Cancel</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity 
+                        onPress={handleSavePassword} 
+                        style={[profilestyle.saveButton, isChangingPassword && profilestyle.disabledButton]} 
+                        disabled={isChangingPassword}
+                    >
+                        {isChangingPassword ? (
+                            <ActivityIndicator size="small" color="#fff" />
+                        ) : (
+                            <Text style={profilestyle.buttonText}>Save</Text>
+                        )}
+                    </TouchableOpacity>
+                </View>
+                </View>
+            </View>
+        </Modal>
             
             <Modal visible={otpModalVisible} transparent animationType="slide">
                 <View style={profilestyle.modalContainer}>
