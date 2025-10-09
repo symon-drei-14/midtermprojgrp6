@@ -363,6 +363,7 @@ activeCard: {
     borderRadius: 20,
     padding: 48,
     marginBottom: 24,
+    marginTop: 24,
     alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
