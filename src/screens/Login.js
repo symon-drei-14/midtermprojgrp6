@@ -135,11 +135,13 @@ const Login = ({ navigation, onLoginSuccess, setUserSession }) => {
         const result = await response.json();
 
         if (result.success) {
+            // Include the Firebase UID and Truck ID from the PHP response
             const userData = {
-                userId: result.user.driver_id,
+                userId: result.user.driver_id, // SQL Driver ID for PHP calls
+                firebaseUserId: result.user.firebase_uid, // The correct Firebase UID for RTDB
                 email: result.user.email,
                 driverName: result.user.name || email.split('@')[0],
-                // You might get more data from the response here
+                assignedTruckId: result.user.assigned_truck_id,
             };
             
             await storeUserSession(userData);
