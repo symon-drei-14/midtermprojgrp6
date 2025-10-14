@@ -9,6 +9,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { launchImageLibrary } from 'react-native-image-picker'; // Import the image picker
 import Icon from 'react-native-vector-icons/Feather';
 import NotificationService from '../services/NotificationService';
+import ProfileSkeleton from '../components/ProfileSkeleton';
 import { API_BASE_URL } from '@env';
 
 const Profile = ({ route }) => {
@@ -31,7 +32,7 @@ const Profile = ({ route }) => {
     const [oldPasswordError, setOldPasswordError] = useState("");
     const [showOldPassword, setShowOldPassword] = useState(false);
     const [unreadCount, setUnreadCount] = useState(0);
-
+    const [isLoading, setIsLoading] = useState(true);
     // New states for OTP flow
     const [otp, setOtp] = useState("");
     const [otpModalVisible, setOtpModalVisible] = useState(false);
@@ -101,6 +102,8 @@ const fetchDriverData = async () => {
         }
     } catch (error) {
         console.error('Error in fetchDriverData:', error);
+    } finally {
+        setIsLoading(false);
     }
 };
     
@@ -422,6 +425,10 @@ useEffect(() => {
         }
         return <Text style={profilestyle.avatar}>👻</Text>;
     };
+
+    if (isLoading) {
+    return <ProfileSkeleton />;
+    }
 
     return (
         <View style={profilestyle.container}>

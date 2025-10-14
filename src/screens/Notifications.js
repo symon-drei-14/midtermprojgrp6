@@ -17,12 +17,13 @@ import { tripstyle } from "../styles/Tripcss";
 import Icon from 'react-native-vector-icons/Feather';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import NotificationSkeleton from '../components/NotificationSkeleton';
 
 const NotificationScreen = () => {
     const nav = useNavigation();
     const state = useNavigationState((state) => state);
     const currentRoute = state.routes[state.index].name;
-
+    const [initialLoading, setInitialLoading] = useState(true);
     const [notifications, setNotifications] = useState([]);
     const [unreadCount, setUnreadCount] = useState(0);
     const [loading, setLoading] = useState(false);
@@ -91,6 +92,7 @@ const NotificationScreen = () => {
             Alert.alert('Error', 'Failed to fetch notifications');
         } finally {
             setLoading(false);
+            setInitialLoading(false);
         }
     };
 
@@ -164,7 +166,13 @@ const NotificationScreen = () => {
 
     const formatDate = (dateString) => {
         try {
-            const date = new Date(dateString);
+            let date;
+            if (dateString.includes('Z') || dateString.includes('+')) {
+                date = new Date(dateString);
+            } else {
+                date = new Date(dateString + 'Z');
+            }
+            
             const now = new Date();
             const diffMs = now - date;
             const diffMins = Math.floor(diffMs / 60000);
@@ -233,23 +241,8 @@ const NotificationScreen = () => {
 
     const filteredNotifications = getFilteredNotifications();
 
-    if (loading && notifications.length === 0) {
-        return (
-            <View style={styles.container}>
-                <View style={styles.header}>
-                    <View style={styles.headerTop}>
-                        <View style={styles.headerTitleContainer}>
-                            <Ionicons name="notifications" size={28} color="#fff" />
-                            <Text style={styles.headerTitle}>Notifications</Text>
-                        </View>
-                    </View>
-                </View>
-                <View style={styles.loadingContainer}>
-                    <ActivityIndicator size="large" color="#d32f2f" />
-                    <Text style={styles.loadingText}>Loading notifications...</Text>
-                </View>
-            </View>
-        );
+    if (initialLoading) {
+        return <NotificationSkeleton />;
     }
 
     return (

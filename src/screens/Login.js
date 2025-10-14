@@ -37,6 +37,8 @@ const Login = ({ navigation, onLoginSuccess, setUserSession }) => {
     );
   }
 
+
+
   const validateInputs = () => {
     let isValid = true;
     
