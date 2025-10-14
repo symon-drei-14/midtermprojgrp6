@@ -223,7 +223,12 @@ const onRefresh = useCallback(async () => {
 }, []);
 
   const updateTripStatus = async (newStatus, tripId) => {
-    if (!currentTrip) return;
+    const targetTripId = tripId || currentTrip?.trip_id;
+    if (!targetTripId) {
+      console.log("Update canceled: No trip ID provided.");
+      return;
+    }
+
     try {
       setUpdating(true);
       const response = await fetch(`${API_BASE_URL}/include/handlers/trip_handler.php`, {
@@ -231,19 +236,30 @@ const onRefresh = useCallback(async () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: 'update_trip_status',
-          trip_id: tripId || currentTrip.trip_id,
+          trip_id: targetTripId,
           status: newStatus,
         }),
       });
 
       const data = await response.json();
       if (data.success) {
-        setStatus(newStatus);
-        setCurrentTrip(prev => ({ ...prev, status: newStatus }));
-        if (['Completed', 'No Show'].includes(newStatus)) fetchTrips();
+        // If a scheduled trip is started, or an active trip is finished, we need a full refresh.
+        if (['En Route', 'Completed', 'No Show'].includes(newStatus)) {
+          setTripDetailModalVisible(false); // Close the details modal if it's open
+          await fetchTrips();
+        } else {
+          // Handle status updates for the currently active trip that don't end it
+          if (currentTrip && targetTripId === currentTrip.trip_id) {
+            setCurrentTrip(prev => ({ ...prev, status: newStatus }));
+            setStatus(newStatus);
+          }
+        }
+      } else {
+        Alert.alert("Update Failed", data.message || "Could not update trip status.");
       }
     } catch (error) {
       console.error('Error updating trip:', error);
+      Alert.alert("Error", "An error occurred while updating the trip.");
     } finally {
       setUpdating(false);
     }
@@ -459,6 +475,33 @@ const triggerReassignment = async (tripId, driverId, reason, showAlert = true) =
     setSelectedTrip(trip);
     setTripDetailModalVisible(true);
   };
+
+  const isEnRouteAvailable = (trip) => {
+    // You can't start a trip if the checklist isn't done.
+    if (!trip?.hasChecklist) {
+        return false;
+    }
+
+    const tripDate = new Date(trip.date);
+    const now = new Date();
+    // This defines the window when the "Begin En Route" button becomes active.
+    const thirtyMinutesBefore = new Date(tripDate.getTime() - 30 * 60 * 1000);
+
+    // If the current time is 30 minutes before the trip or later, the button is available.
+    return now >= thirtyMinutesBefore;
+};
+
+const handleStartEnRoute = (tripId) => {
+    Alert.alert(
+      "Confirm Start Trip",
+      "Are you sure you want to begin this trip? Your status will be set to 'En Route'.",
+      [
+        { text: "Cancel", style: "cancel" },
+        // This calls the update function when the driver confirms.
+        { text: "Confirm", onPress: () => updateTripStatus('En Route', tripId) }
+      ]
+    );
+};
 
   const getStatusColor = (tripStatus) => {
     switch(tripStatus) {
@@ -782,58 +825,74 @@ const triggerReassignment = async (tripId, driverId, reason, showAlert = true) =
 
       {/* Bottom Actions */}
       <View style={TripDetail.bottomActions}>
-        <TouchableOpacity
+         <TouchableOpacity
           style={[
             TripDetail.startButton,
-            selectedTrip?.hasChecklist && TripDetail.startButtonCompleted,
-            !isChecklistAvailable(selectedTrip) && TripDetail.startButtonDisabled,
+            // When checklist is done but it's not time to start, show a green 'Completed' button.
+            (selectedTrip?.hasChecklist && !isEnRouteAvailable(selectedTrip)) && TripDetail.startButtonCompleted,
+            // When checklist is done AND it's time to start, show an orange 'En Route' button.
+            (selectedTrip?.hasChecklist && isEnRouteAvailable(selectedTrip)) && tripstyle.secondaryButton,
+            // FIX: Only apply the disabled style if the checklist has NOT been submitted yet.
+            (!isChecklistAvailable(selectedTrip) && !selectedTrip?.hasChecklist) && TripDetail.startButtonDisabled,
           ]}
+          disabled={
+            updating || 
+            (selectedTrip?.hasChecklist && !isEnRouteAvailable(selectedTrip)) || 
+            (!isChecklistAvailable(selectedTrip) && !selectedTrip?.hasChecklist)
+          }
           onPress={() => {
-            if (selectedTrip?.hasChecklist || !isChecklistAvailable(selectedTrip))
-              return;
-
-            const tripDate = new Date(selectedTrip.date);
-            const now = new Date();
-            const threeHoursBefore = new Date(
-              tripDate.getTime() - 3 * 60 * 60 * 1000
-            );
-            const oneHourBefore = new Date(
-              tripDate.getTime() - 1 * 60 * 60 * 1000
-            );
-
-            if (now < threeHoursBefore && !isChecklistAvailable(selectedTrip)) {
-              const formattedTime = threeHoursBefore.toLocaleTimeString("en-US", {
-                hour: "2-digit",
-                minute: "2-digit",
-                hour12: true,
-              });
-              Alert.alert(
-                "Checklist Not Available Yet",
-                `Checklist will be available starting at ${formattedTime} (3 hours before the scheduled trip).`
-              );
+            // Case 1: Checklist is done, and it's time to start the trip.
+            if (selectedTrip?.hasChecklist && isEnRouteAvailable(selectedTrip)) {
+              handleStartEnRoute(selectedTrip.trip_id);
               return;
             }
 
-            if (now > oneHourBefore && !isChecklistAvailable(selectedTrip)) {
-              Alert.alert(
-                "Checklist Submission Closed",
-                "Checklist submission closed 1 hour before the scheduled trip time."
-              );
-              return;
+            // Case 2: It's time to submit the checklist.
+            if (isChecklistAvailable(selectedTrip) && !selectedTrip?.hasChecklist) {
+                setCurrentTripId(selectedTrip.trip_id);
+                resetChecklistData();
+                setTripDetailModalVisible(false);
+                setChecklistModalVisible(true);
+                return;
             }
 
-            setCurrentTripId(selectedTrip.trip_id);
-            resetChecklistData();
-            setTripDetailModalVisible(false);
-            setChecklistModalVisible(true);
+            // Case 3: Checklist is not available yet, so show an informational alert.
+            if (!isChecklistAvailable(selectedTrip) && !selectedTrip?.hasChecklist) {
+                const tripDate = new Date(selectedTrip.date);
+                const now = new Date();
+                const threeHoursBefore = new Date(
+                  tripDate.getTime() - 3 * 60 * 60 * 1000
+                );
+                
+                if (now < threeHoursBefore) {
+                  const formattedTime = threeHoursBefore.toLocaleTimeString("en-US", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    hour12: true,
+                  });
+                  Alert.alert(
+                    "Checklist Not Available Yet",
+                    `Checklist will be available starting at ${formattedTime} (3 hours before the scheduled trip).`
+                  );
+                } else {
+                    Alert.alert(
+                        "Checklist Submission Closed",
+                        "Checklist submission closed 1 hour before the scheduled trip time."
+                    );
+                }
+            }
           }}
         >
           <Text style={TripDetail.startButtonText}>
-            {selectedTrip?.hasChecklist
-              ? "Checklist Submitted"
-              : !isChecklistAvailable(selectedTrip)
-              ? "Checklist Not Available"
-              : "Start Trip"}
+            {
+              selectedTrip?.hasChecklist
+                ? (isEnRouteAvailable(selectedTrip)
+                  ? (updating ? 'Starting...' : 'Begin En Route')
+                  : "Checklist Submitted")
+                : (isChecklistAvailable(selectedTrip)
+                  ? "Start Trip & Submit Checklist"
+                  : "Checklist Not Available")
+            }
           </Text>
         </TouchableOpacity>
       </View>

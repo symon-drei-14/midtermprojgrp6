@@ -1060,6 +1060,11 @@ scrollContent: {
     borderRadius: 12,
     marginBottom: 12,
   },
+
+   startButtonEnRoute: {
+    backgroundColor: '#f97316',
+  },
+
   startButtonCompleted: {
     backgroundColor: '#4CAF50',
   },
