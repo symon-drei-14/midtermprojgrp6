@@ -104,13 +104,19 @@ const Login = ({ navigation, onLoginSuccess, setUserSession }) => {
         }
       } else {
         setLoading(false);
-        if (result.error === "invalid_email") {
+        // --- START OF ADDITION: Handle Lockout/Attempt Errors ---
+        if (result.error === "login_locked") {
+             // Handle locked account message provided by the server
+             Alert.alert("Account Locked", result.message);
+        } else if (result.error === "invalid_email") {
           setEmailError("Account not found. Please check your email.");
         } else if (result.error === "invalid_password") {
-          setPasswordError("Incorrect password. Please try again.");
+          // Display the specific remaining attempt message from the server
+          setPasswordError(result.message || "Incorrect password. Please try again.");
         } else {
           Alert.alert("Login Error", result.message || "Authentication failed.");
         }
+        // --- END OF ADDITION ---
       }
     } catch (error) {
       console.error("Login Error:", error);
@@ -158,7 +164,15 @@ const Login = ({ navigation, onLoginSuccess, setUserSession }) => {
             }]);
         } else {
             setIsVerifyingOtp(false);
-            Alert.alert("Verification Failed", result.message || "An unknown error occurred.");
+             // --- START OF ADDITION: Handle OTP Blocked Error ---
+            if (result.error === "otp_blocked") {
+                 // Close the OTP modal and show the block message
+                 setOtpModalVisible(false);
+                 Alert.alert("OTP Blocked", result.message);
+            } else {
+                 Alert.alert("Verification Failed", result.message || "An unknown error occurred.");
+            }
+             // --- END OF ADDITION ---
         }
     } catch (error) {
         console.error("OTP Verification Error:", error);
