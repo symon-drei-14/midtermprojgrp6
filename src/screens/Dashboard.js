@@ -812,55 +812,72 @@ useFocusEffect(
         }
     }, [sensorEnabled, updateInterval, locationEnabled]);
 
-    const handleLocationToggle = async (value) => {
-        console.log(`Location toggle requested: ${value}`);
-        
-        // Use the authenticated Firebase ID here
-        const locationUserId = firebaseRtdbId; 
-        
-        if (locationUserId === 'guest_user') {
-            Alert.alert("Authentication Required", "Please log in to your account to enable location tracking.");
+
+const handleLocationToggle = async (value) => {
+    console.log(`Location toggle requested: ${value}`);
+    
+    const locationUserId = firebaseRtdbId; 
+    
+    if (locationUserId === 'guest_user') {
+        Alert.alert("Authentication Required", "Please log in to your account to enable location tracking.");
+        return;
+    }
+
+    if (value) {
+        const currentStatus = LocationService.getTrackingStatus();
+
+        if (currentStatus.isTracking) {
+            console.log('Service already tracking - updating UI only');
+            setLocationEnabled(true);
+            setDriverStatus('online');
             return;
         }
 
-        if (value) {
-            const currentStatus = LocationService.getTrackingStatus();
+        Alert.alert(
+            "Enable Location?",
+            `Do you want to allow location updates every ${updateInterval} seconds?`,
+            [
+                { text: "Cancel", style: "cancel" },
+                {
+                    text: "Allow",
+                    onPress: async () => {
+                        console.log('Starting location tracking for first time with ID:', locationUserId);
+                        await LocationService.startTracking(locationUserId, updateInterval, sensorEnabled);
 
-            if (currentStatus.isTracking) {
-                console.log('Service already tracking - updating UI only');
-                setLocationEnabled(true);
-                setDriverStatus('online');
-                return;
-            }
-
-            Alert.alert(
-                "Enable Location?",
-                `Do you want to allow location updates every ${updateInterval} seconds?`,
-                [
-                    { text: "Cancel", style: "cancel" },
-                    {
-                        text: "Allow",
-                        onPress: async () => {
-                            console.log('Starting location tracking for first time with ID:', locationUserId);
-                            // Pass the correct firebaseRtdbId to LocationService
-                            await LocationService.startTracking(locationUserId, updateInterval, sensorEnabled);
-                            setLocationEnabled(true);
-                            setDriverStatus('online');
-                            setLocationUpdateStatus('Online');
-                        }
+                        await AsyncStorage.setItem('locationTrackingState', JSON.stringify({
+                            isTracking: true,
+                            userId: locationUserId,
+                            updateInterval: updateInterval,
+                            sensorEnabled: sensorEnabled,
+                            timestamp: Date.now()
+                        }));
+                        
+                        setLocationEnabled(true);
+                        setDriverStatus('online');
+                        setLocationUpdateStatus('Online');
                     }
-                ]
-            );
-        } else {
-            const currentStatus = LocationService.getTrackingStatus();
-            if (currentStatus.isTracking) {
-                LocationService.stopTracking();
-            }
-            setLocationEnabled(false);
-            setDriverStatus('offline');
-            setLocationUpdateStatus('Offline');
+                }
+            ]
+        );
+    } else {
+        const currentStatus = LocationService.getTrackingStatus();
+        if (currentStatus.isTracking) {
+            await LocationService.stopTracking();
         }
-    };
+
+        await AsyncStorage.setItem('locationTrackingState', JSON.stringify({
+            isTracking: false,
+            userId: locationUserId,
+            updateInterval: updateInterval,
+            sensorEnabled: sensorEnabled,
+            timestamp: Date.now()
+        }));
+        
+        setLocationEnabled(false);
+        setDriverStatus('offline');
+        setLocationUpdateStatus('Offline');
+    }
+};
 
     if (isLoading) {
         return <DashboardSkeleton />;

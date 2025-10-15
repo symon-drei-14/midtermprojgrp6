@@ -4,10 +4,12 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator, CardStyleInterpolators } from "@react-navigation/stack";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { View, ActivityIndicator, Text } from "react-native";
+import { View, ActivityIndicator, Text, AppState } from "react-native";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import auth from '@react-native-firebase/auth';
 import NotificationService from './src/services/NotificationService';
+import LocationService from './src/services/LocationService';
+import BackgroundFetch from 'react-native-background-fetch';
 
 import Login from "./src/screens/Login";
 import Dashboard from "./src/screens/Dashboard";
@@ -51,6 +53,53 @@ const App = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [userSession, setUserSession] = useState(null);
   const navigationRef = useRef();
+  const appState = useRef(AppState.currentState);
+  const locationInitialized = useRef(false);
+
+  const handleGlobalLocationUpdate = useCallback((data) => {
+    console.log('[App] Global location update:', data);
+  }, []);
+
+  const initializeLocationTracking = useCallback(async (userData) => {
+    if (locationInitialized.current) {
+      console.log('[App] Location already initialized');
+      return;
+    }
+
+    try {
+      await LocationService.configureBackgroundFetch();
+      await BackgroundFetch.start();
+
+      const trackingState = await AsyncStorage.getItem('locationTrackingState');
+      
+      if (trackingState) {
+        const { isTracking, updateInterval, sensorEnabled } = JSON.parse(trackingState);
+        
+        if (isTracking) {
+          console.log('[App] Restoring location tracking');
+
+          const sessionData = await AsyncStorage.getItem('userSession');
+          if (sessionData) {
+            const session = JSON.parse(sessionData);
+            const firebaseUserId = session.firebaseUserId || userData.userId;
+
+            await LocationService.startTracking(
+              firebaseUserId,
+              updateInterval || 10,
+              sensorEnabled || false
+            );
+          }
+        }
+      }
+
+      LocationService.addListener(handleGlobalLocationUpdate);
+      locationInitialized.current = true;
+
+      console.log('[App] Location tracking initialized');
+    } catch (error) {
+      console.error('[App] Error initializing location tracking:', error);
+    }
+  }, [handleGlobalLocationUpdate]);
 
   const registerNotificationToken = useCallback(async (userId) => {
     if (userId) {
@@ -66,7 +115,8 @@ const App = () => {
     setUserSession(userData);
     setIsAuthenticated(true);
     await registerNotificationToken(userData.userId);
-  }, [registerNotificationToken]);
+    await initializeLocationTracking(userData);
+  }, [registerNotificationToken, initializeLocationTracking]);
 
   const handleNotificationEvent = useCallback((data) => {
     console.log('Notification event received:', data);
@@ -137,9 +187,35 @@ const App = () => {
     return unsubscribe;
   }, [userSession, setAuthenticatedUser]);
 
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', nextAppState => {
+      if (appState.current.match(/inactive|background/) && nextAppState === 'active') {
+        console.log('[App] App came to foreground');
+
+        const status = LocationService.getTrackingStatus();
+        if (status.isTracking) {
+          console.log('[App] Location tracking is active');
+        }
+      }
+      appState.current = nextAppState;
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, []);
+
   const handleLogout = useCallback(async () => {
     try {
       setIsLoading(true);
+
+      const status = LocationService.getTrackingStatus();
+      if (status.isTracking) {
+        console.log('[App] Stopping location tracking on logout');
+        await LocationService.stopTracking();
+      }
+
+      await AsyncStorage.removeItem('locationTrackingState');
 
       const firebaseUser = auth().currentUser;
       if (firebaseUser) {
@@ -147,6 +223,11 @@ const App = () => {
       }
 
       await AsyncStorage.multiRemove(['userSession', 'fcm_token']);
+
+      if (locationInitialized.current) {
+        LocationService.removeListener(handleGlobalLocationUpdate);
+        locationInitialized.current = false;
+      }
 
       setIsAuthenticated(false);
       setUserSession(null);
@@ -157,7 +238,7 @@ const App = () => {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [handleGlobalLocationUpdate]);
 
   const handleLoginSuccess = useCallback(async (userData) => {
     await setAuthenticatedUser(userData);
