@@ -238,6 +238,7 @@ const onRefresh = useCallback(async () => {
           action: 'update_trip_status',
           trip_id: targetTripId,
           status: newStatus,
+          driver_name: driverInfo?.name,
         }),
       });
 
