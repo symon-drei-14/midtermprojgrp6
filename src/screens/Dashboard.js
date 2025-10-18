@@ -950,7 +950,7 @@ return (
                 >
                     <LinearGradient colors={["#FF6680", "#F43F5E"]} style={{ position:'absolute', left:0, right:0, top:0, bottom:0 }} />
                     <Icon name="file-text" size={16} color="#FFFFFF" style={dashboardstyles.actionIcon} />
-                    <Text style={dashboardstyles.generateReportText}>Generate Report</Text>
+                    <Text style={dashboardstyles.generateReportText}>Report Expense</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity

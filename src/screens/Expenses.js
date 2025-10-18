@@ -530,86 +530,88 @@ const handleViewReceipt = (uri) => {
   
 const addExpense = async () => {
     console.log("--- Checking State Inside addExpense ---");
-  console.log("Value of currentTrip:", currentTrip);
-  console.log("Value of tripId from route:", tripId);
-  console.log("------------------------------------");
-  let hasError = false;
-  const expenseAmountNum = parseFloat(expenseAmount);
-  if (!expenseAmount || isNaN(expenseAmountNum) || expenseAmountNum <= 0) {
-    setExpenseAmountError("A valid amount is required.");
-    hasError = true;
-  } else {
-    setExpenseAmountError("");
-  }
-  if (showCustomInput && !customCategory.trim()) {
-    setCustomCategoryError("Category is required.");
-    hasError = true;
-  } else {
-    setCustomCategoryError("");
-  }
-  if (hasError) return;
-
-  // --- Data Preparation ---
-  if (!driverInfo || !driverInfo.driver_id || parseInt(driverInfo.driver_id, 10) <= 0) {
-    Alert.alert('Error', 'Driver information is invalid. Please try logging out and back in.');
-    return;
-  }
-
-  // This logic now correctly and reliably uses the active trip's ID.
-  if (!currentTrip || !currentTrip.trip_id) {
-    Alert.alert('Error', 'Could not find an active trip. The trip may have recently ended.');
-    return;
-  }
-  
-  const targetTripId = parseInt(currentTrip.trip_id, 10);
-
-  // Final check to ensure the ID is a valid number
-  if (isNaN(targetTripId) || targetTripId <= 0) {
-    Alert.alert('Error', 'The active trip has an invalid ID. Please contact support.');
-    return;
-  }
-
-  setSubmitting(true);
-  try {
-    let imagePath = null;
-    if (receiptImage && receiptImage.uri && !receiptImage.uri.startsWith('http')) {
-      imagePath = await uploadImage(receiptImage);
-    }
-
-    const expenseData = {
-      action: 'add_expense',
-      trip_id: targetTripId,
-      driver_id: parseInt(driverInfo.driver_id, 10),
-      expense_type: showCustomInput ? customCategory.trim() : expenseName,
-      amount: expenseAmountNum,
-      receipt_image: imagePath,
-    };
+    console.log("Value of currentTrip:", currentTrip);
+    console.log("Value of tripId from route:", tripId);
+    console.log("------------------------------------");
     
-    const response = await fetch(`${API_BASE_URL}/include/handlers/expense_handler.php`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(expenseData),
-    });
-
-    const resultText = await response.text();
-    if (!response.ok) {
-        throw new Error(`Server Error: ${resultText}`);
+    let hasError = false;
+    const expenseAmountNum = parseFloat(expenseAmount);
+    if (!expenseAmount || isNaN(expenseAmountNum) || expenseAmountNum <= 0) {
+        setExpenseAmountError("A valid amount is required.");
+        hasError = true;
+    } else {
+        setExpenseAmountError("");
     }
-    const result = JSON.parse(resultText);
+    if (showCustomInput && !customCategory.trim()) {
+        setCustomCategoryError("Category is required.");
+        hasError = true;
+    } else {
+        setCustomCategoryError("");
+    }
+    if (hasError) return;
 
-    if (!result.success) {
-      throw new Error(result.message || 'The server returned an error.');
+    if (!driverInfo || !driverInfo.driver_id || parseInt(driverInfo.driver_id, 10) <= 0) {
+        Alert.alert('Error', 'Driver information is invalid. Please try logging out and back in.');
+        return;
     }
 
-    Alert.alert('Success', 'Expense added successfully!');
-    setModalVisible(false);
-    await initializeData();
+    let targetTripId;
+    
+    if (tripId) {
+        targetTripId = parseInt(tripId, 10);
+    } else if (currentTrip?.trip_id) {
+        targetTripId = parseInt(currentTrip.trip_id, 10);
+    } else {
+        Alert.alert('Error', 'Could not find an active trip. The trip may have recently ended.');
+        return;
+    }
 
-  } catch (error) {
-    Alert.alert('Error', `Failed to add expense: ${error.message}`);
-  } finally {
-    setSubmitting(false);
-  }
+    if (isNaN(targetTripId) || targetTripId <= 0) {
+        Alert.alert('Error', 'The active trip has an invalid ID. Please contact support.');
+        return;
+    }
+
+    setSubmitting(true);
+    try {
+        let imagePath = null;
+        if (receiptImage && receiptImage.uri && !receiptImage.uri.startsWith('http')) {
+            imagePath = await uploadImage(receiptImage);
+        }
+
+        const expenseData = {
+            action: 'add_expense',
+            trip_id: targetTripId,
+            driver_id: parseInt(driverInfo.driver_id, 10),
+            expense_type: showCustomInput ? customCategory.trim() : expenseName,
+            amount: expenseAmountNum,
+            receipt_image: imagePath,
+        };
+        
+        const response = await fetch(`${API_BASE_URL}/include/handlers/expense_handler.php`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(expenseData),
+        });
+
+        const resultText = await response.text();
+        if (!response.ok) {
+            throw new Error(`Server Error: ${resultText}`);
+        }
+        const result = JSON.parse(resultText);
+
+        if (!result.success) {
+            throw new Error(result.message || 'The server returned an error.');
+        }
+
+        Alert.alert('Success', 'Expense added successfully!');
+        setModalVisible(false);
+        await initializeData();
+
+    } catch (error) {
+        Alert.alert('Error', `Failed to add expense: ${error.message}`);
+    } finally {
+        setSubmitting(false);
+    }
 };
 
 const handleOpenEditModal = (expense) => {
