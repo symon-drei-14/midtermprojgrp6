@@ -1136,12 +1136,13 @@ const getCategoryIcon = (category, size = 20, color = "#374151") => {
                       ▼
                     </Text>
                   </TouchableOpacity>
-
                   {dropdownVisible && (
                     <View style={expensestyle.dropdownList}>
                       <ScrollView
                         nestedScrollEnabled={true}
+                        showsVerticalScrollIndicator={true}
                         style={expensestyle.dropdownScrollView}
+                        contentContainerStyle={{ paddingBottom: 8 }}
                       >
                         {expenseCategories.map((category) => (
                           <TouchableOpacity

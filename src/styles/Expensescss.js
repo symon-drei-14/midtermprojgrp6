@@ -840,25 +840,18 @@ export const expensestyle = StyleSheet.create({
   },
 
   dropdownList: {
-    position: "absolute",
-    top: "100%",
-    left: 0,
-    right: 0,
-    backgroundColor: "#ffffff",
-    borderWidth: 1,
-    borderColor: "#d1d5db",
-    borderTopWidth: 0,
-    borderBottomLeftRadius: 12,
-    borderBottomRightRadius: 12,
     maxHeight: 200,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 8,
-    zIndex: 1001,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    borderRadius: 8,
+    backgroundColor: '#fff',
+    marginTop: 4,
   },
 
+  dropdownScrollView: {
+    maxHeight: 200,
+  },
+  
   receiptModalContainer: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.85)',
